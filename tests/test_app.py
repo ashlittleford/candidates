@@ -46,7 +46,7 @@ class AppTestCase(unittest.TestCase):
 
     def test_login_logout(self):
         response = self.login('candidate', 'candidate')
-        self.assertIn(b'My Profile', response.data)
+        self.assertIn(b'Formation Details', response.data)
         self.assertIn(b'Welcome, Candidate', response.data)
 
         response = self.logout()
@@ -58,7 +58,7 @@ class AppTestCase(unittest.TestCase):
         response = self.client.get('/admin', follow_redirects=True)
         # Should be denied and redirected to profile or shown error (my logic redirects)
         self.assertIn(b'Access denied', response.data)
-        self.assertIn(b'My Profile', response.data)
+        self.assertIn(b'Formation Details', response.data)
 
         self.logout()
 
@@ -73,7 +73,7 @@ class AppTestCase(unittest.TestCase):
         self.login('candidate', 'candidate')
         response = self.client.get('/profile')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Formation Progress', response.data)
+        self.assertIn(b'Formation Details', response.data)
 
     def test_admin_edit_profile(self):
         self.login('admin', 'admin')
