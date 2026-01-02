@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2>My Profile</h2>
+        <hr>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4>Personal Information</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ user.name }}</p>
+                <p><strong>Username:</strong> {{ user.username }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h4>Formation Progress</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5>Formation Panel Details</h5>
+                    <p>{{ user.profile.formation_panel_details or 'Not updated' }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <h5>Formation Days Completed</h5>
+                    <p>{{ user.profile.formation_days_completed or 'None' }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <h5>Walking on Country</h5>
+                    <p>
+                        {% if user.profile.walking_on_country %}
+                            <span class="badge bg-success">Completed/Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm uca-border-red">
+            <div class="card-header uca-bg-red text-white">
+                <h5 class="mb-0">Important Dates</h5>
+            </div>
+            <div class="card-body">
+                <h6>Upcoming Formation Days</h6>
+                <p>{{ user.profile.upcoming_formation_dates or 'TBD' }}</p>
+                <hr>
+                <h6>Formation Panels (Yearly)</h6>
+                <div class="alert alert-warning">
+                    {{ user.profile.formation_panel_dates or 'Dates not set' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5>Common Resources</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><a href="#">Formation Handbook</a></li>
+                    <li><a href="#">Candidate Guidelines</a></li>
+                    <li><a href="#">Pastoral Care Contacts</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h3>Edit Profile: {{ user.name }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ user.name }}">
+                    </div>
+
+                    <h5 class="mt-4">Formation Details</h5>
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label">Formation Panel Members and Details</label>
+                        <textarea class="form-control" name="formation_panel_details" rows="3">{{ user.profile.formation_panel_details }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Formation Days Completed</label>
+                        <input type="text" class="form-control" name="formation_days_completed" value="{{ user.profile.formation_days_completed }}">
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="walking_on_country" name="walking_on_country" {% if user.profile.walking_on_country %}checked{% endif %}>
+                        <label class="form-check-label" for="walking_on_country">Walking on Country</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Upcoming Dates of Formation Days</label>
+                        <input type="text" class="form-control" name="upcoming_formation_dates" value="{{ user.profile.upcoming_formation_dates }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Formation Panels Dates (Yearly)</label>
+                        <input type="text" class="form-control" name="formation_panel_dates" value="{{ user.profile.formation_panel_dates }}">
+                        <div class="form-text">Enter the dates for the 3 formation panels for the year.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn uca-btn-red">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

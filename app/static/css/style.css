@@ -1,0 +1,55 @@
+:root {
+    --uca-red: #D9282C; /* Approx UCA Red */
+    --uca-black: #000000;
+    --uca-white: #FFFFFF;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.uca-header {
+    background-color: var(--uca-black);
+    border-bottom: 5px solid var(--uca-red);
+}
+
+.uca-footer {
+    background-color: var(--uca-black);
+    margin-top: auto;
+}
+
+.uca-bg-red {
+    background-color: var(--uca-red) !important;
+}
+
+.uca-text-red {
+    color: var(--uca-red) !important;
+}
+
+.uca-btn-red {
+    background-color: var(--uca-red);
+    color: white;
+    border: none;
+}
+
+.uca-btn-red:hover {
+    background-color: #b01f22;
+    color: white;
+}
+
+.uca-border-red {
+    border-color: var(--uca-red) !important;
+}
+
+/* Ensure footer sticks to bottom if content is short */
+html, body {
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+}
+main {
+    flex-shrink: 0;
+}
