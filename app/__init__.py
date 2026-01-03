@@ -43,6 +43,49 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'category' column: {e}")
 
+        if inspector.has_table("profile"):
+            columns = [col['name'] for col in inspector.get_columns("profile")]
+
+            if "code_of_ethics_signed" not in columns:
+                print("Missing column 'code_of_ethics_signed' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN code_of_ethics_signed BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'code_of_ethics_signed' column.")
+                except Exception as e:
+                    print(f"Failed to add 'code_of_ethics_signed' column: {e}")
+
+            if "code_of_ethics_date" not in columns:
+                print("Missing column 'code_of_ethics_date' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN code_of_ethics_date VARCHAR(50)"))
+                        conn.commit()
+                    print("Successfully added 'code_of_ethics_date' column.")
+                except Exception as e:
+                    print(f"Failed to add 'code_of_ethics_date' column: {e}")
+
+            if "wwcc_cleared" not in columns:
+                print("Missing column 'wwcc_cleared' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN wwcc_cleared BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'wwcc_cleared' column.")
+                except Exception as e:
+                    print(f"Failed to add 'wwcc_cleared' column: {e}")
+
+            if "wwcc_number" not in columns:
+                print("Missing column 'wwcc_number' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN wwcc_number VARCHAR(100)"))
+                        conn.commit()
+                    print("Successfully added 'wwcc_number' column.")
+                except Exception as e:
+                    print(f"Failed to add 'wwcc_number' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
