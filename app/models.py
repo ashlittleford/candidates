@@ -1,3 +1,4 @@
+from datetime import datetime
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +15,7 @@ class User(UserMixin, db.Model):
     formation_panel = db.relationship('FormationPanel', backref='panel_member_users', foreign_keys=[formation_panel_id])
 
     profile = db.relationship('Profile', backref='user', uselist=False, cascade="all, delete-orphan")
+    panel_documents = db.relationship('PanelDocument', backref='user', lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -122,3 +124,10 @@ class Standard(db.Model):
     def lfd_list(self):
         if not self.lfd: return []
         return [x.strip() for x in self.lfd.split('\n') if x.strip()]
+
+class PanelDocument(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
