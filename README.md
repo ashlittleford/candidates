@@ -82,3 +82,17 @@ To run the unit tests:
 ```bash
 python3 -m unittest tests/test_app.py
 ```
+
+## Troubleshooting
+
+### OperationalError: no such column: profile.current_church
+
+If you encounter an error like `sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: profile.current_church` when running the application, it means your local database schema is outdated.
+
+To fix this without losing your data, run the provided fix script:
+
+```bash
+python3 fix_schema.py
+```
+
+This script will update your existing database to include the missing column.
