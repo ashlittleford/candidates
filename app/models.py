@@ -38,6 +38,43 @@ class Profile(db.Model):
     formation_panel_dates = db.Column(db.Text, default="")
     presbytery = db.Column(db.String(100), nullable=True)
 
+    @property
+    def computed_formation_days_count(self):
+        txt = self.formation_days_completed
+        if not txt:
+            return 0
+        txt = txt.strip()
+        if txt.isdigit():
+            return int(txt)
+
+        # Check for list
+        if '\n' in txt:
+            items = [x for x in txt.split('\n') if x.strip()]
+            return len(items)
+        elif ',' in txt:
+            items = [x for x in txt.split(',') if x.strip()]
+            # Check if it's just a single number with comma? Unlikely.
+            return len(items)
+        else:
+            # Single item that is not a digit?
+            return 1
+
+    @property
+    def formation_days_list_items(self):
+        txt = self.formation_days_completed
+        if not txt:
+            return []
+        txt = txt.strip()
+        if txt.isdigit():
+            return []
+
+        if '\n' in txt:
+             return [x.strip() for x in txt.split('\n') if x.strip()]
+        elif ',' in txt:
+             return [x.strip() for x in txt.split(',') if x.strip()]
+        else:
+             return [txt]
+
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
