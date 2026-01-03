@@ -16,30 +16,14 @@ body {
 
 /* Header */
 .uca-header {
-    background-color: var(--uca-black);
+    background-color: var(--uca-white);
     border-bottom: 5px solid var(--uca-red);
     padding: 15px 0;
 }
 
-.uca-header .logo-text {
-    color: white;
-    font-weight: 700;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-}
-
-.uca-header .logo-icon {
-    background-color: var(--uca-red);
-    color: white;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 10px;
+.uca-logo {
+    height: 80px;
+    width: auto;
 }
 
 /* Typography */
