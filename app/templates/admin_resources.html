@@ -19,6 +19,7 @@
                         <thead>
                             <tr>
                                 <th>Title</th>
+                                <th>Category</th>
                                 <th>Type</th>
                                 <th>Detail (URL or File)</th>
                                 <th>Actions</th>
@@ -28,6 +29,13 @@
                             {% for resource in resources %}
                             <tr>
                                 <td>{{ resource.title }}</td>
+                                <td>
+                                    {% if resource.category == 'panel_paper' %}
+                                        <span class="badge bg-secondary">Panel Paper</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">General</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if resource.type == 'link' %}
                                         <span class="badge bg-info text-dark">Link</span>
@@ -77,6 +85,14 @@
                     <div class="mb-3">
                         <label for="title" class="form-label">Title</label>
                         <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="general">General Resource</option>
+                            <option value="panel_paper">Formation Panel Paper</option>
+                        </select>
                     </div>
 
                     <div class="mb-3">

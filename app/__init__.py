@@ -31,6 +31,18 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'current_church' column: {e}")
 
+        if inspector.has_table("resource"):
+            columns = [col['name'] for col in inspector.get_columns("resource")]
+            if "category" not in columns:
+                print("Missing column 'category' detected in 'resource' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE resource ADD COLUMN category VARCHAR(50) DEFAULT 'general'"))
+                        conn.commit()
+                    print("Successfully added 'category' column.")
+                except Exception as e:
+                    print(f"Failed to add 'category' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')

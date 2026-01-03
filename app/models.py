@@ -86,6 +86,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     type = db.Column(db.String(50), nullable=False) # 'file' or 'link'
+    category = db.Column(db.String(50), default='general') # 'general' or 'panel_paper'
     url = db.Column(db.String(500), nullable=True)
     filename = db.Column(db.String(250), nullable=True)
 
