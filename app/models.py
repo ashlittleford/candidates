@@ -32,44 +32,7 @@ class Profile(db.Model):
     formation_panel_details = db.Column(db.Text, default="")
 
     formation_days_completed = db.Column(db.Text, default="")
-
-    @property
-    def computed_formation_days_count(self):
-        if not self.formation_days_completed:
-            return 0
-
-        # Check if it's just a number
-        s = self.formation_days_completed.strip()
-        if s.isdigit():
-            return int(s)
-
-        # Otherwise split
-        # Split by newline if present, otherwise comma
-        if '\n' in s:
-            items = s.split('\n')
-        else:
-            items = s.split(',')
-
-        # Filter empty
-        items = [i.strip() for i in items if i.strip()]
-        return len(items)
-
-    @property
-    def formation_days_list_items(self):
-        if not self.formation_days_completed:
-            return []
-
-        s = self.formation_days_completed.strip()
-        if s.isdigit():
-            return []
-
-        if '\n' in s:
-            items = s.split('\n')
-        else:
-            items = s.split(',')
-
-        return [i.strip() for i in items if i.strip()]
-
+    start_date = db.Column(db.String(50), default="")
     walking_on_country = db.Column(db.Boolean, default=False)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
