@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h3>{% if panel %}Edit Formation Panel{% else %}Create Formation Panel{% endif %}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Chair Name</label>
+                        <input type="text" class="form-control" name="chair_name" value="{{ panel.chair_name if panel else '' }}" required>
+                        <div class="form-text">The panel is identified by the chair's name.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Panel Members</label>
+                        <textarea class="form-control" name="members" rows="5" placeholder="Enter member names, separated by commas or new lines.">{{ panel.members if panel else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('main.admin_panels') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn uca-btn-red">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
