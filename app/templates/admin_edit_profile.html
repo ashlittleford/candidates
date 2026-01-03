@@ -42,6 +42,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Presbytery</label>
+                        <input type="text" class="form-control" name="presbytery" value="{{ user.profile.presbytery or '' }}">
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Days Completed</label>
                         <textarea class="form-control" name="formation_days_completed" rows="4">{{ user.profile.formation_days_completed }}</textarea>
                         <div class="form-text">Enter a total number (e.g. 5) OR list the dates individually (separated by commas or new lines).</div>
