@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">(Started: {{ user.profile.start_date }})</small>{% endif %}</h1>
+        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">Start Date: {{ user.profile.start_date }}</small>{% endif %}</h1>
         {% if user.profile.presbytery %}
         <p class="profile-subtitle mb-0">{{ user.profile.presbytery }}</p>
         {% endif %}
@@ -166,16 +166,20 @@
                                 {% endif %}
                             </div>
 
-                            {% if user.profile.start_date %}
                             <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                <span>Start Date</span>
-                                <span class="fw-bold">{{ user.profile.start_date }}</span>
+                                <span>Mid-Term Panel</span>
+                                {% if user.profile.mid_term_panel %}
+                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                {% endif %}
                             </div>
-                            {% endif %}
+
                         </div>
 
                         <div>
                             <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
+
                             <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
                                 <span>Walking on Country</span>
                                 {% if user.profile.walking_on_country %}

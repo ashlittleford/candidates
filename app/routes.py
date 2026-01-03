@@ -162,6 +162,7 @@ def edit_user(user_id):
 
         user.profile.formation_days_completed = request.form.get('formation_days_completed')
         user.profile.start_date = request.form.get('start_date')
+        user.profile.mid_term_panel = True if request.form.get('mid_term_panel') else False
         user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
         user.profile.presbytery = request.form.get('presbytery')
         # upcoming_formation_dates and formation_panel_dates are now global and not edited here
