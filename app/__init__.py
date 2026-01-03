@@ -66,5 +66,50 @@ def create_app(test_config=None):
     # Run schema check and upgrade
     if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':
          check_and_upgrade_schema(app)
+         seed_standards(app)
 
     return app
+
+def seed_standards(app):
+    """
+    Checks if the Standard table is empty and populates it from the JSON file.
+    """
+    import json
+    from app.models import Standard
+
+    with app.app_context():
+        # Ensure table exists first (created by db.create_all() in check_and_upgrade_schema or init_db)
+        # But check_and_upgrade_schema only does specific upgrades.
+        # db.create_all() is typically called in init_db.py, but we can call it here to be safe if it's cheap?
+        # Actually, check_and_upgrade_schema calls db.create_all(). So we are good.
+
+        try:
+            if Standard.query.count() == 0:
+                print("Seeding Standards database from JSON...")
+                json_path = os.path.join(app.root_path, 'standards_data.json')
+                if os.path.exists(json_path):
+                    with open(json_path, 'r') as f:
+                        data = json.load(f)
+
+                    for item in data:
+                        # Join lists with newlines
+                        beginning_text = "\n".join(item.get('beginning', []))
+                        developing_text = "\n".join(item.get('developing', []))
+                        established_text = "\n".join(item.get('established', []))
+                        lfd_text = "\n".join(item.get('lfd', []))
+
+                        std = Standard(
+                            id=item['id'],
+                            attribute=item['attribute'],
+                            beginning=beginning_text,
+                            developing=developing_text,
+                            established=established_text,
+                            lfd=lfd_text
+                        )
+                        db.session.add(std)
+                    db.session.commit()
+                    print("Standards seeded successfully.")
+                else:
+                    print(f"Warning: {json_path} not found. Skipping seeding.")
+        except Exception as e:
+            print(f"Error seeding standards: {e}")
