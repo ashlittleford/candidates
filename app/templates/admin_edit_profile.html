@@ -5,7 +5,7 @@
     <div class="col-md-8">
         <div class="card shadow">
             <div class="card-header">
-                <h3>Edit Profile: {{ user.name }}</h3>
+                <h3>Edit Profile: {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-6">(Started: {{ user.profile.start_date }})</small>{% endif %}</h3>
             </div>
             <div class="card-body">
                 <form method="POST">
@@ -39,11 +39,6 @@
                             {% endfor %}
                         </select>
                         <div class="form-text">Select the formation panel (identified by Chair) for this candidate.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Presbytery</label>
-                        <input type="text" class="form-control" name="presbytery" value="{{ user.profile.presbytery or '' }}">
                     </div>
 
                     <div class="mb-3">
