@@ -4,9 +4,11 @@ from app.models import User, Profile
 
 class FormationTallyTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app = create_app(test_config={
+            'TESTING': True,
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+            'WTF_CSRF_ENABLED': False
+        })
         self.app_context = self.app.app_context()
         self.app_context.push()
         db.create_all()
