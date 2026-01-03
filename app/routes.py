@@ -393,8 +393,9 @@ def admin_resources():
     if request.method == 'POST':
         title = request.form.get('title')
         res_type = request.form.get('type')
+        category = request.form.get('category')
 
-        new_resource = Resource(title=title, type=res_type)
+        new_resource = Resource(title=title, type=res_type, category=category)
 
         if res_type == 'link':
             new_resource.url = request.form.get('url')
@@ -431,6 +432,7 @@ def edit_resource(resource_id):
     if request.method == 'POST':
         resource.title = request.form.get('title')
         res_type = request.form.get('type')
+        resource.category = request.form.get('category')
         resource.type = res_type
 
         if res_type == 'link':

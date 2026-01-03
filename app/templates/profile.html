@@ -382,13 +382,39 @@
 
     <!-- Right Column -->
     <div class="col-lg-4">
+        <!-- Formation Panel Papers -->
+        <div class="mb-5">
+            <h5 class="section-title">Formation Panel Papers</h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        {% set panel_papers = resources | selectattr("category", "equalto", "panel_paper") | list %}
+                        {% for resource in panel_papers %}
+                            {% if resource.type == 'link' %}
+                                <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-file-download"></i> {{ resource.title }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">No papers available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Resources -->
         <div class="mb-5">
             <h5 class="section-title">Resources</h5>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
-                        {% for resource in resources %}
+                        {% set general_resources = resources | rejectattr("category", "equalto", "panel_paper") | list %}
+                        {% for resource in general_resources %}
                             {% if resource.type == 'link' %}
                                 <a href="{{ resource.url }}" class="resource-link" target="_blank">
                                     <i class="fas fa-external-link-alt"></i> {{ resource.title }}

@@ -17,6 +17,14 @@
             </div>
 
             <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option value="general" {% if resource.category == 'general' %}selected{% endif %}>General Resource</option>
+                    <option value="panel_paper" {% if resource.category == 'panel_paper' %}selected{% endif %}>Formation Panel Paper</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
                 <label for="type" class="form-label">Type</label>
                 <select class="form-select" id="type" name="type" required onchange="toggleTypeInput()">
                     <option value="link" {% if resource.type == 'link' %}selected{% endif %}>URL Link</option>
