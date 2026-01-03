@@ -13,9 +13,79 @@ def index():
     if current_user.is_authenticated:
         if current_user.is_admin:
             return redirect(url_for('main.admin_dashboard'))
+        elif current_user.is_panel_member:
+            return redirect(url_for('main.panel_dashboard'))
         else:
             return redirect(url_for('main.profile'))
     return redirect(url_for('main.login'))
+
+@main.route('/panel_dashboard')
+@login_required
+def panel_dashboard():
+    if not current_user.is_panel_member:
+        flash("Access denied")
+        return redirect(url_for('main.index'))
+
+    # Get candidates belonging to the same formation panel
+    if current_user.formation_panel_id:
+        candidates = User.query.join(Profile).filter(
+            Profile.formation_panel_id == current_user.formation_panel_id,
+            User.is_admin == False,
+            User.is_panel_member == False
+        ).all()
+    else:
+        candidates = []
+
+    return render_template('panel_dashboard.html', candidates=candidates)
+
+@main.route('/candidate/<int:user_id>')
+@login_required
+def view_candidate_profile(user_id):
+    # Determine if viewer is allowed
+    target_user = User.query.get_or_404(user_id)
+
+    allowed = False
+    if current_user.is_admin:
+        allowed = True
+    elif current_user.is_panel_member:
+        # Check if target user belongs to same panel
+        if target_user.profile and target_user.profile.formation_panel_id == current_user.formation_panel_id:
+            allowed = True
+
+    if not allowed:
+        flash("Access denied to this profile.")
+        return redirect(url_for('main.index'))
+
+    # Reuse the logic from profile() view
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        global_settings = GlobalSettings()
+
+    upcoming_dates_raw = global_settings.upcoming_formation_dates
+    upcoming_dates = []
+
+    if upcoming_dates_raw:
+        if '\n' in upcoming_dates_raw:
+            raw_list = upcoming_dates_raw.split('\n')
+        else:
+            raw_list = upcoming_dates_raw.split(',')
+
+        for item in raw_list:
+            item = item.strip()
+            if not item:
+                continue
+
+            parts = item.split(':', 1)
+            if len(parts) > 1:
+                label = parts[0].strip()
+                date_str = parts[1].strip()
+                upcoming_dates.append({'label': label, 'date': date_str})
+            else:
+                upcoming_dates.append({'label': None, 'date': item})
+
+    resources = Resource.query.all()
+
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -77,6 +147,19 @@ def profile():
 
     return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates)
 
+@main.route('/profile/update_supervisor', methods=['POST'])
+@login_required
+def update_supervisor():
+    if current_user.is_admin:
+        flash("Admins cannot have supervisors.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    supervisor_name = request.form.get('supervisor')
+    current_user.profile.supervisor = supervisor_name
+    db.session.commit()
+    flash('Supervisor updated successfully.')
+    return redirect(url_for('main.profile'))
+
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
@@ -88,7 +171,7 @@ def admin_settings():
     if not settings:
         settings = GlobalSettings(
             upcoming_formation_dates="Monday 2 March 2026, Monday 13 April 2026, Monday 4 May 2026, Monday 1 June 2026, Monday 3 August 2026, Monday 7 September 2026, Monday 12 October 2026, Monday 2 November 2026",
-            formation_panel_dates="First: Friday 13 February 2026, Second: Friday 19 June 2026, Third: Friday 20 November 2026"
+            formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026"
         )
         db.session.add(settings)
         db.session.commit()
@@ -108,9 +191,36 @@ def admin_dashboard():
     if not current_user.is_admin:
         flash('Access denied')
         return redirect(url_for('main.profile'))
-    users = User.query.filter_by(is_admin=False).all()
+    users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
+    panel_members = User.query.filter_by(is_panel_member=True).all()
     panels = FormationPanel.query.all()
-    return render_template('admin_dashboard.html', users=users, panels=panels)
+    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members)
+
+@main.route('/admin/create_panel_member', methods=['GET', 'POST'])
+@login_required
+def create_panel_member():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        name = request.form.get('name')
+        formation_panel_id = request.form.get('formation_panel_id')
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+        else:
+            new_user = User(username=username, name=name, is_panel_member=True, formation_panel_id=formation_panel_id)
+            new_user.set_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Panel Member created successfully')
+            return redirect(url_for('main.admin_dashboard') + '#members')
+
+    panels = FormationPanel.query.all()
+    return render_template('admin_create_panel_member.html', panels=panels)
 
 @main.route('/admin/create', methods=['GET', 'POST'])
 @login_required
@@ -173,6 +283,38 @@ def edit_user(user_id):
 
     panels = FormationPanel.query.all()
     return render_template('admin_edit_profile.html', user=user, panels=panels)
+
+@main.route('/admin/bulk_add_formation_day', methods=['POST'])
+@login_required
+def bulk_add_formation_day():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user_ids = request.form.getlist('user_ids')
+    formation_day = request.form.get('formation_day')
+
+    if not user_ids or not formation_day:
+        flash('No users selected or formation day empty')
+        return redirect(url_for('main.admin_dashboard'))
+
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if user:
+            if not user.profile:
+                user.profile = Profile(user=user)
+                db.session.add(user.profile)
+
+            if not user.profile.formation_days_completed:
+                 user.profile.formation_days_completed = formation_day
+            else:
+                 # Avoid duplicates if possible
+                 if formation_day not in user.profile.formation_days_completed:
+                     user.profile.formation_days_completed += "\n" + formation_day
+
+    db.session.commit()
+    flash('Formation day added to selected profiles')
+    return redirect(url_for('main.admin_dashboard'))
 
 # --- Formation Panel Management Routes ---
 

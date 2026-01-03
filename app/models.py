@@ -7,7 +7,12 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    is_panel_member = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(150))
+
+    formation_panel_id = db.Column(db.Integer, db.ForeignKey('formation_panel.id'), nullable=True)
+    formation_panel = db.relationship('FormationPanel', backref='panel_member_users', foreign_keys=[formation_panel_id])
+
     profile = db.relationship('Profile', backref='user', uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, password):
@@ -38,6 +43,44 @@ class Profile(db.Model):
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
     presbytery = db.Column(db.String(100), nullable=True)
+    supervisor = db.Column(db.String(150), nullable=True)
+
+    @property
+    def computed_formation_days_count(self):
+        txt = self.formation_days_completed
+        if not txt:
+            return 0
+        txt = txt.strip()
+        if txt.isdigit():
+            return int(txt)
+
+        # Check for list
+        if '\n' in txt:
+            items = [x for x in txt.split('\n') if x.strip()]
+            return len(items)
+        elif ',' in txt:
+            items = [x for x in txt.split(',') if x.strip()]
+            # Check if it's just a single number with comma? Unlikely.
+            return len(items)
+        else:
+            # Single item that is not a digit?
+            return 1
+
+    @property
+    def formation_days_list_items(self):
+        txt = self.formation_days_completed
+        if not txt:
+            return []
+        txt = txt.strip()
+        if txt.isdigit():
+            return []
+
+        if '\n' in txt:
+             return [x.strip() for x in txt.split('\n') if x.strip()]
+        elif ',' in txt:
+             return [x.strip() for x in txt.split(',') if x.strip()]
+        else:
+             return [txt]
 
     @property
     def computed_formation_days_count(self):

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-1">Welcome, {{ current_user.name }}</h1>
+        <p class="profile-subtitle">Formation Panel Member - {{ current_user.formation_panel.chair_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="section-title">Assigned Candidates</h5>
+        <div class="card border-0 shadow-sm p-4">
+            {% if candidates %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email/Username</th>
+                                <th>Presbytery</th>
+                                <th>Formation Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in candidates %}
+                            <tr>
+                                <td class="fw-bold">{{ candidate.name }}</td>
+                                <td>{{ candidate.username }}</td>
+                                <td>{{ candidate.profile.presbytery or '-' }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ candidate.profile.computed_formation_days_count }} Days
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.view_candidate_profile', user_id=candidate.id) }}" class="btn btn-sm uca-btn-red">
+                                        View Profile
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center my-4">No candidates currently assigned to this Formation Panel.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

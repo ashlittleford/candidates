@@ -16,46 +16,65 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="panels-tab" data-bs-toggle="tab" data-bs-target="#panels" type="button" role="tab" aria-controls="panels" aria-selected="false">Formation Panels</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">Panel Members</button>
+    </li>
 </ul>
 
 <div class="tab-content" id="adminTabsContent">
     <div class="tab-pane fade show active" id="candidates" role="tabpanel" aria-labelledby="candidates-tab">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-             <input type="text" id="candidateSearch" class="form-control w-25" placeholder="Search candidates...">
-             <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
-        </div>
-        <div class="card shadow">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover" id="candidatesTable">
-                        <thead>
-                            <tr>
-                                <th style="cursor: pointer;" onclick="sortTable(0)">ID <i class="fa fa-sort"></i></th>
-                                <th style="cursor: pointer;" onclick="sortTable(1)">Name <i class="fa fa-sort"></i></th>
-                                <th style="cursor: pointer;" onclick="sortTable(2)">Username <i class="fa fa-sort"></i></th>
-                                <th style="cursor: pointer;" onclick="sortTable(3)">Presbytery <i class="fa fa-sort"></i></th>
-                                <th style="cursor: pointer;" onclick="sortTable(4)">Panel Chair <i class="fa fa-sort"></i></th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                            <tr>
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.name }}</td>
-                                <td>{{ user.username }}</td>
-                                <td>{{ user.profile.presbytery or '' }}</td>
-                                <td>{{ user.profile.formation_panel.chair_name if user.profile.formation_panel else '' }}</td>
-                                <td>
-                                    <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <form method="POST" action="{{ url_for('main.bulk_add_formation_day') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <h5>Bulk Actions</h5>
+                    <div class="input-group">
+                         <span class="input-group-text">Add Formation Day</span>
+                         <input type="text" name="formation_day" class="form-control" placeholder="e.g. Monday 2 March 2026">
+                         <button type="submit" class="btn uca-btn-red">Add to Selected</button>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                 <input type="text" id="candidateSearch" class="form-control w-25" placeholder="Search candidates...">
+                 <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
+            </div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="candidatesTable">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(1)">ID <i class="fa fa-sort"></i></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(2)">Name <i class="fa fa-sort"></i></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(3)">Username <i class="fa fa-sort"></i></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(4)">Presbytery <i class="fa fa-sort"></i></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(5)">Panel Chair <i class="fa fa-sort"></i></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td><input type="checkbox" name="user_ids" value="{{ user.id }}"></td>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.profile.presbytery or '' }}</td>
+                                    <td>{{ user.profile.formation_panel.chair_name if user.profile.formation_panel else '' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
     <div class="tab-pane fade" id="panels" role="tabpanel" aria-labelledby="panels-tab">
         <div class="d-flex justify-content-end mb-3">
@@ -69,7 +88,8 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Chair Name</th>
-                                <th>Members</th>
+                                <th>Members (Text)</th>
+                                <th>Member Accounts</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -86,12 +106,61 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {{ panel.panel_member_users|length }} Users
+                                </td>
+                                <td>
                                     <a href="{{ url_for('main.edit_panel', panel_id=panel.id) }}" class="btn btn-sm btn-primary">Edit</a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center">No formation panels found.</td>
+                                <td colspan="5" class="text-center">No formation panels found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('main.create_panel_member') }}" class="btn uca-btn-red">Add New Panel Member</a>
+        </div>
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Assigned Panel</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in panel_members %}
+                            <tr>
+                                <td>{{ member.id }}</td>
+                                <td>{{ member.name }}</td>
+                                <td>{{ member.username }}</td>
+                                <td>
+                                    {% if member.formation_panel %}
+                                        Panel {{ member.formation_panel.id }} ({{ member.formation_panel.chair_name }})
+                                    {% else %}
+                                        <span class="text-danger">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Currently no specific edit for panel member, reuse delete or similar if implemented -->
+                                    <span class="text-muted">N/A</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No panel members found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -113,6 +182,14 @@
             }
         }
 
+        // Select All Checkbox
+        document.getElementById('selectAll').addEventListener('change', function() {
+            var checkboxes = document.querySelectorAll('input[name="user_ids"]');
+            for (var checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
+        });
+
         // Search Filter
         document.getElementById('candidateSearch').addEventListener('keyup', function() {
             var input, filter, table, tr, td, i, txtValue;
@@ -123,8 +200,8 @@
 
             for (i = 1; i < tr.length; i++) {
                 var found = false;
-                // Check Name (1), Username (2), Presbytery (3), Chair (4)
-                var cols = [1, 2, 3, 4];
+                // Check Name (1), Username (2), Presbytery (3), Chair (4) - Adjusted for checkbox column at 0
+                var cols = [2, 3, 4, 5];
                 for (var j of cols) {
                     td = tr[i].getElementsByTagName("td")[j];
                     if (td) {
