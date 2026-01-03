@@ -40,7 +40,6 @@ def logout():
 @login_required
 def profile():
     if current_user.is_admin:
-         # Admins don't strictly have a "candidate profile", but maybe they can see a generic one or redirect to dashboard
          flash("Admins should use the dashboard.")
          return redirect(url_for('main.admin_dashboard'))
 
@@ -122,7 +121,14 @@ def edit_user(user_id):
 
     if request.method == 'POST':
         user.name = request.form.get('name')
-        user.profile.formation_panel_details = request.form.get('formation_panel_details')
+
+        # Handle Formation Panel Selection
+        panel_id = request.form.get('formation_panel_id')
+        if panel_id:
+            user.profile.formation_panel_id = int(panel_id)
+        else:
+            user.profile.formation_panel_id = None
+
         user.profile.formation_days_completed = request.form.get('formation_days_completed')
         user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
         # upcoming_formation_dates and formation_panel_dates are now global and not edited here
@@ -131,4 +137,53 @@ def edit_user(user_id):
         flash('User updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
-    return render_template('admin_edit_profile.html', user=user)
+    panels = FormationPanel.query.all()
+    return render_template('admin_edit_profile.html', user=user, panels=panels)
+
+# --- Formation Panel Management Routes ---
+
+@main.route('/admin/panels')
+@login_required
+def admin_panels():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+    panels = FormationPanel.query.all()
+    return render_template('admin_panels.html', panels=panels)
+
+@main.route('/admin/panels/create', methods=['GET', 'POST'])
+@login_required
+def create_panel():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        chair_name = request.form.get('chair_name')
+        members = request.form.get('members')
+
+        new_panel = FormationPanel(chair_name=chair_name, members=members)
+        db.session.add(new_panel)
+        db.session.commit()
+        flash('Formation Panel created successfully')
+        return redirect(url_for('main.admin_panels'))
+
+    return render_template('admin_create_edit_panel.html', panel=None)
+
+@main.route('/admin/panels/edit/<int:panel_id>', methods=['GET', 'POST'])
+@login_required
+def edit_panel(panel_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    panel = FormationPanel.query.get_or_404(panel_id)
+
+    if request.method == 'POST':
+        panel.chair_name = request.form.get('chair_name')
+        panel.members = request.form.get('members')
+        db.session.commit()
+        flash('Formation Panel updated successfully')
+        return redirect(url_for('main.admin_panels'))
+
+    return render_template('admin_create_edit_panel.html', panel=panel)

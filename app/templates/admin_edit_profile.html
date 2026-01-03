@@ -19,8 +19,16 @@
                     <hr>
 
                     <div class="mb-3">
-                        <label class="form-label">Formation Panel Members and Details</label>
-                        <textarea class="form-control" name="formation_panel_details" rows="3">{{ user.profile.formation_panel_details }}</textarea>
+                        <label class="form-label">Formation Panel</label>
+                        <select class="form-select" name="formation_panel_id">
+                            <option value="">Select a Formation Panel</option>
+                            {% for panel in panels %}
+                                <option value="{{ panel.id }}" {% if user.profile.formation_panel_id == panel.id %}selected{% endif %}>
+                                    Chair: {{ panel.chair_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Select the formation panel (identified by Chair) for this candidate.</div>
                     </div>
 
                     <div class="mb-3">
