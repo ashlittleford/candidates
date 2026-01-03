@@ -176,13 +176,25 @@
 
                         <div>
                             <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2">
                                 <span>Walking on Country</span>
                                 {% if user.profile.walking_on_country %}
                                     <span class="badge bg-success rounded-pill px-3">Yes</span>
                                 {% else %}
                                     <span class="badge bg-secondary rounded-pill px-3">No</span>
                                 {% endif %}
+                            </div>
+                            <div class="p-3 bg-light rounded">
+                                <form action="{{ url_for('main.update_supervisor') }}" method="POST" class="d-flex align-items-center">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <div class="flex-grow-1 me-2">
+                                        <label for="supervisor" class="form-label small text-muted mb-0">Supervisor</label>
+                                        <input type="text" class="form-control form-control-sm" id="supervisor" name="supervisor" value="{{ user.profile.supervisor if user.profile.supervisor else '' }}" placeholder="Enter Supervisor Name">
+                                    </div>
+                                    <div class="mt-3">
+                                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>

@@ -77,6 +77,19 @@ def profile():
 
     return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates)
 
+@main.route('/profile/update_supervisor', methods=['POST'])
+@login_required
+def update_supervisor():
+    if current_user.is_admin:
+        flash("Admins cannot have supervisors.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    supervisor_name = request.form.get('supervisor')
+    current_user.profile.supervisor = supervisor_name
+    db.session.commit()
+    flash('Supervisor updated successfully.')
+    return redirect(url_for('main.profile'))
+
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
