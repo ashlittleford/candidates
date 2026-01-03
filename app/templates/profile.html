@@ -143,15 +143,27 @@
                     <div class="col-md-6">
                         <div class="mb-4">
                             <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>Formation Days Completed</span>
-                                <span class="fw-bold fs-5">
-                                    {% if user.profile.formation_days_completed %}
-                                        {{ user.profile.formation_days_completed.split(',')|length }}
-                                    {% else %}
-                                        0
-                                    {% endif %}
-                                </span>
+                            <div class="d-flex flex-column p-3 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <span>Formation Days Completed</span>
+                                    <span class="fw-bold fs-5">
+                                        {{ user.profile.computed_formation_days_count }}
+                                    </span>
+                                </div>
+                                {% if user.profile.formation_days_list_items %}
+                                    <div class="mt-2 text-end">
+                                        <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#formationDatesList" aria-expanded="false" aria-controls="formationDatesList">
+                                            Show Dates <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div class="collapse mt-2" id="formationDatesList">
+                                        <ul class="list-unstyled mb-0 text-end">
+                                            {% for date_item in user.profile.formation_days_list_items %}
+                                                <li class="small text-muted">{{ date_item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
 
