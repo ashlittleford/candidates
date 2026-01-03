@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard
+from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument
 from app.standards_loader import load_standards
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -526,6 +526,7 @@ def upload_panel_document():
         return redirect(url_for('main.profile'))
 
     files = request.files.getlist('file')
+    day_label = request.form.get('day_label')
 
     for file in files:
         if file.filename == '':
@@ -540,7 +541,8 @@ def upload_panel_document():
             doc = PanelDocument(
                 user_id=current_user.id,
                 filename=filename,
-                original_filename=original_filename
+                original_filename=original_filename,
+                day_label=day_label
             )
             db.session.add(doc)
 
