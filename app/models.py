@@ -34,6 +34,7 @@ class Profile(db.Model):
     walking_on_country = db.Column(db.Boolean, default=False)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
+    presbytery = db.Column(db.String(100), nullable=True)
 
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
