@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Resource</h2>
+    <a href="{{ url_for('main.admin_resources') }}" class="btn btn-secondary">Back to Resources</a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ resource.title }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type" required onchange="toggleTypeInput()">
+                    <option value="link" {% if resource.type == 'link' %}selected{% endif %}>URL Link</option>
+                    <option value="file" {% if resource.type == 'file' %}selected{% endif %}>File Upload</option>
+                </select>
+            </div>
+
+            <div class="mb-3 {% if resource.type != 'link' %}d-none{% endif %}" id="url-input-group">
+                <label for="url" class="form-label">URL</label>
+                <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com" value="{{ resource.url or '' }}" {% if resource.type == 'link' %}required{% endif %}>
+            </div>
+
+            <div class="mb-3 {% if resource.type != 'file' %}d-none{% endif %}" id="file-input-group">
+                <label for="file" class="form-label">Upload New File (Optional)</label>
+                <input type="file" class="form-control" id="file" name="file">
+                {% if resource.filename %}
+                <div class="form-text">Current file: <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" target="_blank">{{ resource.filename }}</a></div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Resource</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleTypeInput() {
+        var type = document.getElementById('type').value;
+        var urlGroup = document.getElementById('url-input-group');
+        var fileGroup = document.getElementById('file-input-group');
+        var urlInput = document.getElementById('url');
+        var fileInput = document.getElementById('file');
+
+        if (type === 'link') {
+            urlGroup.classList.remove('d-none');
+            fileGroup.classList.add('d-none');
+            urlInput.setAttribute('required', 'required');
+        } else {
+            urlGroup.classList.add('d-none');
+            fileGroup.classList.remove('d-none');
+            urlInput.removeAttribute('required');
+        }
+    }
+</script>
+{% endblock %}

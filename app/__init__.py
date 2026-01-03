@@ -12,6 +12,8 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     if test_config:
         app.config.update(test_config)

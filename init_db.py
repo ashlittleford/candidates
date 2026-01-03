@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Profile, GlobalSettings, FormationPanel
+from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
 
 app = create_app()
 

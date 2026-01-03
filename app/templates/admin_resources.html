@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Resources</h2>
+    <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<div class="row">
+    <!-- List Resources -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Existing Resources</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Detail (URL or File)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for resource in resources %}
+                            <tr>
+                                <td>{{ resource.title }}</td>
+                                <td>
+                                    {% if resource.type == 'link' %}
+                                        <span class="badge bg-info text-dark">Link</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">File</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if resource.type == 'link' %}
+                                        <a href="{{ resource.url }}" target="_blank">{{ resource.url }}</a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" target="_blank">{{ resource.filename }}</a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('main.edit_resource', resource_id=resource.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                        <form action="{{ url_for('main.delete_resource', resource_id=resource.id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No resources found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Resource -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-success">Add New Resource</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Type</label>
+                        <select class="form-select" id="type" name="type" required onchange="toggleTypeInput()">
+                            <option value="link">URL Link</option>
+                            <option value="file">File Upload</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="url-input-group">
+                        <label for="url" class="form-label">URL</label>
+                        <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com">
+                    </div>
+
+                    <div class="mb-3 d-none" id="file-input-group">
+                        <label for="file" class="form-label">Upload File</label>
+                        <input type="file" class="form-control" id="file" name="file">
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Add Resource</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleTypeInput() {
+        var type = document.getElementById('type').value;
+        var urlGroup = document.getElementById('url-input-group');
+        var fileGroup = document.getElementById('file-input-group');
+        var urlInput = document.getElementById('url');
+        var fileInput = document.getElementById('file');
+
+        if (type === 'link') {
+            urlGroup.classList.remove('d-none');
+            fileGroup.classList.add('d-none');
+            urlInput.setAttribute('required', 'required');
+            fileInput.removeAttribute('required');
+        } else {
+            urlGroup.classList.add('d-none');
+            fileGroup.classList.remove('d-none');
+            urlInput.removeAttribute('required');
+            fileInput.setAttribute('required', 'required');
+        }
+    }
+</script>
+{% endblock %}
