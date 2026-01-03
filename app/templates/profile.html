@@ -15,18 +15,43 @@
         <!-- Formation Panel Dates Section -->
         <div class="mb-5">
             <h5 class="section-title">Upcoming Dates of Formation Days</h5>
-             {% if global_settings.upcoming_formation_dates %}
+             {% if upcoming_dates %}
                 <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
                    <div class="d-flex align-items-start">
                         <i class="fas fa-calendar-alt text-red me-3 fa-2x mt-1"></i>
-                        <div>
+                        <div class="w-100">
                              <h6 class="fw-bold mb-2">Upcoming Formation Days</h6>
-                             {% set upcoming_list = global_settings.upcoming_formation_dates.split(',') %}
                              <ul class="mb-0 ps-3">
-                                {% for day in upcoming_list %}
-                                    <li class="mb-1">{{ day.strip() }}</li>
-                                {% endfor %}
+                                <!-- Show First Item -->
+                                <li class="mb-1 fw-bold">
+                                    {% if upcoming_dates[0].label %}
+                                        <strong>{{ upcoming_dates[0].label }}:</strong> {{ upcoming_dates[0].date }}
+                                    {% else %}
+                                        {{ upcoming_dates[0].date }}
+                                    {% endif %}
+                                </li>
                              </ul>
+
+                             {% if upcoming_dates|length > 1 %}
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#moreDates" aria-expanded="false" aria-controls="moreDates">
+                                        Show More <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="moreDates">
+                                    <ul class="mb-0 ps-3">
+                                        {% for item in upcoming_dates[1:] %}
+                                            <li class="mb-1">
+                                                {% if item.label %}
+                                                    <strong>{{ item.label }}:</strong> {{ item.date }}
+                                                {% else %}
+                                                    {{ item.date }}
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                             {% endif %}
                         </div>
                    </div>
                 </div>

@@ -50,8 +50,32 @@ def profile():
     if not global_settings:
         global_settings = GlobalSettings()
 
-    resources = Resource.query.all()
-    return render_template('profile.html', user=current_user, global_settings=global_settings, resources=resources)
+    # Parse upcoming_formation_dates
+    # Supports newline or comma separation
+    # Supports "Label: Date" format
+    upcoming_dates_raw = global_settings.upcoming_formation_dates
+    upcoming_dates = []
+
+    if upcoming_dates_raw:
+        if '\n' in upcoming_dates_raw:
+            raw_list = upcoming_dates_raw.split('\n')
+        else:
+            raw_list = upcoming_dates_raw.split(',')
+
+        for item in raw_list:
+            item = item.strip()
+            if not item:
+                continue
+
+            parts = item.split(':', 1)
+            if len(parts) > 1:
+                label = parts[0].strip()
+                date_str = parts[1].strip()
+                upcoming_dates.append({'label': label, 'date': date_str})
+            else:
+                upcoming_dates.append({'label': None, 'date': item})
+
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates)
 
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
