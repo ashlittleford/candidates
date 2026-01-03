@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
+from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard
 from app.standards_loader import load_standards
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -85,7 +85,7 @@ def view_candidate_profile(user_id):
                 upcoming_dates.append({'label': None, 'date': item})
 
     resources = Resource.query.all()
-    standards = load_standards()
+    standards = Standard.query.order_by(Standard.id).all()
 
     return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
 
@@ -148,7 +148,7 @@ def profile():
                 upcoming_dates.append({'label': None, 'date': item})
 
     resources = Resource.query.all()
-    standards = load_standards()
+    standards = Standard.query.order_by(Standard.id).all()
     return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
@@ -472,6 +472,40 @@ def delete_resource(resource_id):
     db.session.commit()
     flash('Resource deleted successfully')
     return redirect(url_for('main.admin_resources'))
+
+# --- Standards Management Routes ---
+
+@main.route('/admin/standards')
+@login_required
+def admin_standards():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    standards = Standard.query.order_by(Standard.id).all()
+    return render_template('admin_standards.html', standards=standards)
+
+@main.route('/admin/standards/edit/<int:standard_id>', methods=['GET', 'POST'])
+@login_required
+def edit_standard(standard_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    standard = Standard.query.get_or_404(standard_id)
+
+    if request.method == 'POST':
+        standard.attribute = request.form.get('attribute')
+        standard.beginning = request.form.get('beginning')
+        standard.developing = request.form.get('developing')
+        standard.established = request.form.get('established')
+        standard.lfd = request.form.get('lfd')
+
+        db.session.commit()
+        flash('Standard updated successfully')
+        return redirect(url_for('main.admin_standards'))
+
+    return render_template('admin_edit_standard.html', standard=standard)
 
 @main.route('/uploads/<filename>')
 def uploaded_file(filename):

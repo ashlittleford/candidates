@@ -93,3 +93,31 @@ class GlobalSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
+
+class Standard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    attribute = db.Column(db.Text, nullable=False)
+    beginning = db.Column(db.Text, default="") # Newline separated
+    developing = db.Column(db.Text, default="") # Newline separated
+    established = db.Column(db.Text, default="") # Newline separated
+    lfd = db.Column(db.Text, default="") # Newline separated
+
+    @property
+    def beginning_list(self):
+        if not self.beginning: return []
+        return [x.strip() for x in self.beginning.split('\n') if x.strip()]
+
+    @property
+    def developing_list(self):
+        if not self.developing: return []
+        return [x.strip() for x in self.developing.split('\n') if x.strip()]
+
+    @property
+    def established_list(self):
+        if not self.established: return []
+        return [x.strip() for x in self.established.split('\n') if x.strip()]
+
+    @property
+    def lfd_list(self):
+        if not self.lfd: return []
+        return [x.strip() for x in self.lfd.split('\n') if x.strip()]
