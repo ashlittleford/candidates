@@ -4,11 +4,12 @@ from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
 app = create_app()
 
 with app.app_context():
-    # Remove existing DB file to start fresh since schema changed
+    # Check for existing DB file
     import os
     if os.path.exists("instance/site.db"):
-        os.remove("instance/site.db")
-        print("Removed old database.")
+        print("Database already exists. Skipping initialization to prevent data loss.")
+        print("To reset the database, manually delete 'instance/site.db' and run this script again.")
+        exit()
 
     db.create_all()
 
@@ -47,6 +48,12 @@ with app.app_context():
         )
         db.session.add(candidate)
         db.session.add(profile)
+
+    # Create Sample Panel Member
+    if not User.query.filter_by(username='panel_member').first():
+        panel_member = User(username='panel_member', name='Dr. Jones', is_panel_member=True, formation_panel_id=panel1.id)
+        panel_member.set_password('password123')
+        db.session.add(panel_member)
 
     # Initialize Global Settings
     if not GlobalSettings.query.first():
