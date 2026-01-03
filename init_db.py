@@ -1,14 +1,19 @@
 from app import create_app, db
 from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
+import os
 
 app = create_app()
 
 with app.app_context():
+    # Ensure instance directory exists
+    if not os.path.exists('instance'):
+        os.makedirs('instance')
+
     # Check for existing DB file
-    import os
     if os.path.exists("instance/site.db"):
         print("Database already exists. Skipping initialization to prevent data loss.")
         print("To reset the database, manually delete 'instance/site.db' and run this script again.")
+        print("If you are encountering schema errors (e.g., 'no such column'), run 'python3 fix_schema.py' to update your database.")
         exit()
 
     db.create_all()
