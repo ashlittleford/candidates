@@ -26,6 +26,7 @@ class Profile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
     formation_panel_id = db.Column(db.Integer, db.ForeignKey('formation_panel.id'), nullable=True)
     formation_panel = db.relationship('FormationPanel', backref='profiles')
+    presbytery = db.Column(db.String(150), nullable=True)
 
     # Deprecated field, keeping for now or we can ignore it since we are resetting DB
     formation_panel_details = db.Column(db.Text, default="")

@@ -32,6 +32,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Presbytery</label>
+                        <input type="text" class="form-control" name="presbytery" value="{{ user.profile.presbytery or '' }}">
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Days Completed</label>
                         <input type="text" class="form-control" name="formation_days_completed" value="{{ user.profile.formation_days_completed }}">
                     </div>

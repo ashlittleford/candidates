@@ -20,18 +20,21 @@
 
 <div class="tab-content" id="adminTabsContent">
     <div class="tab-pane fade show active" id="candidates" role="tabpanel" aria-labelledby="candidates-tab">
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+             <input type="text" id="candidateSearch" class="form-control w-25" placeholder="Search candidates...">
              <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
         </div>
         <div class="card shadow">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover" id="candidatesTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Username</th>
+                                <th style="cursor: pointer;" onclick="sortTable(0)">ID <i class="fa fa-sort"></i></th>
+                                <th style="cursor: pointer;" onclick="sortTable(1)">Name <i class="fa fa-sort"></i></th>
+                                <th style="cursor: pointer;" onclick="sortTable(2)">Username <i class="fa fa-sort"></i></th>
+                                <th style="cursor: pointer;" onclick="sortTable(3)">Presbytery <i class="fa fa-sort"></i></th>
+                                <th style="cursor: pointer;" onclick="sortTable(4)">Panel Chair <i class="fa fa-sort"></i></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -41,6 +44,8 @@
                                 <td>{{ user.id }}</td>
                                 <td>{{ user.name }}</td>
                                 <td>{{ user.username }}</td>
+                                <td>{{ user.profile.presbytery or '' }}</td>
+                                <td>{{ user.profile.formation_panel.chair_name if user.profile.formation_panel else '' }}</td>
                                 <td>
                                     <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
                                 </td>
@@ -107,6 +112,96 @@
                 tab.show();
             }
         }
+
+        // Search Filter
+        document.getElementById('candidateSearch').addEventListener('keyup', function() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("candidateSearch");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("candidatesTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                var found = false;
+                // Check Name (1), Username (2), Presbytery (3), Chair (4)
+                var cols = [1, 2, 3, 4];
+                for (var j of cols) {
+                    td = tr[i].getElementsByTagName("td")[j];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (found) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        });
     });
+
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("candidatesTable");
+        switching = true;
+        // Set the sorting direction to ascending:
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                var xContent = x.innerHTML.toLowerCase();
+                var yContent = y.innerHTML.toLowerCase();
+
+                // Check if numeric
+                var xNum = parseFloat(xContent);
+                var yNum = parseFloat(yContent);
+
+                if (!isNaN(xNum) && !isNaN(yNum)) {
+                     if (dir == "asc") {
+                        if (xNum > yNum) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xNum < yNum) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if (dir == "asc") {
+                        if (xContent > yContent) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xContent < yContent) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
 </script>
 {% endblock %}
