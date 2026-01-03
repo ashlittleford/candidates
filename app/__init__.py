@@ -2,11 +2,34 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from sqlalchemy import inspect, text
 import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+
+def check_and_upgrade_schema(app):
+    """
+    Checks the database schema for missing columns and attempts to add them.
+    This is a simple migration mechanism to handle schema changes without full Alembic setup.
+    """
+    with app.app_context():
+        # Ensure the database tables exist first
+        db.create_all()
+
+        inspector = inspect(db.engine)
+        if inspector.has_table("profile"):
+            columns = [col['name'] for col in inspector.get_columns("profile")]
+            if "current_church" not in columns:
+                print("Missing column 'current_church' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN current_church VARCHAR(150)"))
+                        conn.commit()
+                    print("Successfully added 'current_church' column.")
+                except Exception as e:
+                    print(f"Failed to add 'current_church' column: {e}")
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -35,5 +58,13 @@ def create_app(test_config=None):
 
     from app.routes import main
     app.register_blueprint(main)
+
+    # Run schema check and upgrade
+    # Only run if not in testing mode to avoid interfering with test db setups unless needed
+    # But since tests often use memory db, create_all handles it.
+    # For persistent dev db, we want this check.
+    if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':
+         # Ensure checking happens after init_app
+         check_and_upgrade_schema(app)
 
     return app
