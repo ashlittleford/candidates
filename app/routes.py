@@ -283,6 +283,38 @@ def edit_user(user_id):
     panels = FormationPanel.query.all()
     return render_template('admin_edit_profile.html', user=user, panels=panels)
 
+@main.route('/admin/bulk_add_formation_day', methods=['POST'])
+@login_required
+def bulk_add_formation_day():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user_ids = request.form.getlist('user_ids')
+    formation_day = request.form.get('formation_day')
+
+    if not user_ids or not formation_day:
+        flash('No users selected or formation day empty')
+        return redirect(url_for('main.admin_dashboard'))
+
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if user:
+            if not user.profile:
+                user.profile = Profile(user=user)
+                db.session.add(user.profile)
+
+            if not user.profile.formation_days_completed:
+                 user.profile.formation_days_completed = formation_day
+            else:
+                 # Avoid duplicates if possible
+                 if formation_day not in user.profile.formation_days_completed:
+                     user.profile.formation_days_completed += "\n" + formation_day
+
+    db.session.commit()
+    flash('Formation day added to selected profiles')
+    return redirect(url_for('main.admin_dashboard'))
+
 # --- Formation Panel Management Routes ---
 
 @main.route('/admin/panels')
