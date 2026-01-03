@@ -36,7 +36,11 @@ def create_app(test_config=None):
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
     # Use absolute path to instance/site.db to avoid path issues
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(base_dir, '..', 'instance', 'site.db')
+    instance_path = os.path.join(base_dir, '..', 'instance')
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path)
+
+    db_path = os.path.join(instance_path, 'site.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -60,11 +64,7 @@ def create_app(test_config=None):
     app.register_blueprint(main)
 
     # Run schema check and upgrade
-    # Only run if not in testing mode to avoid interfering with test db setups unless needed
-    # But since tests often use memory db, create_all handles it.
-    # For persistent dev db, we want this check.
     if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':
-         # Ensure checking happens after init_app
          check_and_upgrade_schema(app)
 
     return app

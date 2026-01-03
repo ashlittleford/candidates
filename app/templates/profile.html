@@ -215,11 +215,30 @@
                                     <div class="p-3 bg-light rounded mb-2">
                                         <label class="form-label small fw-bold">Supervisor</label>
                                         {% if current_user.id == user.id %}
-                                        <form action="{{ url_for('main.update_supervisor') }}" method="POST" class="d-flex">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="text" class="form-control form-control-sm me-2" name="supervisor" value="{{ user.profile.supervisor or '' }}" placeholder="Supervisor Name">
-                                            <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
-                                        </form>
+                                            {% if user.profile.supervisor %}
+                                                <div id="supervisor-display" class="d-flex justify-content-between align-items-center">
+                                                    <span class="fs-6">{{ user.profile.supervisor }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleSupervisorEdit()">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                </div>
+                                                <div id="supervisor-form" class="d-none">
+                                            {% else %}
+                                                <div id="supervisor-display" class="d-none d-flex justify-content-between align-items-center">
+                                                    <span class="fs-6">{{ user.profile.supervisor or '' }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleSupervisorEdit()">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                </div>
+                                                <div id="supervisor-form">
+                                            {% endif %}
+                                                <form action="{{ url_for('main.update_supervisor') }}" method="POST" class="d-flex">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="text" class="form-control form-control-sm me-2" name="supervisor" value="{{ user.profile.supervisor or '' }}" placeholder="Supervisor Name">
+                                                    <button type="submit" class="btn btn-sm uca-btn-red me-2">Save</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleSupervisorEdit()">Cancel</button>
+                                                </form>
+                                            </div>
                                         {% else %}
                                             <p class="mb-0">{{ user.profile.supervisor or 'Not set' }}</p>
                                         {% endif %}
@@ -377,4 +396,20 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+    function toggleSupervisorEdit() {
+        const displayDiv = document.getElementById('supervisor-display');
+        const formDiv = document.getElementById('supervisor-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            // Currently hidden, show it (Cancel edit)
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
+            // Currently visible, hide it (Start edit)
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+</script>
 {% endblock %}
