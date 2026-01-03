@@ -16,6 +16,9 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="panels-tab" data-bs-toggle="tab" data-bs-target="#panels" type="button" role="tab" aria-controls="panels" aria-selected="false">Formation Panels</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">Panel Members</button>
+    </li>
 </ul>
 
 <div class="tab-content" id="adminTabsContent">
@@ -69,7 +72,8 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Chair Name</th>
-                                <th>Members</th>
+                                <th>Members (Text)</th>
+                                <th>Member Accounts</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -86,12 +90,61 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {{ panel.panel_member_users|length }} Users
+                                </td>
+                                <td>
                                     <a href="{{ url_for('main.edit_panel', panel_id=panel.id) }}" class="btn btn-sm btn-primary">Edit</a>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center">No formation panels found.</td>
+                                <td colspan="5" class="text-center">No formation panels found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('main.create_panel_member') }}" class="btn uca-btn-red">Add New Panel Member</a>
+        </div>
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Assigned Panel</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in panel_members %}
+                            <tr>
+                                <td>{{ member.id }}</td>
+                                <td>{{ member.name }}</td>
+                                <td>{{ member.username }}</td>
+                                <td>
+                                    {% if member.formation_panel %}
+                                        Panel {{ member.formation_panel.id }} ({{ member.formation_panel.chair_name }})
+                                    {% else %}
+                                        <span class="text-danger">Not Assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Currently no specific edit for panel member, reuse delete or similar if implemented -->
+                                    <span class="text-muted">N/A</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No panel members found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

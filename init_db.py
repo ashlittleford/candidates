@@ -49,6 +49,12 @@ with app.app_context():
         db.session.add(candidate)
         db.session.add(profile)
 
+    # Create Sample Panel Member
+    if not User.query.filter_by(username='panel_member').first():
+        panel_member = User(username='panel_member', name='Dr. Jones', is_panel_member=True, formation_panel_id=panel1.id)
+        panel_member.set_password('password123')
+        db.session.add(panel_member)
+
     # Initialize Global Settings
     if not GlobalSettings.query.first():
         # Use defaults or take from the sample candidate if desired, but better to start clean or with placeholder
