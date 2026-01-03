@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">Start Date: {{ user.profile.start_date }}</small>{% endif %}</h1>
+        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">{{ user.profile.start_date }}</small>{% endif %}</h1>
         {% if user.profile.presbytery %}
         <p class="profile-subtitle mb-0">{{ user.profile.presbytery }}</p>
         {% endif %}

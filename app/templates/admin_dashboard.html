@@ -49,7 +49,7 @@
                                     <th><input type="checkbox" id="selectAll"></th>
                                     <th style="cursor: pointer;" onclick="sortTable(1)">ID <i class="fa fa-sort"></i></th>
                                     <th style="cursor: pointer;" onclick="sortTable(2)">Name <i class="fa fa-sort"></i></th>
-                                    <th style="cursor: pointer;" onclick="sortTable(3)">Username <i class="fa fa-sort"></i></th>
+                                    <th style="cursor: pointer;" onclick="sortTable(3)">Start Date <i class="fa fa-sort"></i></th>
                                     <th style="cursor: pointer;" onclick="sortTable(4)">Presbytery <i class="fa fa-sort"></i></th>
                                     <th style="cursor: pointer;" onclick="sortTable(5)">Panel Chair <i class="fa fa-sort"></i></th>
                                     <th>Actions</th>
@@ -61,7 +61,7 @@
                                     <td><input type="checkbox" name="user_ids" value="{{ user.id }}"></td>
                                     <td>{{ user.id }}</td>
                                     <td>{{ user.name }}</td>
-                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.profile.start_date }}</td>
                                     <td>{{ user.profile.presbytery or '' }}</td>
                                     <td>{{ user.profile.formation_panel.chair_name if user.profile.formation_panel else '' }}</td>
                                     <td>
