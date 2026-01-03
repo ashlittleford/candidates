@@ -6,6 +6,7 @@ from app.standards_loader import load_standards
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -393,8 +394,9 @@ def admin_resources():
     if request.method == 'POST':
         title = request.form.get('title')
         res_type = request.form.get('type')
+        category = request.form.get('category')
 
-        new_resource = Resource(title=title, type=res_type)
+        new_resource = Resource(title=title, type=res_type, category=category)
 
         if res_type == 'link':
             new_resource.url = request.form.get('url')
@@ -431,6 +433,7 @@ def edit_resource(resource_id):
     if request.method == 'POST':
         resource.title = request.form.get('title')
         res_type = request.form.get('type')
+        resource.category = request.form.get('category')
         resource.type = res_type
 
         if res_type == 'link':
@@ -510,3 +513,64 @@ def edit_standard(standard_id):
 @main.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+@main.route('/profile/upload_document', methods=['POST'])
+@login_required
+def upload_panel_document():
+    if current_user.is_admin or current_user.is_panel_member:
+        flash("Only candidates can upload formation panel documents.")
+        return redirect(url_for('main.profile'))
+
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('main.profile'))
+
+    files = request.files.getlist('file')
+
+    for file in files:
+        if file.filename == '':
+            continue
+
+        if file:
+            original_filename = secure_filename(file.filename)
+            # Add timestamp to ensure uniqueness
+            filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{original_filename}"
+            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+
+            doc = PanelDocument(
+                user_id=current_user.id,
+                filename=filename,
+                original_filename=original_filename
+            )
+            db.session.add(doc)
+
+    db.session.commit()
+    flash('Documents uploaded successfully.')
+    return redirect(url_for('main.profile'))
+
+@main.route('/profile/delete_document/<int:doc_id>', methods=['POST'])
+@login_required
+def delete_panel_document(doc_id):
+    doc = PanelDocument.query.get_or_404(doc_id)
+
+    # Allow admin or owner to delete
+    if doc.user_id != current_user.id and not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('main.profile'))
+
+    try:
+        os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], doc.filename))
+    except:
+        pass # File might be missing
+
+    db.session.delete(doc)
+    db.session.commit()
+    flash('Document deleted.')
+
+    # Redirect back to appropriate page
+    if current_user.id == doc.user_id:
+        return redirect(url_for('main.profile'))
+    else:
+        # If admin deleted it, where should they go? Admin dashboard?
+        # Actually admin views candidate profile via view_candidate_profile
+        return redirect(request.referrer or url_for('main.admin_dashboard'))

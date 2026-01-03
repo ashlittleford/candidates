@@ -12,11 +12,30 @@
             <!-- Current Church -->
             <div class="d-flex align-items-center">
                 {% if current_user.id == user.id %}
-                <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Enter Current Church">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
-                </form>
+                    {% if user.profile.current_church %}
+                    <div id="church-display" class="d-flex align-items-center">
+                        <span class="text-muted me-2">| {{ user.profile.current_church }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div id="church-form" class="d-none">
+                    {% else %}
+                    <div id="church-display" class="d-none d-flex align-items-center">
+                        <span class="text-muted me-2">| {{ user.profile.current_church or '' }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div id="church-form">
+                    {% endif %}
+                        <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Enter Current Church">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary me-1">Save</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">Cancel</button>
+                        </form>
+                    </div>
                 {% else %}
                     {% if user.profile.current_church %}
                         <span class="text-muted"> | {{ user.profile.current_church }}</span>
@@ -139,6 +158,67 @@
                             </div>
                         </div>
                     {% endif %}
+                </div>
+
+                <!-- My Formation Panel Documents -->
+                <div class="mb-4">
+                    <h5 class="section-title">My Formation Panel Documents</h5>
+                    <div class="card border-0 shadow-sm p-4">
+                        {% if current_user.id == user.id %}
+                        <!-- Upload Form -->
+                        <div class="mb-3">
+                            <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="file" name="file" class="form-control form-control-sm w-auto" multiple required>
+                                <button type="submit" class="btn btn-sm uca-btn-red">Upload</button>
+                            </form>
+                            <small class="text-muted d-block mt-1">Upload documents for upcoming Formation Panel Day (around 5 files).</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Documents List -->
+                        {% if user.panel_documents %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Filename</th>
+                                            <th>Date Uploaded</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for doc in user.panel_documents %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fas fa-file me-2"></i>{{ doc.original_filename }}
+                                                </a>
+                                            </td>
+                                            <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                {% if current_user.id == user.id or current_user.is_admin %}
+                                                <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                                {% else %}
+                                                 <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No documents uploaded yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Formation Details Section -->
@@ -363,13 +443,39 @@
 
     <!-- Right Column -->
     <div class="col-lg-4">
+        <!-- Formation Panel Papers -->
+        <div class="mb-5">
+            <h5 class="section-title">Formation Panel Papers</h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        {% set panel_papers = resources | selectattr("category", "equalto", "panel_paper") | list %}
+                        {% for resource in panel_papers %}
+                            {% if resource.type == 'link' %}
+                                <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-file-download"></i> {{ resource.title }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">No papers available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Resources -->
         <div class="mb-5">
             <h5 class="section-title">Resources</h5>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
-                        {% for resource in resources %}
+                        {% set general_resources = resources | rejectattr("category", "equalto", "panel_paper") | list %}
+                        {% for resource in general_resources %}
                             {% if resource.type == 'link' %}
                                 <a href="{{ resource.url }}" class="resource-link" target="_blank">
                                     <i class="fas fa-external-link-alt"></i> {{ resource.title }}
@@ -413,6 +519,19 @@
             formDiv.classList.add('d-none');
         } else {
             // Currently visible, hide it (Start edit)
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+
+    function toggleChurchEdit() {
+        const displayDiv = document.getElementById('church-display');
+        const formDiv = document.getElementById('church-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
             displayDiv.classList.add('d-none');
             formDiv.classList.remove('d-none');
         }
