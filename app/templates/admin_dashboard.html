@@ -3,8 +3,8 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Admin Dashboard</h2>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('main.admin_panels') }}" class="btn btn-secondary">Manage Formation Panels</a>
+    <div>
+        <a href="{{ url_for('main.admin_settings') }}" class="btn btn-secondary me-2">Global Settings</a>
         <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
     </div>
 </div>
