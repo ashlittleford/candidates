@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile, GlobalSettings
+from app.models import User, Profile, GlobalSettings, FormationPanel
 from werkzeug.security import generate_password_hash
 
 main = Blueprint('main', __name__)
@@ -82,7 +82,8 @@ def admin_dashboard():
         flash('Access denied')
         return redirect(url_for('main.profile'))
     users = User.query.filter_by(is_admin=False).all()
-    return render_template('admin_dashboard.html', users=users)
+    panels = FormationPanel.query.all()
+    return render_template('admin_dashboard.html', users=users, panels=panels)
 
 @main.route('/admin/create', methods=['GET', 'POST'])
 @login_required
@@ -151,8 +152,7 @@ def admin_panels():
     if not current_user.is_admin:
         flash('Access denied')
         return redirect(url_for('main.profile'))
-    panels = FormationPanel.query.all()
-    return render_template('admin_panels.html', panels=panels)
+    return redirect(url_for('main.admin_dashboard') + '#panels')
 
 @main.route('/admin/panels/create', methods=['GET', 'POST'])
 @login_required
@@ -169,7 +169,7 @@ def create_panel():
         db.session.add(new_panel)
         db.session.commit()
         flash('Formation Panel created successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=None)
 
@@ -187,6 +187,6 @@ def edit_panel(panel_id):
         panel.members = request.form.get('members')
         db.session.commit()
         flash('Formation Panel updated successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=panel)

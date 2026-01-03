@@ -5,36 +5,107 @@
     <h2>Admin Dashboard</h2>
     <div>
         <a href="{{ url_for('main.admin_settings') }}" class="btn btn-secondary me-2">Global Settings</a>
-        <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>
-                            <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="candidates-tab" data-bs-toggle="tab" data-bs-target="#candidates" type="button" role="tab" aria-controls="candidates" aria-selected="true">Candidates</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="panels-tab" data-bs-toggle="tab" data-bs-target="#panels" type="button" role="tab" aria-controls="panels" aria-selected="false">Formation Panels</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="adminTabsContent">
+    <div class="tab-pane fade show active" id="candidates" role="tabpanel" aria-labelledby="candidates-tab">
+        <div class="d-flex justify-content-end mb-3">
+             <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
+        </div>
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="panels" role="tabpanel" aria-labelledby="panels-tab">
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('main.create_panel') }}" class="btn uca-btn-red">Add New Panel</a>
+        </div>
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Chair Name</th>
+                                <th>Members</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for panel in panels %}
+                            <tr>
+                                <td>{{ panel.id }}</td>
+                                <td>{{ panel.chair_name }}</td>
+                                <td>
+                                    {% if panel.members %}
+                                        {{ panel.members|truncate(50) }}
+                                    {% else %}
+                                        <span class="text-muted">No members listed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.edit_panel', panel_id=panel.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No formation panels found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var hash = window.location.hash;
+        if (hash) {
+            var triggerEl = document.querySelector('button[data-bs-target="' + hash + '"]');
+            if (triggerEl) {
+                var tab = new bootstrap.Tab(triggerEl);
+                tab.show();
+            }
+        }
+    });
+</script>
 {% endblock %}
