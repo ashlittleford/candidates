@@ -37,6 +37,7 @@ class Profile(db.Model):
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
     presbytery = db.Column(db.String(100), nullable=True)
+    supervisor = db.Column(db.String(150), nullable=True)
 
     @property
     def computed_formation_days_count(self):
