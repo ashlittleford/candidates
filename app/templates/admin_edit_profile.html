@@ -29,6 +29,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Current Church</label>
+                        <input type="text" class="form-control" name="current_church" value="{{ user.profile.current_church or '' }}">
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Panel</label>
                         <select class="form-select" name="formation_panel_id">
                             <option value="">Select a Formation Panel</option>

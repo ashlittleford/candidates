@@ -180,13 +180,6 @@
                                         {% endif %}
                                     </div>
 
-                                    {% if user.profile.start_date %}
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                        <span>Start Date</span>
-                                        <span class="fw-bold">{{ user.profile.start_date }}</span>
-                                    </div>
-                                    {% endif %}
-
                                     <!-- Mid-Term Panel Badge -->
                                     <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
                                         <span>Mid-Term Panel</span>
@@ -200,6 +193,21 @@
 
                                 <div>
                                     <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
+
+                                    <!-- Supervisor -->
+                                    <div class="p-3 bg-light rounded mb-2">
+                                        <label class="form-label small fw-bold">Supervisor</label>
+                                        {% if current_user.id == user.id %}
+                                        <form action="{{ url_for('main.update_supervisor') }}" method="POST" class="d-flex">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="text" class="form-control form-control-sm me-2" name="supervisor" value="{{ user.profile.supervisor or '' }}" placeholder="Supervisor Name">
+                                            <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
+                                        </form>
+                                        {% else %}
+                                            <p class="mb-0">{{ user.profile.supervisor or 'Not set' }}</p>
+                                        {% endif %}
+                                    </div>
+
                                     <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
                                         <span>Walking on Country</span>
                                         {% if user.profile.walking_on_country %}
@@ -325,4 +333,7 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
 {% endblock %}
