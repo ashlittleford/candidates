@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
+from app.standards_loader import load_standards
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
@@ -84,8 +85,9 @@ def view_candidate_profile(user_id):
                 upcoming_dates.append({'label': None, 'date': item})
 
     resources = Resource.query.all()
+    standards = load_standards()
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -146,7 +148,8 @@ def profile():
                 upcoming_dates.append({'label': None, 'date': item})
 
     resources = Resource.query.all()
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources)
+    standards = load_standards()
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required

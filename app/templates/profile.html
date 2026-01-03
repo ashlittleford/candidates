@@ -230,22 +230,46 @@
                 <div class="mb-5">
                     <h5 class="section-title">14 Standards of Ministry</h5>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle shadow-sm bg-white rounded">
-                            <thead class="bg-light">
+                        <table class="table table-hover align-top shadow-sm bg-white rounded standards-table">
+                            <thead class="standards-header text-center align-middle">
                                 <tr>
-                                    <th scope="col" style="width: 20%;">Standard</th>
-                                    <th scope="col" style="width: 40%;">Description</th>
-                                    <th scope="col" style="width: 15%;">Status</th>
-                                    <th scope="col" style="width: 25%;">Notes</th>
+                                    <th scope="col" style="width: 20%;">Attribute</th>
+                                    <th scope="col" style="width: 20%;">Beginning</th>
+                                    <th scope="col" style="width: 20%;">Developing</th>
+                                    <th scope="col" style="width: 20%;">Established</th>
+                                    <th scope="col" style="width: 20%;">LFD and other Formation activities</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in range(1, 15) %}
+                                {% for standard in standards %}
                                 <tr>
-                                    <td>Standard {{ i }}</td>
-                                    <td class="text-muted small">Description for Standard {{ i }} goes here...</td>
-                                    <td><span class="badge bg-secondary">Pending</span></td>
-                                    <td><span class="text-muted small">-</span></td>
+                                    <td class="fw-bold">{{ standard.id }}. {{ standard.attribute }}</td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0 small">
+                                            {% for item in standard.beginning %}
+                                            <li class="mb-2"><i class="fas fa-circle fa-xs me-1 text-muted"></i> {{ item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0 small">
+                                            {% for item in standard.developing %}
+                                            <li class="mb-2"><i class="fas fa-circle fa-xs me-1 text-muted"></i> {{ item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0 small">
+                                            {% for item in standard.established %}
+                                            <li class="mb-2"><i class="fas fa-circle fa-xs me-1 text-muted"></i> {{ item }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td class="small bg-light">
+                                        {% for para in standard.lfd %}
+                                            <p class="mb-2">{{ para }}</p>
+                                        {% endfor %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
