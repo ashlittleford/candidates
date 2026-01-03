@@ -3,22 +3,10 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">Start Date: {{ user.profile.start_date }}</small>{% endif %}</h1>
-        <div class="d-flex align-items-center profile-subtitle mb-2">
-            {% if user.profile.presbytery %}
-            <span class="me-2">{{ user.profile.presbytery }}</span>
-            <span class="me-2">|</span>
-            {% endif %}
-            {% if current_user.id == user.id %}
-            <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Current Church" style="width: 250px;">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
-            </form>
-            {% else %}
-             <span>{{ user.profile.current_church or '' }}</span>
-            {% endif %}
-        </div>
+        <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">{{ user.profile.start_date }}</small>{% endif %}</h1>
+        {% if user.profile.presbytery %}
+        <p class="profile-subtitle mb-0">{{ user.profile.presbytery }}</p>
+        {% endif %}
         <p class="profile-subtitle">Here is your formation progress and upcoming schedule.</p>
     </div>
 </div>

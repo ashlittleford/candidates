@@ -145,7 +145,8 @@ def profile():
             else:
                 upcoming_dates.append({'label': None, 'date': item})
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates)
+    resources = Resource.query.all()
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
