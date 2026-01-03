@@ -15,175 +15,255 @@
     <!-- Main Left Column -->
     <div class="col-lg-8">
 
-        <!-- Formation Panel Dates Section -->
-        <div class="mb-5">
-            <h5 class="section-title">Upcoming Dates of Formation Days</h5>
-             {% if upcoming_dates %}
-                <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
-                   <div class="d-flex align-items-start">
-                        <i class="fas fa-calendar-alt text-red me-3 fa-2x mt-1"></i>
-                        <div class="w-100">
-                             <h6 class="fw-bold mb-2">Upcoming Formation Days</h6>
-                             <ul class="mb-0 ps-3">
-                                <!-- Show First Item -->
-                                <li class="mb-1 fw-bold">
-                                    {% if upcoming_dates[0].label %}
-                                        <strong>{{ upcoming_dates[0].label }}:</strong> {{ upcoming_dates[0].date }}
-                                    {% else %}
-                                        {{ upcoming_dates[0].date }}
-                                    {% endif %}
-                                </li>
-                             </ul>
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="formation-tab" data-bs-toggle="tab" data-bs-target="#formation" type="button" role="tab" aria-controls="formation" aria-selected="true">Formation Progress</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="standards-tab" data-bs-toggle="tab" data-bs-target="#standards" type="button" role="tab" aria-controls="standards" aria-selected="false">Standards & Requirements</button>
+            </li>
+        </ul>
 
-                             {% if upcoming_dates|length > 1 %}
-                                <div class="mt-2">
-                                    <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#moreDates" aria-expanded="false" aria-controls="moreDates">
-                                        Show More <i class="fas fa-chevron-down"></i>
-                                    </button>
+        <div class="tab-content" id="profileTabsContent">
+            <!-- Formation Progress Tab -->
+            <div class="tab-pane show active" id="formation" role="tabpanel" aria-labelledby="formation-tab">
+                <!-- Formation Panel Dates Section -->
+                <div class="mb-5">
+                    <h5 class="section-title">Upcoming Dates of Formation Days</h5>
+                     {% if upcoming_dates %}
+                        <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
+                           <div class="d-flex align-items-start">
+                                <i class="fas fa-calendar-alt text-red me-3 fa-2x mt-1"></i>
+                                <div class="w-100">
+                                     <h6 class="fw-bold mb-2">Upcoming Formation Days</h6>
+                                     <ul class="mb-0 ps-3">
+                                        <!-- Show First Item -->
+                                        <li class="mb-1 fw-bold">
+                                            {% if upcoming_dates[0].label %}
+                                                <strong>{{ upcoming_dates[0].label }}:</strong> {{ upcoming_dates[0].date }}
+                                            {% else %}
+                                                {{ upcoming_dates[0].date }}
+                                            {% endif %}
+                                        </li>
+                                     </ul>
+
+                                     {% if upcoming_dates|length > 1 %}
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#moreDates" aria-expanded="false" aria-controls="moreDates">
+                                                Show More <i class="fas fa-chevron-down"></i>
+                                            </button>
+                                        </div>
+                                        <div class="collapse mt-2" id="moreDates">
+                                            <ul class="mb-0 ps-3">
+                                                {% for item in upcoming_dates[1:] %}
+                                                    <li class="mb-1">
+                                                        {% if item.label %}
+                                                            <strong>{{ item.label }}:</strong> {{ item.date }}
+                                                        {% else %}
+                                                            {{ item.date }}
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                     {% endif %}
                                 </div>
-                                <div class="collapse mt-2" id="moreDates">
-                                    <ul class="mb-0 ps-3">
-                                        {% for item in upcoming_dates[1:] %}
-                                            <li class="mb-1">
-                                                {% if item.label %}
-                                                    <strong>{{ item.label }}:</strong> {{ item.date }}
-                                                {% else %}
-                                                    {{ item.date }}
-                                                {% endif %}
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                             {% endif %}
+                           </div>
                         </div>
-                   </div>
-                </div>
-            {% endif %}
+                    {% endif %}
 
-            <h5 class="section-title">Formation Panel Dates</h5>
+                    <h5 class="section-title">Formation Panel Dates</h5>
 
-            {% if global_settings.formation_panel_dates %}
-                <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
-                <!-- If the data string has commas, we split it. Otherwise we display one box. -->
-                {% set dates_list = global_settings.formation_panel_dates.split(',') %}
+                    {% if global_settings.formation_panel_dates %}
+                        <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
+                        <!-- If the data string has commas, we split it. Otherwise we display one box. -->
+                        {% set dates_list = global_settings.formation_panel_dates.split(',') %}
 
-                <div class="row g-3">
-                    {% for date_item in dates_list %}
-                    <div class="col-md-4">
-                        <div class="formation-date-card">
-                            {% set parts = date_item.split(':') %}
-                            {% if parts|length > 1 %}
-                                <div class="formation-term">{{ parts[0].strip() }}</div>
-                                <div class="formation-date">{{ parts[1].strip() }}</div>
-                            {% else %}
-                                <div class="formation-term">UPCOMING</div>
-                                <div class="formation-date">{{ date_item.strip() }}</div>
+                        <div class="row g-3">
+                            {% for date_item in dates_list %}
+                            <div class="col-md-4">
+                                <div class="formation-date-card">
+                                    {% set parts = date_item.split(':') %}
+                                    {% if parts|length > 1 %}
+                                        <div class="formation-term">{{ parts[0].strip() }}</div>
+                                        <div class="formation-date">{{ parts[1].strip() }}</div>
+                                    {% else %}
+                                        <div class="formation-term">UPCOMING</div>
+                                        <div class="formation-date">{{ date_item.strip() }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            {% if dates_list|length == 0 %}
+                             <div class="col-12"><p class="text-muted">No dates scheduled.</p></div>
                             {% endif %}
                         </div>
-                    </div>
-                    {% endfor %}
-
-                    {% if dates_list|length == 0 %}
-                     <div class="col-12"><p class="text-muted">No dates scheduled.</p></div>
+                    {% else %}
+                        <div class="row g-3">
+                            <!-- Default Placeholders for Visual Match if empty -->
+                            <div class="col-md-4">
+                                <div class="formation-date-card">
+                                    <div class="formation-term">First</div>
+                                    <div class="formation-date">March 10-12</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="formation-date-card">
+                                    <div class="formation-term">Second</div>
+                                    <div class="formation-date">July 15-17</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="formation-date-card">
+                                    <div class="formation-term">Third</div>
+                                    <div class="formation-date">November 5-7</div>
+                                </div>
+                            </div>
+                        </div>
                     {% endif %}
                 </div>
-            {% else %}
-                <div class="row g-3">
-                    <!-- Default Placeholders for Visual Match if empty -->
-                    <div class="col-md-4">
-                        <div class="formation-date-card">
-                            <div class="formation-term">First</div>
-                            <div class="formation-date">March 10-12</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="formation-date-card">
-                            <div class="formation-term">Second</div>
-                            <div class="formation-date">July 15-17</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="formation-date-card">
-                            <div class="formation-term">Third</div>
-                            <div class="formation-date">November 5-7</div>
+
+                <!-- Formation Details Section -->
+                <div class="mb-4">
+                    <h5 class="section-title">Formation Details</h5>
+                    <div class="card border-0 shadow-sm p-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
+
+                                {% if user.profile.formation_panel %}
+                                    <!-- Chair -->
+                                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                        <span class="fw-bold">{{ user.profile.formation_panel.chair_name }}</span>
+                                        <span class="badge bg-white text-secondary border">Chair</span>
+                                    </div>
+                                    <!-- Members -->
+                                    {% if user.profile.formation_panel.members %}
+                                        {% for member in user.profile.formation_panel.members.split(',') %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                <span class="fw-bold">{{ member.strip() }}</span>
+                                                <span class="badge bg-white text-secondary border">Member</span>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% else %}
+                                     <p class="text-muted">No panel assigned.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
+                                    <div class="d-flex flex-column p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-center w-100">
+                                            <span>Formation Days Completed</span>
+                                            <span class="fw-bold fs-5">
+                                                {{ user.profile.computed_formation_days_count }}
+                                            </span>
+                                        </div>
+                                        {% if user.profile.formation_days_list_items %}
+                                            <div class="mt-2 text-end">
+                                                <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#formationDatesList" aria-expanded="false" aria-controls="formationDatesList">
+                                                    Show Dates <i class="fas fa-chevron-down"></i>
+                                                </button>
+                                            </div>
+                                            <div class="collapse mt-2" id="formationDatesList">
+                                                <ul class="list-unstyled mb-0 text-end">
+                                                    {% for date_item in user.profile.formation_days_list_items %}
+                                                        <li class="small text-muted">{{ date_item }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if user.profile.start_date %}
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
+                                        <span>Start Date</span>
+                                        <span class="fw-bold">{{ user.profile.start_date }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div>
+                                    <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <span>Walking on Country</span>
+                                        {% if user.profile.walking_on_country %}
+                                            <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            {% endif %}
-        </div>
+            </div>
 
-        <!-- Formation Details Section -->
-        <div class="mb-4">
-            <h5 class="section-title">Formation Details</h5>
-            <div class="card border-0 shadow-sm p-4">
-                <div class="row">
-                    <div class="col-md-6 mb-4 mb-md-0">
-                        <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
-
-                        {% if user.profile.formation_panel %}
-                            <!-- Chair -->
-                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                <span class="fw-bold">{{ user.profile.formation_panel.chair_name }}</span>
-                                <span class="badge bg-white text-secondary border">Chair</span>
-                            </div>
-                            <!-- Members -->
-                            {% if user.profile.formation_panel.members %}
-                                {% for member in user.profile.formation_panel.members.split(',') %}
-                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                        <span class="fw-bold">{{ member.strip() }}</span>
-                                        <span class="badge bg-white text-secondary border">Member</span>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% else %}
-                             <p class="text-muted">No panel assigned.</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-4">
-                            <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
-                            <div class="d-flex flex-column p-3 bg-light rounded">
-                                <div class="d-flex justify-content-between align-items-center w-100">
-                                    <span>Formation Days Completed</span>
-                                    <span class="fw-bold fs-5">
-                                        {{ user.profile.computed_formation_days_count }}
-                                    </span>
-                                </div>
-                                {% if user.profile.formation_days_list_items %}
-                                    <div class="mt-2 text-end">
-                                        <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#formationDatesList" aria-expanded="false" aria-controls="formationDatesList">
-                                            Show Dates <i class="fas fa-chevron-down"></i>
-                                        </button>
-                                    </div>
-                                    <div class="collapse mt-2" id="formationDatesList">
-                                        <ul class="list-unstyled mb-0 text-end">
-                                            {% for date_item in user.profile.formation_days_list_items %}
-                                                <li class="small text-muted">{{ date_item }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            {% if user.profile.start_date %}
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                <span>Start Date</span>
-                                <span class="fw-bold">{{ user.profile.start_date }}</span>
-                            </div>
-                            {% endif %}
+            <!-- Standards & Requirements Tab -->
+            <div class="tab-pane fade" id="standards" role="tabpanel" aria-labelledby="standards-tab">
+                <div class="mb-5">
+                    <h5 class="section-title">14 Standards of Ministry</h5>
+                    <div class="card border-0 shadow-sm p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Standard</th>
+                                        <th scope="col">Description</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in range(1, 15) %}
+                                    <tr>
+                                        <td>Standard {{ i }}</td>
+                                        <td class="text-muted"><em>Description of Standard {{ i }}</em></td>
+                                        <td><span class="badge bg-secondary">Pending</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+                </div>
 
-                        <div>
-                            <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>Walking on Country</span>
-                                {% if user.profile.walking_on_country %}
-                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
-                                {% endif %}
-                            </div>
+                <div class="mb-4">
+                    <h5 class="section-title">Study Requirements</h5>
+                    <div class="card border-0 shadow-sm p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Requirement</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Theology 101</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                        <td>Dec 2023</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pastoral Care Basics</td>
+                                        <td><span class="badge bg-warning text-dark">In Progress</span></td>
+                                        <td>June 2024</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Ethics in Ministry</td>
+                                        <td><span class="badge bg-secondary">Pending</span></td>
+                                        <td>Dec 2024</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
