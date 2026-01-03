@@ -42,12 +42,14 @@ To run the application locally:
 
 ```bash
 export FLASK_APP=app
-flask run
+flask run --host=0.0.0.0
 ```
 
 (On Windows PowerShell use `$env:FLASK_APP = "app"`)
 
-The application will be accessible at `http://127.0.0.1:5000/`.
+The application will be accessible at `http://localhost:5000/` (or your machine's IP address if accessing remotely).
+
+**Note:** The `--host=0.0.0.0` flag tells Flask to listen on all public IPs, which is often required if running in a container (like Docker) or a remote environment.
 
 ## Default Credentials
 
