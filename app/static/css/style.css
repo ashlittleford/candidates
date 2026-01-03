@@ -157,3 +157,25 @@ main {
     font-size: 1rem;
     margin-bottom: 30px;
 }
+
+/* 14 Standards Table */
+.standards-table thead th {
+    background-color: #f7c7a3 !important; /* Peach/Orange color matching image */
+    color: #000;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.standards-table tbody td {
+    vertical-align: top;
+    border-right: 1px solid #f0f0f0;
+}
+
+.standards-table tbody td:last-child {
+    border-right: none;
+}
+
+.standards-table ul li i {
+    font-size: 0.5rem;
+    vertical-align: middle;
+}
