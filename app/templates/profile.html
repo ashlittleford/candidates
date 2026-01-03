@@ -170,6 +170,21 @@
                             <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="file" name="file" class="form-control form-control-sm w-auto" multiple required>
+
+                                <select name="day_label" class="form-select form-select-sm w-auto">
+                                    <option value="">Select Formation Day</option>
+                                    {% if global_settings.formation_panel_dates %}
+                                        {% for date_item in global_settings.formation_panel_dates.split(',') %}
+                                            {% set parts = date_item.split(':') %}
+                                            {% if parts|length > 1 %}
+                                                 <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
+                                            {% else %}
+                                                 <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+
                                 <button type="submit" class="btn btn-sm uca-btn-red">Upload</button>
                             </form>
                             <small class="text-muted d-block mt-1">Upload documents for upcoming Formation Panel Day (around 5 files).</small>
@@ -183,6 +198,7 @@
                                     <thead>
                                         <tr>
                                             <th>Filename</th>
+                                            <th>For</th>
                                             <th>Date Uploaded</th>
                                             <th>Actions</th>
                                         </tr>
@@ -194,6 +210,13 @@
                                                 <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none">
                                                     <i class="fas fa-file me-2"></i>{{ doc.original_filename }}
                                                 </a>
+                                            </td>
+                                            <td>
+                                                {% if doc.day_label %}
+                                                    <span class="badge bg-light text-dark border">{{ doc.day_label }}</span>
+                                                {% else %}
+                                                    <span class="text-muted small">-</span>
+                                                {% endif %}
                                             </td>
                                             <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                             <td>

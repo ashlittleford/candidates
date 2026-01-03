@@ -43,6 +43,18 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'category' column: {e}")
 
+        if inspector.has_table("panel_document"):
+            columns = [col['name'] for col in inspector.get_columns("panel_document")]
+            if "day_label" not in columns:
+                print("Missing column 'day_label' detected in 'panel_document' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE panel_document ADD COLUMN day_label VARCHAR(50)"))
+                        conn.commit()
+                    print("Successfully added 'day_label' column.")
+                except Exception as e:
+                    print(f"Failed to add 'day_label' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
