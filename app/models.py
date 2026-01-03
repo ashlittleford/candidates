@@ -31,6 +31,7 @@ class Profile(db.Model):
     formation_panel_details = db.Column(db.Text, default="")
 
     formation_days_completed = db.Column(db.Text, default="")
+    start_date = db.Column(db.String(50), default="")
     walking_on_country = db.Column(db.Boolean, default=False)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")

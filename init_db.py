@@ -39,6 +39,7 @@ with app.app_context():
             user=candidate,
             formation_panel_id=panel1.id, # Link to Panel 1
             formation_days_completed="Day 1 (Jan), Day 2 (Mar)",
+            start_date="March 2023",
             walking_on_country=True,
             upcoming_formation_dates="Day 3 (Jun 15), Day 4 (Aug 20)",
             formation_panel_dates="Panel 1: May, Panel 2: Sep, Panel 3: Nov"
