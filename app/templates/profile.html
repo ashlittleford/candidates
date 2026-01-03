@@ -14,12 +14,25 @@
 
         <!-- Formation Panel Dates Section -->
         <div class="mb-5">
+            <h5 class="section-title">Upcoming Dates of Formation Days</h5>
+             {% if global_settings.upcoming_formation_dates %}
+                <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
+                   <div class="d-flex align-items-center">
+                        <i class="fas fa-calendar-alt text-red me-3 fa-2x"></i>
+                        <div>
+                             <h6 class="fw-bold mb-1">Upcoming Formation Days</h6>
+                             <p class="mb-0">{{ global_settings.upcoming_formation_dates }}</p>
+                        </div>
+                   </div>
+                </div>
+            {% endif %}
+
             <h5 class="section-title">Formation Panel Dates</h5>
 
-            {% if user.profile.formation_panel_dates %}
+            {% if global_settings.formation_panel_dates %}
                 <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
                 <!-- If the data string has commas, we split it. Otherwise we display one box. -->
-                {% set dates_list = user.profile.formation_panel_dates.split(',') %}
+                {% set dates_list = global_settings.formation_panel_dates.split(',') %}
 
                 <div class="row g-3">
                     {% for date_item in dates_list %}

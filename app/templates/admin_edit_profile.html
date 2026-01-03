@@ -33,16 +33,6 @@
                         <label class="form-check-label" for="walking_on_country">Walking on Country</label>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Upcoming Dates of Formation Days</label>
-                        <input type="text" class="form-control" name="upcoming_formation_dates" value="{{ user.profile.upcoming_formation_dates }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Formation Panels Dates (Yearly)</label>
-                        <input type="text" class="form-control" name="formation_panel_dates" value="{{ user.profile.formation_panel_dates }}">
-                        <div class="form-text">Enter the dates for the 3 formation panels for the year.</div>
-                    </div>
 
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Cancel</a>

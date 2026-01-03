@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile
+from app.models import User, Profile, GlobalSettings
 from werkzeug.security import generate_password_hash
 
 main = Blueprint('main', __name__)
@@ -43,7 +43,35 @@ def profile():
          # Admins don't strictly have a "candidate profile", but maybe they can see a generic one or redirect to dashboard
          flash("Admins should use the dashboard.")
          return redirect(url_for('main.admin_dashboard'))
-    return render_template('profile.html', user=current_user)
+
+    global_settings = GlobalSettings.query.first()
+    # If for some reason settings don't exist, create a temporary empty one (shouldn't happen with correct init_db)
+    if not global_settings:
+        global_settings = GlobalSettings()
+
+    return render_template('profile.html', user=current_user, global_settings=global_settings)
+
+@main.route('/admin/settings', methods=['GET', 'POST'])
+@login_required
+def admin_settings():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    settings = GlobalSettings.query.first()
+    if not settings:
+        settings = GlobalSettings()
+        db.session.add(settings)
+        db.session.commit()
+
+    if request.method == 'POST':
+        settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
+        settings.formation_panel_dates = request.form.get('formation_panel_dates')
+        db.session.commit()
+        flash('Global settings updated successfully')
+        return redirect(url_for('main.admin_dashboard'))
+
+    return render_template('admin_global_settings.html', settings=settings)
 
 @main.route('/admin')
 @login_required
@@ -97,8 +125,7 @@ def edit_user(user_id):
         user.profile.formation_panel_details = request.form.get('formation_panel_details')
         user.profile.formation_days_completed = request.form.get('formation_days_completed')
         user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
-        user.profile.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
-        user.profile.formation_panel_dates = request.form.get('formation_panel_dates')
+        # upcoming_formation_dates and formation_panel_dates are now global and not edited here
 
         db.session.commit()
         flash('User updated successfully')
