@@ -12,11 +12,30 @@
             <!-- Current Church -->
             <div class="d-flex align-items-center">
                 {% if current_user.id == user.id %}
-                <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Enter Current Church">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
-                </form>
+                    {% if user.profile.current_church %}
+                    <div id="church-display" class="d-flex align-items-center">
+                        <span class="text-muted me-2">| {{ user.profile.current_church }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div id="church-form" class="d-none">
+                    {% else %}
+                    <div id="church-display" class="d-none d-flex align-items-center">
+                        <span class="text-muted me-2">| {{ user.profile.current_church or '' }}</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div id="church-form">
+                    {% endif %}
+                        <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Enter Current Church">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary me-1">Save</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleChurchEdit()">Cancel</button>
+                        </form>
+                    </div>
                 {% else %}
                     {% if user.profile.current_church %}
                         <span class="text-muted"> | {{ user.profile.current_church }}</span>
@@ -413,6 +432,19 @@
             formDiv.classList.add('d-none');
         } else {
             // Currently visible, hide it (Start edit)
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+
+    function toggleChurchEdit() {
+        const displayDiv = document.getElementById('church-display');
+        const formDiv = document.getElementById('church-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
             displayDiv.classList.add('d-none');
             formDiv.classList.remove('d-none');
         }
