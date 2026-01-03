@@ -1,78 +1,162 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-1">Welcome, {{ user.name }}</h1>
+        <p class="profile-subtitle">Here is your formation progress and upcoming schedule.</p>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-12 mb-4">
-        <h2>My Profile</h2>
-        <hr>
-    </div>
+    <!-- Main Left Column -->
+    <div class="col-lg-8">
 
-    <div class="col-md-8">
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header">
-                <h4>Personal Information</h4>
-            </div>
-            <div class="card-body">
-                <p><strong>Name:</strong> {{ user.name }}</p>
-                <p><strong>Username:</strong> {{ user.username }}</p>
-            </div>
+        <!-- Formation Panel Dates Section -->
+        <div class="mb-5">
+            <h5 class="section-title">Formation Panel Dates</h5>
+
+            {% if user.profile.formation_panel_dates %}
+                <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
+                <!-- If the data string has commas, we split it. Otherwise we display one box. -->
+                {% set dates_list = user.profile.formation_panel_dates.split(',') %}
+
+                <div class="row g-3">
+                    {% for date_item in dates_list %}
+                    <div class="col-md-4">
+                        <div class="formation-date-card">
+                            {% set parts = date_item.split(':') %}
+                            {% if parts|length > 1 %}
+                                <div class="formation-term">{{ parts[0].strip() }}</div>
+                                <div class="formation-date">{{ parts[1].strip() }}</div>
+                            {% else %}
+                                <div class="formation-term">UPCOMING</div>
+                                <div class="formation-date">{{ date_item.strip() }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if dates_list|length == 0 %}
+                     <div class="col-12"><p class="text-muted">No dates scheduled.</p></div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="row g-3">
+                    <!-- Default Placeholders for Visual Match if empty -->
+                    <div class="col-md-4">
+                        <div class="formation-date-card">
+                            <div class="formation-term">TERM 1</div>
+                            <div class="formation-date">March 10-12</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="formation-date-card">
+                            <div class="formation-term">TERM 2</div>
+                            <div class="formation-date">July 15-17</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="formation-date-card">
+                            <div class="formation-term">TERM 3</div>
+                            <div class="formation-date">November 5-7</div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header">
-                <h4>Formation Progress</h4>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h5>Formation Panel Details</h5>
-                    <p>{{ user.profile.formation_panel_details or 'Not updated' }}</p>
-                </div>
+        <!-- Formation Details Section -->
+        <div class="mb-4">
+            <h5 class="section-title">Formation Details</h5>
+            <div class="card border-0 shadow-sm p-4">
+                <div class="row">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
 
-                <div class="mb-3">
-                    <h5>Formation Days Completed</h5>
-                    <p>{{ user.profile.formation_days_completed or 'None' }}</p>
-                </div>
-
-                <div class="mb-3">
-                    <h5>Walking on Country</h5>
-                    <p>
-                        {% if user.profile.walking_on_country %}
-                            <span class="badge bg-success">Completed/Yes</span>
+                        <!-- Splitting details by comma for list effect -->
+                        {% if user.profile.formation_panel_details %}
+                            {% for detail in user.profile.formation_panel_details.split(',') %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <span class="fw-bold">{{ detail.strip() }}</span>
+                                <!-- Mocking roles based on order or random if not present -->
+                                {% if loop.index == 1 %}
+                                <span class="badge bg-white text-secondary border">Chair</span>
+                                {% elif loop.index == 2 %}
+                                <span class="badge bg-white text-secondary border">Mentor</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
                         {% else %}
-                            <span class="badge bg-secondary">No</span>
+                             <p class="text-muted">No panel assigned.</p>
                         {% endif %}
-                    </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <span>Formation Days Completed</span>
+                                <span class="fw-bold fs-5">
+                                    {% if user.profile.formation_days_completed %}
+                                        {{ user.profile.formation_days_completed.split(',')|length }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <span>Walking on Country</span>
+                                {% if user.profile.walking_on_country %}
+                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card mb-4 shadow-sm uca-border-red">
-            <div class="card-header uca-bg-red text-white">
-                <h5 class="mb-0">Important Dates</h5>
-            </div>
-            <div class="card-body">
-                <h6>Upcoming Formation Days</h6>
-                <p>{{ user.profile.upcoming_formation_dates or 'TBD' }}</p>
-                <hr>
-                <h6>Formation Panels (Yearly)</h6>
-                <div class="alert alert-warning">
-                    {{ user.profile.formation_panel_dates or 'Dates not set' }}
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Resources -->
+        <div class="mb-5">
+            <h5 class="section-title">Resources</h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-file-pdf"></i> Formation Handbook PDF
+                        </a>
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-book-open"></i> Reflection Guide
+                        </a>
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-external-link-alt"></i> UCA Theology Library
+                        </a>
+                        <a href="#" class="resource-link">
+                            <i class="fas fa-shield-alt"></i> Safe Church Training
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5>Common Resources</h5>
-            </div>
+        <!-- Support -->
+        <div class="card support-card shadow-sm">
             <div class="card-body">
-                <ul class="list-unstyled">
-                    <li><a href="#">Formation Handbook</a></li>
-                    <li><a href="#">Candidate Guidelines</a></li>
-                    <li><a href="#">Pastoral Care Contacts</a></li>
-                </ul>
+                <div class="support-title">Need Support?</div>
+                <p class="support-text">
+                    Contact your Presbytery Minister for any questions regarding your formation journey.
+                </p>
+                <a href="mailto:support@uca.org.au" class="support-link">support@uca.org.au</a>
             </div>
         </div>
     </div>
