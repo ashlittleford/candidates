@@ -7,7 +7,12 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    is_panel_member = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(150))
+
+    formation_panel_id = db.Column(db.Integer, db.ForeignKey('formation_panel.id'), nullable=True)
+    formation_panel = db.relationship('FormationPanel', backref='panel_member_users', foreign_keys=[formation_panel_id])
+
     profile = db.relationship('Profile', backref='user', uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, password):
