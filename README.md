@@ -71,6 +71,10 @@ The `init_db.py` script creates the following default users:
     -   Username: `candidate`
     -   Password: `password123`
 
+-   **Panel Member User:**
+    -   Username: `panel_member`
+    -   Password: `password123`
+
 ## Running Tests
 
 To run the unit tests:

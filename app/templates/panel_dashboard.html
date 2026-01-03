@@ -18,7 +18,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Email/Username</th>
+                                <th>Current Church</th>
                                 <th>Presbytery</th>
                                 <th>Formation Progress</th>
                                 <th>Actions</th>
@@ -28,7 +28,7 @@
                             {% for candidate in candidates %}
                             <tr>
                                 <td class="fw-bold">{{ candidate.name }}</td>
-                                <td>{{ candidate.username }}</td>
+                                <td>{{ candidate.profile.current_church or '-' }}</td>
                                 <td>{{ candidate.profile.presbytery or '-' }}</td>
                                 <td>
                                     <span class="badge bg-light text-dark border">

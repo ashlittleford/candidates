@@ -161,6 +161,19 @@ def update_supervisor():
     flash('Supervisor updated successfully.')
     return redirect(url_for('main.profile'))
 
+@main.route('/profile/update_church', methods=['POST'])
+@login_required
+def update_church():
+    if current_user.is_admin:
+        flash("Admins cannot edit their church.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    church_name = request.form.get('current_church')
+    current_user.profile.current_church = church_name
+    db.session.commit()
+    flash('Current church updated successfully.')
+    return redirect(url_for('main.profile'))
+
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
@@ -276,6 +289,7 @@ def edit_user(user_id):
         user.profile.mid_term_panel = True if request.form.get('mid_term_panel') else False
         user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
         user.profile.presbytery = request.form.get('presbytery')
+        user.profile.current_church = request.form.get('current_church')
         # upcoming_formation_dates and formation_panel_dates are now global and not edited here
 
         db.session.commit()
