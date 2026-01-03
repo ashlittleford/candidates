@@ -85,7 +85,8 @@ def admin_dashboard():
         flash('Access denied')
         return redirect(url_for('main.profile'))
     users = User.query.filter_by(is_admin=False).all()
-    return render_template('admin_dashboard.html', users=users)
+    panels = FormationPanel.query.all()
+    return render_template('admin_dashboard.html', users=users, panels=panels)
 
 @main.route('/admin/create', methods=['GET', 'POST'])
 @login_required
@@ -154,8 +155,7 @@ def admin_panels():
     if not current_user.is_admin:
         flash('Access denied')
         return redirect(url_for('main.profile'))
-    panels = FormationPanel.query.all()
-    return render_template('admin_panels.html', panels=panels)
+    return redirect(url_for('main.admin_dashboard') + '#panels')
 
 @main.route('/admin/panels/create', methods=['GET', 'POST'])
 @login_required
@@ -172,7 +172,7 @@ def create_panel():
         db.session.add(new_panel)
         db.session.commit()
         flash('Formation Panel created successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=None)
 
@@ -190,7 +190,7 @@ def edit_panel(panel_id):
         panel.members = request.form.get('members')
         db.session.commit()
         flash('Formation Panel updated successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=panel)
 
