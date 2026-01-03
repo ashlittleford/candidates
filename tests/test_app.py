@@ -1,6 +1,6 @@
 import unittest
 from app import create_app, db
-from app.models import User, Profile
+from app.models import User, Profile, FormationPanel
 
 class AppTestCase(unittest.TestCase):
     def setUp(self):
@@ -27,6 +27,10 @@ class AppTestCase(unittest.TestCase):
             profile = Profile(user=candidate)
             db.session.add(candidate)
             db.session.add(profile)
+
+            # Create a Panel
+            panel = FormationPanel(chair_name='Rev. Test', members='Member 1, Member 2')
+            db.session.add(panel)
 
             db.session.commit()
 
@@ -78,14 +82,16 @@ class AppTestCase(unittest.TestCase):
     def test_admin_edit_profile(self):
         self.login('admin', 'admin')
 
-        # Get candidate id
+        # Get candidate id and panel id
         with self.app.app_context():
             candidate = User.query.filter_by(username='candidate').first()
             candidate_id = candidate.id
+            panel = FormationPanel.query.first()
+            panel_id = panel.id
 
         response = self.client.post(f'/admin/edit/{candidate_id}', data=dict(
             name='Updated Name',
-            formation_panel_details='Panel A',
+            formation_panel_id=panel_id,
             formation_days_completed='Day 1',
             walking_on_country='on', # Checkbox sends 'on' if checked
             upcoming_formation_dates='Tomorrow',
@@ -98,7 +104,7 @@ class AppTestCase(unittest.TestCase):
         with self.app.app_context():
             updated_candidate = User.query.get(candidate_id)
             self.assertEqual(updated_candidate.name, 'Updated Name')
-            self.assertEqual(updated_candidate.profile.formation_panel_details, 'Panel A')
+            self.assertEqual(updated_candidate.profile.formation_panel.chair_name, 'Rev. Test')
             self.assertTrue(updated_candidate.profile.walking_on_country)
 
 if __name__ == '__main__':

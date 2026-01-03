@@ -1,9 +1,15 @@
 from app import create_app, db
-from app.models import User, Profile
+from app.models import User, Profile, FormationPanel
 
 app = create_app()
 
 with app.app_context():
+    # Remove existing DB file to start fresh since schema changed
+    import os
+    if os.path.exists("instance/site.db"):
+        os.remove("instance/site.db")
+        print("Removed old database.")
+
     db.create_all()
 
     # Create Admin
@@ -12,6 +18,18 @@ with app.app_context():
         admin.set_password('admin123')
         db.session.add(admin)
 
+    # Create Sample Panels
+    panel1 = FormationPanel(chair_name="Rev. Smith", members="Dr. Jones, Rev. Brown, Ms. White")
+    panel2 = FormationPanel(chair_name="Rev. Williams", members="Mr. Black, Dr. Green, Rev. Gray")
+    panel3 = FormationPanel(chair_name="Dr. Taylor", members="Rev. Wilson, Ms. Evans, Mr. Thomas")
+    panel4 = FormationPanel(chair_name="Rev. Roberts", members="Dr. Lee, Rev. Harris, Ms. Clark")
+
+    db.session.add(panel1)
+    db.session.add(panel2)
+    db.session.add(panel3)
+    db.session.add(panel4)
+    db.session.commit() # Commit to get IDs
+
     # Create Sample Candidate
     if not User.query.filter_by(username='candidate').first():
         candidate = User(username='candidate', name='John Doe', is_admin=False)
@@ -19,7 +37,7 @@ with app.app_context():
         # Create Profile
         profile = Profile(
             user=candidate,
-            formation_panel_details="Rev. Smith, Dr. Jones",
+            formation_panel_id=panel1.id, # Link to Panel 1
             formation_days_completed="Day 1 (Jan), Day 2 (Mar)",
             walking_on_country=True,
             upcoming_formation_dates="Day 3 (Jun 15), Day 4 (Aug 20)",
