@@ -19,6 +19,16 @@
                     <hr>
 
                     <div class="mb-3">
+                        <label class="form-label">Presbytery</label>
+                        <select class="form-select" name="presbytery">
+                            <option value="">Select a Presbytery</option>
+                            <option value="Generate Presbytery" {% if user.profile.presbytery == 'Generate Presbytery' %}selected{% endif %}>Generate Presbytery</option>
+                            <option value="Wimala Presbytery" {% if user.profile.presbytery == 'Wimala Presbytery' %}selected{% endif %}>Wimala Presbytery</option>
+                            <option value="POSSA" {% if user.profile.presbytery == 'POSSA' %}selected{% endif %}>POSSA</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Panel</label>
                         <select class="form-select" name="formation_panel_id">
                             <option value="">Select a Formation Panel</option>
@@ -32,8 +42,14 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Presbytery</label>
+                        <input type="text" class="form-control" name="presbytery" value="{{ user.profile.presbytery or '' }}">
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Days Completed</label>
-                        <input type="text" class="form-control" name="formation_days_completed" value="{{ user.profile.formation_days_completed }}">
+                        <textarea class="form-control" name="formation_days_completed" rows="4">{{ user.profile.formation_days_completed }}</textarea>
+                        <div class="form-text">Enter a total number (e.g. 5) OR list the dates individually (separated by commas or new lines).</div>
                     </div>
 
                     <div class="mb-3">

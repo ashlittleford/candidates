@@ -38,6 +38,7 @@ with app.app_context():
         profile = Profile(
             user=candidate,
             formation_panel_id=panel1.id, # Link to Panel 1
+            presbytery="Presbytery of Example",
             formation_days_completed="Day 1 (Jan), Day 2 (Mar)",
             start_date="March 2023",
             walking_on_country=True,
