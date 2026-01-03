@@ -347,10 +347,10 @@
                     <h5 class="section-title">14 Standards of Ministry</h5>
                     <div class="accordion" id="standardsAccordion">
                         {% for standard in standards %}
-                        <div class="accordion-item">
+                        <div class="accordion-item mb-2 border rounded overflow-hidden">
                             <h2 class="accordion-header" id="heading{{ standard.id }}">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ standard.id }}" aria-expanded="false" aria-controls="collapse{{ standard.id }}">
-                                    <span class="fw-bold">{{ standard.id }}. {{ standard.attribute }}</span>
+                                    <span>{{ standard.id }}. {{ standard.attribute }}</span>
                                 </button>
                             </h2>
                             <div id="collapse{{ standard.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ standard.id }}" data-bs-parent="#standardsAccordion">
