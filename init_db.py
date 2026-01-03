@@ -49,12 +49,18 @@ with app.app_context():
         db.session.add(candidate)
         db.session.add(profile)
 
+    # Create Sample Panel Member
+    if not User.query.filter_by(username='panel_member').first():
+        panel_member = User(username='panel_member', name='Dr. Jones', is_panel_member=True, formation_panel_id=panel1.id)
+        panel_member.set_password('password123')
+        db.session.add(panel_member)
+
     # Initialize Global Settings
     if not GlobalSettings.query.first():
         # Use defaults or take from the sample candidate if desired, but better to start clean or with placeholder
         settings = GlobalSettings(
             upcoming_formation_dates="Monday 2 March 2026, Monday 13 April 2026, Monday 4 May 2026, Monday 1 June 2026, Monday 3 August 2026, Monday 7 September 2026, Monday 12 October 2026, Monday 2 November 2026",
-        formation_panel_dates="First: Friday 13 February 2026, Second: Friday 19 June 2026, Third: Friday 20 November 2026"
+        formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026"
         )
         db.session.add(settings)
 
