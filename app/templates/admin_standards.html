@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-3">Manage Standards of Ministry</h1>
+        <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 80%;">Attribute</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for standard in standards %}
+                    <tr>
+                        <td class="fw-bold">{{ standard.id }}</td>
+                        <td>{{ standard.attribute | truncate(100) }}</td>
+                        <td>
+                            <a href="{{ url_for('main.edit_standard', standard_id=standard.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

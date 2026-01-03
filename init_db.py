@@ -1,6 +1,7 @@
 from app import create_app, db
-from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
+from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard
 import os
+import json
 
 app = create_app()
 
@@ -48,7 +49,8 @@ with app.app_context():
         profile = Profile(
             user=candidate,
             formation_panel_id=panel1.id if panel1 else None, # Link to Panel 1
-            presbytery="Presbytery of Example",
+            presbytery="Wimala Presbytery",
+            current_church="Encounter Henley",
             formation_days_completed="Day 1 (Jan), Day 2 (Mar)",
             start_date="March 2023",
             walking_on_country=True,
@@ -81,6 +83,37 @@ with app.app_context():
         print("Created Global Settings.")
     else:
         print("Global Settings already exist.")
+
+    # Initialize Standards
+    if Standard.query.count() == 0:
+        json_path = os.path.join(app.root_path, 'standards_data.json')
+        if os.path.exists(json_path):
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+
+            print(f"Found {len(data)} standards in JSON. Populating database...")
+
+            for item in data:
+                # Join lists with newlines
+                beginning_text = "\n".join(item.get('beginning', []))
+                developing_text = "\n".join(item.get('developing', []))
+                established_text = "\n".join(item.get('established', []))
+                lfd_text = "\n".join(item.get('lfd', []))
+
+                std = Standard(
+                    id=item['id'],
+                    attribute=item['attribute'],
+                    beginning=beginning_text,
+                    developing=developing_text,
+                    established=established_text,
+                    lfd=lfd_text
+                )
+                db.session.add(std)
+            print("Standards populated.")
+        else:
+            print(f"Warning: {json_path} not found.")
+    else:
+        print("Standards already exist in DB.")
 
     db.session.commit()
     print("Database initialized.")
