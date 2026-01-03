@@ -38,7 +38,17 @@ This will create a SQLite database `instance/site.db` (or `site.db` depending on
 
 ## Running the Application
 
-To run the application locally:
+To run the application locally, simply execute:
+
+```bash
+python3 run.py
+```
+
+The application will be accessible at `http://localhost:5000/` (or your machine's IP address if accessing remotely). The `run.py` script automatically configures the server to listen on all public IP addresses (`0.0.0.0`).
+
+### Alternative: Running with Flask Command Line
+
+If you prefer to use the `flask` command directly:
 
 ```bash
 export FLASK_APP=app
@@ -46,8 +56,6 @@ flask run --host=0.0.0.0
 ```
 
 (On Windows PowerShell use `$env:FLASK_APP = "app"`)
-
-The application will be accessible at `http://localhost:5000/` (or your machine's IP address if accessing remotely).
 
 **Note:** The `--host=0.0.0.0` flag tells Flask to listen on all public IPs, which is often required if running in a container (like Docker) or a remote environment.
 
