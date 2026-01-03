@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-3">Edit Standard {{ standard.id }}</h1>
+        <a href="{{ url_for('main.admin_standards') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Standards</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-4">
+                <label for="attribute" class="form-label fw-bold">Attribute</label>
+                <textarea class="form-control" id="attribute" name="attribute" rows="3">{{ standard.attribute }}</textarea>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="beginning" class="form-label fw-bold text-primary">Beginning</label>
+                        <div class="form-text mb-2">One item per line.</div>
+                        <textarea class="form-control" id="beginning" name="beginning" rows="10">{{ standard.beginning }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="developing" class="form-label fw-bold text-primary">Developing</label>
+                        <div class="form-text mb-2">One item per line.</div>
+                        <textarea class="form-control" id="developing" name="developing" rows="10">{{ standard.developing }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="established" class="form-label fw-bold text-primary">Established</label>
+                        <div class="form-text mb-2">One item per line.</div>
+                        <textarea class="form-control" id="established" name="established" rows="10">{{ standard.established }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 mt-3">
+                <label for="lfd" class="form-label fw-bold text-dark">LFD and other Formation activities</label>
+                <div class="form-text mb-2">One item per line (treated as paragraphs).</div>
+                <textarea class="form-control" id="lfd" name="lfd" rows="5">{{ standard.lfd }}</textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('main.admin_standards') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn uca-btn-red">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
