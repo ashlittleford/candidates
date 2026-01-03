@@ -4,9 +4,21 @@
 <div class="row mb-4">
     <div class="col-12">
         <h1 class="mb-1">Welcome, {{ user.name }} {% if user.profile.start_date %}<small class="text-muted fs-5 fw-normal">Start Date: {{ user.profile.start_date }}</small>{% endif %}</h1>
-        {% if user.profile.presbytery %}
-        <p class="profile-subtitle mb-0">{{ user.profile.presbytery }}</p>
-        {% endif %}
+        <div class="d-flex align-items-center profile-subtitle mb-2">
+            {% if user.profile.presbytery %}
+            <span class="me-2">{{ user.profile.presbytery }}</span>
+            <span class="me-2">|</span>
+            {% endif %}
+            {% if current_user.id == user.id %}
+            <form action="{{ url_for('main.update_church') }}" method="POST" class="d-flex align-items-center">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" class="form-control form-control-sm me-2" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Current Church" style="width: 250px;">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Save</button>
+            </form>
+            {% else %}
+             <span>{{ user.profile.current_church or '' }}</span>
+            {% endif %}
+        </div>
         <p class="profile-subtitle">Here is your formation progress and upcoming schedule.</p>
     </div>
 </div>
@@ -181,30 +193,6 @@
                                         {% endif %}
                                     </div>
 
-                                    {% if user.profile.start_date %}
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                        <span>Start Date</span>
-                                        <span class="fw-bold">{{ user.profile.start_date }}</span>
-                                    </div>
-                                    {% endif %}
-
-                                    <!-- Current Church -->
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                        <span>Current Church</span>
-                                        <div class="text-end">
-                                            {% if user.profile.current_church %}
-                                                <span class="fw-bold d-block">{{ user.profile.current_church }}</span>
-                                            {% else %}
-                                                <span class="text-muted small">Not set</span>
-                                            {% endif %}
-                                            {% if current_user.id == user.id %}
-                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none small" data-bs-toggle="modal" data-bs-target="#editChurchModal">
-                                                    Edit
-                                                </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
                                     <!-- Mid-Term Panel Badge -->
                                     <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
                                         <span>Mid-Term Panel</span>
@@ -218,6 +206,21 @@
 
                                 <div>
                                     <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
+
+                                    <!-- Supervisor -->
+                                    <div class="p-3 bg-light rounded mb-2">
+                                        <label class="form-label small fw-bold">Supervisor</label>
+                                        {% if current_user.id == user.id %}
+                                        <form action="{{ url_for('main.update_supervisor') }}" method="POST" class="d-flex">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="text" class="form-control form-control-sm me-2" name="supervisor" value="{{ user.profile.supervisor or '' }}" placeholder="Supervisor Name">
+                                            <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
+                                        </form>
+                                        {% else %}
+                                            <p class="mb-0">{{ user.profile.supervisor or 'Not set' }}</p>
+                                        {% endif %}
+                                    </div>
+
                                     <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
                                         <span>Walking on Country</span>
                                         {% if user.profile.walking_on_country %}
@@ -346,28 +349,4 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Modal for Editing Church -->
-<div class="modal fade" id="editChurchModal" tabindex="-1" aria-labelledby="editChurchModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editChurchModalLabel">Edit Current Church</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form action="{{ url_for('main.update_church') }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="modal-body">
-            <div class="mb-3">
-                <label for="current_church" class="form-label">Church Name</label>
-                <input type="text" class="form-control" id="current_church" name="current_church" value="{{ user.profile.current_church or '' }}" placeholder="Enter church name">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn uca-btn-red">Save Changes</button>
-          </div>
-      </form>
-    </div>
-  </div>
-</div>
 {% endblock %}
