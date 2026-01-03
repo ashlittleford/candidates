@@ -28,7 +28,7 @@
         <div class="tab-content" id="profileTabsContent">
             <!-- Formation Progress Tab -->
             <div class="tab-pane show active" id="formation" role="tabpanel" aria-labelledby="formation-tab">
-                <!-- Formation Panel Dates Section -->
+                <!-- Upcoming Dates of Formation Days -->
                 <div class="mb-5">
                     <h5 class="section-title">Upcoming Dates of Formation Days</h5>
                      {% if upcoming_dates %}
@@ -73,11 +73,11 @@
                         </div>
                     {% endif %}
 
+                    <!-- Formation Panel Dates -->
                     <h5 class="section-title">Formation Panel Dates</h5>
 
                     {% if global_settings.formation_panel_dates %}
                         <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
-                        <!-- If the data string has commas, we split it. Otherwise we display one box. -->
                         {% set dates_list = global_settings.formation_panel_dates.split(',') %}
 
                         <div class="row g-3">
@@ -130,6 +130,7 @@
                     <h5 class="section-title">Formation Details</h5>
                     <div class="card border-0 shadow-sm p-4">
                         <div class="row">
+                            <!-- Formation Panel Members -->
                             <div class="col-md-6 mb-4 mb-md-0">
                                 <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
 
@@ -153,6 +154,7 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Progress & Requirements -->
                             <div class="col-md-6">
                                 <div class="mb-4">
                                     <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
@@ -185,6 +187,16 @@
                                         <span class="fw-bold">{{ user.profile.start_date }}</span>
                                     </div>
                                     {% endif %}
+
+                                    <!-- Mid-Term Panel Badge -->
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
+                                        <span>Mid-Term Panel</span>
+                                        {% if user.profile.mid_term_panel %}
+                                            <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
 
                                 <div>
@@ -204,33 +216,74 @@
                 </div>
             </div>
 
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mt-2">
-                                <span>Mid-Term Panel</span>
-                                {% if user.profile.mid_term_panel %}
-                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
-                                {% endif %}
-                            </div>
+            <!-- Standards & Requirements Tab -->
+            <div class="tab-pane fade" id="standards" role="tabpanel" aria-labelledby="standards-tab">
 
-                        </div>
+                <!-- 14 Standards of Ministry Table -->
+                <div class="mb-5">
+                    <h5 class="section-title">14 Standards of Ministry</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle shadow-sm bg-white rounded">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th scope="col" style="width: 20%;">Standard</th>
+                                    <th scope="col" style="width: 40%;">Description</th>
+                                    <th scope="col" style="width: 15%;">Status</th>
+                                    <th scope="col" style="width: 25%;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(1, 15) %}
+                                <tr>
+                                    <td>Standard {{ i }}</td>
+                                    <td class="text-muted small">Description for Standard {{ i }} goes here...</td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                    <td><span class="text-muted small">-</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                        <div>
-                            <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
-
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>Walking on Country</span>
-                                {% if user.profile.walking_on_country %}
-                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
-                                {% endif %}
-                            </div>
-                        </div>
+                <!-- Study Requirements Table -->
+                <div class="mb-4">
+                    <h5 class="section-title">Study Requirements</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle shadow-sm bg-white rounded">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th scope="col">Requirement</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Due Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Old Testament Introduction</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>New Testament Introduction</td>
+                                    <td><span class="badge bg-warning text-dark">In Progress</span></td>
+                                    <td>Nov 2026</td>
+                                </tr>
+                                <tr>
+                                    <td>Systematic Theology</td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>Church History</td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
