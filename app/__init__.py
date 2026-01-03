@@ -11,7 +11,10 @@ csrf = CSRFProtect()
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    # Use absolute path to instance/site.db to avoid path issues
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(base_dir, '..', 'instance', 'site.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
