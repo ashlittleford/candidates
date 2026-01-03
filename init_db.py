@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Profile
+from app.models import User, Profile, GlobalSettings
 
 app = create_app()
 
@@ -27,6 +27,15 @@ with app.app_context():
         )
         db.session.add(candidate)
         db.session.add(profile)
+
+    # Initialize Global Settings
+    if not GlobalSettings.query.first():
+        # Use defaults or take from the sample candidate if desired, but better to start clean or with placeholder
+        settings = GlobalSettings(
+            upcoming_formation_dates="Monday 2 March 2026, Monday 13 April 2026, Monday 4 May 2026, Monday 1 June 2026, Monday 3 August 2026, Monday 7 September 2026, Monday 12 October 2026, Monday 2 November 2026",
+            formation_panel_dates="Term 1: Friday 13 February 2026, Term 2: Friday 19 June 2026, Term 3: Friday 20 November 2026"
+        )
+        db.session.add(settings)
 
     db.session.commit()
     print("Database initialized.")

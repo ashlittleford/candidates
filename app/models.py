@@ -24,3 +24,8 @@ class Profile(db.Model):
     walking_on_country = db.Column(db.Boolean, default=False)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
+
+class GlobalSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    upcoming_formation_dates = db.Column(db.Text, default="")
+    formation_panel_dates = db.Column(db.Text, default="")
