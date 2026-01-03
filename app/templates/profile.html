@@ -17,11 +17,16 @@
             <h5 class="section-title">Upcoming Dates of Formation Days</h5>
              {% if global_settings.upcoming_formation_dates %}
                 <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
-                   <div class="d-flex align-items-center">
-                        <i class="fas fa-calendar-alt text-red me-3 fa-2x"></i>
+                   <div class="d-flex align-items-start">
+                        <i class="fas fa-calendar-alt text-red me-3 fa-2x mt-1"></i>
                         <div>
-                             <h6 class="fw-bold mb-1">Upcoming Formation Days</h6>
-                             <p class="mb-0">{{ global_settings.upcoming_formation_dates }}</p>
+                             <h6 class="fw-bold mb-2">Upcoming Formation Days</h6>
+                             {% set upcoming_list = global_settings.upcoming_formation_dates.split(',') %}
+                             <ul class="mb-0 ps-3">
+                                {% for day in upcoming_list %}
+                                    <li class="mb-1">{{ day.strip() }}</li>
+                                {% endfor %}
+                             </ul>
                         </div>
                    </div>
                 </div>

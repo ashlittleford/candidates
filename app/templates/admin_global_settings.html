@@ -13,14 +13,14 @@
 
                     <div class="mb-3">
                         <label class="form-label">Upcoming Dates of Formation Days</label>
-                        <input type="text" class="form-control" name="upcoming_formation_dates" value="{{ settings.upcoming_formation_dates }}">
-                        <div class="form-text">These dates will apply to all candidates.</div>
+                        <textarea class="form-control" name="upcoming_formation_dates" rows="5">{{ settings.upcoming_formation_dates }}</textarea>
+                        <div class="form-text">These dates will apply to all candidates. Separate with commas.</div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Formation Panels Dates (Yearly)</label>
-                        <input type="text" class="form-control" name="formation_panel_dates" value="{{ settings.formation_panel_dates }}">
-                        <div class="form-text">Enter the dates for the 3 formation panels for the year. Applies to all candidates.</div>
+                        <textarea class="form-control" name="formation_panel_dates" rows="3">{{ settings.formation_panel_dates }}</textarea>
+                        <div class="form-text">Enter the dates for the 3 formation panels for the year. Format: "Label: Date, Label: Date".</div>
                     </div>
 
                     <div class="d-flex justify-content-between mt-4">
