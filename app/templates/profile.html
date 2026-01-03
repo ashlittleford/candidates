@@ -177,18 +177,19 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
-                        <a href="#" class="resource-link">
-                            <i class="fas fa-file-pdf"></i> Formation Handbook PDF
-                        </a>
-                        <a href="#" class="resource-link">
-                            <i class="fas fa-book-open"></i> Reflection Guide
-                        </a>
-                        <a href="#" class="resource-link">
-                            <i class="fas fa-external-link-alt"></i> UCA Theology Library
-                        </a>
-                        <a href="#" class="resource-link">
-                            <i class="fas fa-shield-alt"></i> Safe Church Training
-                        </a>
+                        {% for resource in resources %}
+                            {% if resource.type == 'link' %}
+                                <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-file-download"></i> {{ resource.title }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">No resources available.</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

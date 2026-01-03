@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile, GlobalSettings
+from app.models import User, Profile, GlobalSettings, FormationPanel, Resource
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
+import os
 
 main = Blueprint('main', __name__)
 
@@ -107,7 +109,8 @@ def admin_dashboard():
         flash('Access denied')
         return redirect(url_for('main.profile'))
     users = User.query.filter_by(is_admin=False).all()
-    return render_template('admin_dashboard.html', users=users)
+    panels = FormationPanel.query.all()
+    return render_template('admin_dashboard.html', users=users, panels=panels)
 
 @main.route('/admin/create', methods=['GET', 'POST'])
 @login_required
@@ -176,8 +179,7 @@ def admin_panels():
     if not current_user.is_admin:
         flash('Access denied')
         return redirect(url_for('main.profile'))
-    panels = FormationPanel.query.all()
-    return render_template('admin_panels.html', panels=panels)
+    return redirect(url_for('main.admin_dashboard') + '#panels')
 
 @main.route('/admin/panels/create', methods=['GET', 'POST'])
 @login_required
@@ -194,7 +196,7 @@ def create_panel():
         db.session.add(new_panel)
         db.session.commit()
         flash('Formation Panel created successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=None)
 
@@ -212,6 +214,102 @@ def edit_panel(panel_id):
         panel.members = request.form.get('members')
         db.session.commit()
         flash('Formation Panel updated successfully')
-        return redirect(url_for('main.admin_panels'))
+        return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=panel)
+
+# --- Resource Management Routes ---
+
+@main.route('/admin/resources', methods=['GET', 'POST'])
+@login_required
+def admin_resources():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        res_type = request.form.get('type')
+
+        new_resource = Resource(title=title, type=res_type)
+
+        if res_type == 'link':
+            new_resource.url = request.form.get('url')
+        elif res_type == 'file':
+            if 'file' not in request.files:
+                flash('No file part')
+                return redirect(request.url)
+            file = request.files['file']
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(request.url)
+            if file:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                new_resource.filename = filename
+
+        db.session.add(new_resource)
+        db.session.commit()
+        flash('Resource added successfully')
+        return redirect(url_for('main.admin_resources'))
+
+    resources = Resource.query.all()
+    return render_template('admin_resources.html', resources=resources)
+
+@main.route('/admin/resources/edit/<int:resource_id>', methods=['GET', 'POST'])
+@login_required
+def edit_resource(resource_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    resource = Resource.query.get_or_404(resource_id)
+
+    if request.method == 'POST':
+        resource.title = request.form.get('title')
+        res_type = request.form.get('type')
+        resource.type = res_type
+
+        if res_type == 'link':
+            resource.url = request.form.get('url')
+            # Optionally clear filename if switching types, or keep it.
+            # resource.filename = None
+        elif res_type == 'file':
+            if 'file' in request.files:
+                file = request.files['file']
+                if file and file.filename != '':
+                    # Delete old file if exists? Maybe better not to automatically delete for now.
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+                    resource.filename = filename
+
+        db.session.commit()
+        flash('Resource updated successfully')
+        return redirect(url_for('main.admin_resources'))
+
+    return render_template('admin_edit_resource.html', resource=resource)
+
+@main.route('/admin/resources/delete/<int:resource_id>', methods=['POST'])
+@login_required
+def delete_resource(resource_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    resource = Resource.query.get_or_404(resource_id)
+
+    # Optionally delete the file from filesystem
+    if resource.filename:
+        try:
+            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], resource.filename))
+        except:
+            pass # File might not exist or permission error
+
+    db.session.delete(resource)
+    db.session.commit()
+    flash('Resource deleted successfully')
+    return redirect(url_for('main.admin_resources'))
+
+@main.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
