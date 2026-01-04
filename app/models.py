@@ -63,16 +63,9 @@ class Profile(db.Model):
             return int(txt)
 
         # Check for list
-        if '\n' in txt:
-            items = [x for x in txt.split('\n') if x.strip()]
-            return len(items)
-        elif ',' in txt:
-            items = [x for x in txt.split(',') if x.strip()]
-            # Check if it's just a single number with comma? Unlikely.
-            return len(items)
-        else:
-            # Single item that is not a digit?
-            return 1
+        normalized_txt = txt.replace('\n', ',')
+        items = [x for x in normalized_txt.split(',') if x.strip()]
+        return len(items)
 
     @property
     def formation_days_list_items(self):
@@ -83,12 +76,8 @@ class Profile(db.Model):
         if txt.isdigit():
             return []
 
-        if '\n' in txt:
-             return [x.strip() for x in txt.split('\n') if x.strip()]
-        elif ',' in txt:
-             return [x.strip() for x in txt.split(',') if x.strip()]
-        else:
-             return [txt]
+        normalized_txt = txt.replace('\n', ',')
+        return [x.strip() for x in normalized_txt.split(',') if x.strip()]
 
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)

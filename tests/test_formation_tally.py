@@ -53,8 +53,8 @@ class FormationTallyTestCase(unittest.TestCase):
 
     def test_formation_days_tally_mixed(self):
         # Mixed newlines and commas.
-        # Since newlines are present, it should split by newline only.
-        # "Jan 1, Feb 2" becomes one item, "Mar 3" becomes another.
+        # Updated logic: Treat both newlines and commas as separators.
+        # "Jan 1, Feb 2" becomes two items, "Mar 3" becomes another. Total 3.
         u = User(username='test4', password_hash='test')
         p = Profile(user=u)
         p.formation_days_completed = "Jan 1, Feb 2\nMar 3"
@@ -62,8 +62,8 @@ class FormationTallyTestCase(unittest.TestCase):
         db.session.add(p)
         db.session.commit()
 
-        self.assertEqual(p.computed_formation_days_count, 2)
-        self.assertEqual(p.formation_days_list_items, ["Jan 1, Feb 2", "Mar 3"])
+        self.assertEqual(p.computed_formation_days_count, 3)
+        self.assertEqual(p.formation_days_list_items, ["Jan 1", "Feb 2", "Mar 3"])
 
     def test_formation_days_tally_empty(self):
         u = User(username='test5', password_hash='test')
