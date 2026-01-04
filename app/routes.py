@@ -11,6 +11,13 @@ import hashlib
 
 main = Blueprint('main', __name__)
 
+PRESBYTERY_EMAILS = {
+    "Generate Presbytery": "admin@generate.org.au",
+    "Wimala Presbytery": "admin@wimala.org.au",
+    "POSSA": "admin@possa.org.au"
+}
+DEFAULT_SUPPORT_EMAIL = "support@uca.org.au"
+
 @main.route('/')
 def index():
     if current_user.is_authenticated:
@@ -89,7 +96,11 @@ def view_candidate_profile(user_id):
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
+    support_email = DEFAULT_SUPPORT_EMAIL
+    if target_user.profile and target_user.profile.presbytery:
+        support_email = PRESBYTERY_EMAILS.get(target_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
+
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -151,7 +162,12 @@ def profile():
 
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards)
+
+    support_email = DEFAULT_SUPPORT_EMAIL
+    if current_user.profile and current_user.profile.presbytery:
+        support_email = PRESBYTERY_EMAILS.get(current_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
+
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
