@@ -347,7 +347,7 @@
                                         {% endif %}
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2">
                                         <span>Walking on Country</span>
                                         {% if user.profile.walking_on_country %}
                                             <span class="badge bg-success rounded-pill px-3">Yes</span>
@@ -355,6 +355,131 @@
                                             <span class="badge bg-secondary rounded-pill px-3">No</span>
                                         {% endif %}
                                     </div>
+
+                                    <!-- Code of Ethics -->
+                                    <div class="p-3 bg-light rounded mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold small">Code of Ethics</span>
+                                            {% if current_user.id == user.id %}
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="toggleEthicsEdit()">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if current_user.id == user.id %}
+                                            <!-- Display Mode -->
+                                            <div id="ethics-display">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>Signed?</span>
+                                                    {% if user.profile.code_of_ethics_signed %}
+                                                        <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    <span>Date</span>
+                                                    <span class="text-muted">{{ user.profile.code_of_ethics_date or 'Not set' }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Edit Mode -->
+                                            <div id="ethics-form" class="d-none">
+                                                <form action="{{ url_for('main.update_code_of_ethics') }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <div class="form-check form-switch mb-2">
+                                                        <input class="form-check-input" type="checkbox" id="code_of_ethics_signed" name="code_of_ethics_signed" {% if user.profile.code_of_ethics_signed %}checked{% endif %}>
+                                                        <label class="form-check-label" for="code_of_ethics_signed">Signed</label>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <input type="text" class="form-control form-control-sm" name="code_of_ethics_date" value="{{ user.profile.code_of_ethics_date or '' }}" placeholder="Date (e.g. 2023-10-25)">
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleEthicsEdit()">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        {% else %}
+                                            <!-- View Only (e.g. for Panel Members/Admin) -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Signed?</span>
+                                                {% if user.profile.code_of_ethics_signed %}
+                                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>Date</span>
+                                                <span class="text-muted">{{ user.profile.code_of_ethics_date or '-' }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- WWCC -->
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold small">WWCC</span>
+                                            {% if current_user.id == user.id %}
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="toggleWwccEdit()">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if current_user.id == user.id %}
+                                            <!-- Display Mode -->
+                                            <div id="wwcc-display">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>Cleared?</span>
+                                                    {% if user.profile.wwcc_cleared %}
+                                                        <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                                    <span>Number</span>
+                                                    <span class="text-muted">{{ user.profile.wwcc_number or 'Not set' }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Edit Mode -->
+                                            <div id="wwcc-form" class="d-none">
+                                                <form action="{{ url_for('main.update_wwcc') }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <div class="form-check form-switch mb-2">
+                                                        <input class="form-check-input" type="checkbox" id="wwcc_cleared" name="wwcc_cleared" {% if user.profile.wwcc_cleared %}checked{% endif %}>
+                                                        <label class="form-check-label" for="wwcc_cleared">Cleared</label>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <input type="text" class="form-control form-control-sm" name="wwcc_number" value="{{ user.profile.wwcc_number or '' }}" placeholder="WWCC Number">
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleWwccEdit()">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        {% else %}
+                                            <!-- View Only -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Cleared?</span>
+                                                {% if user.profile.wwcc_cleared %}
+                                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <span>Number</span>
+                                                <span class="text-muted">{{ user.profile.wwcc_number or '-' }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -550,6 +675,32 @@
     function toggleChurchEdit() {
         const displayDiv = document.getElementById('church-display');
         const formDiv = document.getElementById('church-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+
+    function toggleEthicsEdit() {
+        const displayDiv = document.getElementById('ethics-display');
+        const formDiv = document.getElementById('ethics-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+
+    function toggleWwccEdit() {
+        const displayDiv = document.getElementById('wwcc-display');
+        const formDiv = document.getElementById('wwcc-form');
 
         if (displayDiv.classList.contains('d-none')) {
             displayDiv.classList.remove('d-none');

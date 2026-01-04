@@ -47,6 +47,12 @@ class Profile(db.Model):
     supervisor = db.Column(db.String(150), nullable=True)
     current_church = db.Column(db.String(150), nullable=True)
 
+    code_of_ethics_signed = db.Column(db.Boolean, default=False)
+    code_of_ethics_date = db.Column(db.String(50), nullable=True)
+
+    wwcc_cleared = db.Column(db.Boolean, default=False)
+    wwcc_number = db.Column(db.String(100), nullable=True)
+
     @property
     def computed_formation_days_count(self):
         txt = self.formation_days_completed

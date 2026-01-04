@@ -178,6 +178,35 @@ def update_church():
     flash('Current church updated successfully.')
     return redirect(url_for('main.profile'))
 
+@main.route('/profile/update_code_of_ethics', methods=['POST'])
+@login_required
+def update_code_of_ethics():
+    if current_user.is_admin:
+        flash("Admins cannot edit their profile directly.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    # Handling checkboxes: if checked, value is 'on', otherwise key is missing
+    current_user.profile.code_of_ethics_signed = True if request.form.get('code_of_ethics_signed') else False
+    current_user.profile.code_of_ethics_date = request.form.get('code_of_ethics_date')
+
+    db.session.commit()
+    flash('Code of Ethics updated successfully.')
+    return redirect(url_for('main.profile'))
+
+@main.route('/profile/update_wwcc', methods=['POST'])
+@login_required
+def update_wwcc():
+    if current_user.is_admin:
+        flash("Admins cannot edit their profile directly.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    current_user.profile.wwcc_cleared = True if request.form.get('wwcc_cleared') else False
+    current_user.profile.wwcc_number = request.form.get('wwcc_number')
+
+    db.session.commit()
+    flash('WWCC updated successfully.')
+    return redirect(url_for('main.profile'))
+
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
