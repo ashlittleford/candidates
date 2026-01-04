@@ -249,32 +249,31 @@
                     <h5 class="section-title">Formation Details</h5>
                     <div class="card border-0 shadow-sm p-4">
                         <div class="row">
-                            <!-- Formation Panel Members -->
+                            <!-- Formation Panel Members & Progress -->
                             <div class="col-md-6 mb-4 mb-md-0">
-                                <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
+                                <div class="mb-4">
+                                    <h6 class="text-red mb-3"><i class="fas fa-users me-2"></i>Formation Panel</h6>
 
-                                {% if user.profile.formation_panel %}
-                                    <!-- Chair -->
-                                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                        <span class="fw-bold">{{ user.profile.formation_panel.chair_name }}</span>
-                                        <span class="badge bg-white text-secondary border">Chair</span>
-                                    </div>
-                                    <!-- Members -->
-                                    {% if user.profile.formation_panel.members %}
-                                        {% for member in user.profile.formation_panel.members.split(',') %}
-                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                                                <span class="fw-bold">{{ member.strip() }}</span>
-                                                <span class="badge bg-white text-secondary border">Member</span>
-                                            </div>
-                                        {% endfor %}
+                                    {% if user.profile.formation_panel %}
+                                        <!-- Chair -->
+                                         <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                            <span class="fw-bold">{{ user.profile.formation_panel.chair_name }}</span>
+                                            <span class="badge bg-white text-secondary border">Chair</span>
+                                        </div>
+                                        <!-- Members -->
+                                        {% if user.profile.formation_panel.members %}
+                                            {% for member in user.profile.formation_panel.members.split(',') %}
+                                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                    <span class="fw-bold">{{ member.strip() }}</span>
+                                                    <span class="badge bg-white text-secondary border">Member</span>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% else %}
+                                         <p class="text-muted">No panel assigned.</p>
                                     {% endif %}
-                                {% else %}
-                                     <p class="text-muted">No panel assigned.</p>
-                                {% endif %}
-                            </div>
+                                </div>
 
-                            <!-- Progress & Requirements -->
-                            <div class="col-md-6">
                                 <div class="mb-4">
                                     <h6 class="text-red mb-3"><i class="fas fa-check-circle me-2"></i>Progress</h6>
                                     <div class="d-flex flex-column p-3 bg-light rounded">
@@ -310,7 +309,10 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                            </div>
 
+                            <!-- Requirements -->
+                            <div class="col-md-6">
                                 <div>
                                     <h6 class="text-red mb-3"><i class="fas fa-map-marker-alt me-2"></i>Requirements</h6>
 
@@ -371,7 +373,7 @@
                                             <!-- Display Mode -->
                                             <div id="ethics-display">
                                                 <div class="d-flex justify-content-between align-items-center">
-                                                    <span>Signed?</span>
+                                                    <span>Completed?</span>
                                                     {% if user.profile.code_of_ethics_signed %}
                                                         <span class="badge bg-success rounded-pill px-3">Yes</span>
                                                     {% else %}
@@ -390,7 +392,7 @@
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <div class="form-check form-switch mb-2">
                                                         <input class="form-check-input" type="checkbox" id="code_of_ethics_signed" name="code_of_ethics_signed" {% if user.profile.code_of_ethics_signed %}checked{% endif %}>
-                                                        <label class="form-check-label" for="code_of_ethics_signed">Signed</label>
+                                                        <label class="form-check-label" for="code_of_ethics_signed">Completed</label>
                                                     </div>
                                                     <div class="mb-2">
                                                         <input type="text" class="form-control form-control-sm" name="code_of_ethics_date" value="{{ user.profile.code_of_ethics_date or '' }}" placeholder="Date (e.g. 2023-10-25)">
@@ -404,7 +406,7 @@
                                         {% else %}
                                             <!-- View Only (e.g. for Panel Members/Admin) -->
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span>Signed?</span>
+                                                <span>Completed?</span>
                                                 {% if user.profile.code_of_ethics_signed %}
                                                     <span class="badge bg-success rounded-pill px-3">Yes</span>
                                                 {% else %}
