@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory, Response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument
@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+import hashlib
 
 main = Blueprint('main', __name__)
 
@@ -605,3 +606,82 @@ def delete_panel_document(doc_id):
         # If admin deleted it, where should they go? Admin dashboard?
         # Actually admin views candidate profile via view_candidate_profile
         return redirect(request.referrer or url_for('main.admin_dashboard'))
+
+@main.route('/calendar/formation.ics')
+@login_required
+def download_ics():
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        return "No settings found", 404
+
+    events = []
+
+    # Helper to parse and add events
+    def add_events(raw_text, default_summary_prefix="Formation Day"):
+        if not raw_text:
+            return
+
+        # Split by newline or comma
+        if '\n' in raw_text:
+            items = raw_text.split('\n')
+        else:
+            items = raw_text.split(',')
+
+        for item in items:
+            item = item.strip()
+            if not item:
+                continue
+
+            label = None
+            date_str = item
+
+            if ':' in item:
+                parts = item.split(':', 1)
+                label = parts[0].strip()
+                date_str = parts[1].strip()
+
+            # Parse date
+            dt = None
+            # Try parsing with and without day name
+            for fmt in ["%A %d %B %Y", "%d %B %Y"]:
+                try:
+                    dt = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    continue
+
+            if dt:
+                summary = f"{default_summary_prefix}: {label}" if label else default_summary_prefix
+
+                # Generate a deterministic UID based on summary and date
+                uid_source = f"{summary}-{dt.strftime('%Y%m%d')}"
+                uid = hashlib.md5(uid_source.encode('utf-8')).hexdigest() + "@ucasa.formation"
+
+                dtstamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+
+                # Create ICS event block
+                events.append(
+                    "BEGIN:VEVENT\n"
+                    f"UID:{uid}\n"
+                    f"DTSTAMP:{dtstamp}\n"
+                    f"SUMMARY:{summary}\n"
+                    f"DTSTART;VALUE=DATE:{dt.strftime('%Y%m%d')}\n"
+                    "END:VEVENT"
+                )
+
+    add_events(global_settings.upcoming_formation_dates, "Formation Day")
+    add_events(global_settings.formation_panel_dates, "Formation Panel")
+
+    ics_content = (
+        "BEGIN:VCALENDAR\n"
+        "VERSION:2.0\n"
+        "PRODID:-//UCA SA//Formation//EN\n"
+        + "\n".join(events) + "\n"
+        "END:VCALENDAR"
+    )
+
+    return Response(
+        ics_content,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": "attachment;filename=formation_schedule.ics"}
+    )

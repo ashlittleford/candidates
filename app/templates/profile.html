@@ -65,7 +65,12 @@
             <div class="tab-pane show active" id="formation" role="tabpanel" aria-labelledby="formation-tab">
                 <!-- Upcoming Dates of Formation Days -->
                 <div class="mb-5">
-                    <h5 class="section-title">Upcoming Dates of Formation Days</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="section-title mb-0">Upcoming Dates of Formation Days</h5>
+                        <a href="{{ url_for('main.download_ics') }}" class="btn btn-sm btn-outline-secondary" title="Sync to Calendar">
+                            <i class="fas fa-calendar-plus me-1"></i> Sync to Calendar
+                        </a>
+                    </div>
                      {% if upcoming_dates %}
                         <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
                            <div class="d-flex align-items-start">
