@@ -179,3 +179,51 @@ main {
     font-size: 0.5rem;
     vertical-align: middle;
 }
+
+/* Standards Accordion Modernization */
+#standardsAccordion .accordion-item {
+    background-color: transparent;
+}
+
+#standardsAccordion .accordion-button {
+    background-color: white;
+    border: 1px solid #eef0f2;
+    border-radius: 8px !important; /* Force radius when collapsed */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    color: var(--uca-text-dark);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    padding: 1.25rem;
+}
+
+#standardsAccordion .accordion-button:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    border-color: #e0e0e0;
+    z-index: 2;
+}
+
+#standardsAccordion .accordion-button:not(.collapsed) {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    background-color: #fff8f8; /* Very light red */
+    color: var(--uca-red);
+    box-shadow: none;
+    transform: none;
+    border-color: #fadbdc;
+}
+
+#standardsAccordion .accordion-collapse {
+    background-color: white;
+    border: 1px solid #fadbdc;
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+/* Fix for the focus ring to match UCA red */
+#standardsAccordion .accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(217, 40, 44, 0.15);
+    border-color: #fab1b3;
+}
