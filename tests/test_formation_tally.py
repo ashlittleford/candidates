@@ -29,6 +29,31 @@ class FormationTallyTestCase(unittest.TestCase):
         self.assertEqual(p.computed_formation_days_count, 5)
         self.assertEqual(p.formation_days_list_items, [])
 
+    def test_formation_days_tally_mixed_integer_and_text(self):
+        # "5\nMonday 2nd March" -> 5 + 1 = 6
+        u = User(username='test7', password_hash='test')
+        p = Profile(user=u)
+        p.formation_days_completed = "5\nMonday 2nd March"
+        db.session.add(u)
+        db.session.add(p)
+        db.session.commit()
+
+        self.assertEqual(p.computed_formation_days_count, 6)
+        # Note: "5" is still part of the items list
+        self.assertEqual(p.formation_days_list_items, ["5", "Monday 2nd March"])
+
+    def test_formation_days_tally_multiple_integers(self):
+        # "2\n3" -> 2 + 3 = 5
+        u = User(username='test8', password_hash='test')
+        p = Profile(user=u)
+        p.formation_days_completed = "2\n3"
+        db.session.add(u)
+        db.session.add(p)
+        db.session.commit()
+
+        self.assertEqual(p.computed_formation_days_count, 5)
+        self.assertEqual(p.formation_days_list_items, ["2", "3"])
+
     def test_formation_days_tally_comma_list(self):
         u = User(username='test2', password_hash='test')
         p = Profile(user=u)

@@ -64,8 +64,15 @@ class Profile(db.Model):
 
         # Check for list
         normalized_txt = txt.replace('\n', ',')
-        items = [x for x in normalized_txt.split(',') if x.strip()]
-        return len(items)
+        items = [x.strip() for x in normalized_txt.split(',') if x.strip()]
+
+        count = 0
+        for item in items:
+            if item.isdigit():
+                count += int(item)
+            else:
+                count += 1
+        return count
 
     @property
     def formation_days_list_items(self):
