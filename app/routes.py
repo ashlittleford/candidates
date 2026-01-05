@@ -225,6 +225,19 @@ def update_wwcc():
     flash('WWCC updated successfully.')
     return redirect(url_for('main.profile'))
 
+@main.route('/profile/update_walking_on_country', methods=['POST'])
+@login_required
+def update_walking_on_country():
+    if current_user.is_admin:
+        flash("Admins cannot edit their profile directly.")
+        return redirect(url_for('main.admin_dashboard'))
+
+    current_user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
+
+    db.session.commit()
+    flash('Walking on Country updated successfully.')
+    return redirect(url_for('main.profile'))
+
 @main.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():

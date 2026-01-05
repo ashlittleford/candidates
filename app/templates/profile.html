@@ -275,12 +275,51 @@
                                         {% endif %}
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2">
-                                        <span>Walking on Country</span>
-                                        {% if user.profile.walking_on_country %}
-                                            <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                    <div class="p-3 bg-light rounded mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold small">Walking on Country</span>
+                                            {% if current_user.id == user.id %}
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="toggleWalkingEdit()">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if current_user.id == user.id %}
+                                            <!-- Display Mode -->
+                                            <div id="walking-display" class="d-flex justify-content-between align-items-center">
+                                                <span>Completed</span>
+                                                {% if user.profile.walking_on_country %}
+                                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Edit Mode -->
+                                            <div id="walking-form" class="d-none">
+                                                <form action="{{ url_for('main.update_walking_on_country') }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <div class="form-check form-switch mb-2">
+                                                        <input class="form-check-input" type="checkbox" id="walking_on_country" name="walking_on_country" {% if user.profile.walking_on_country %}checked{% endif %}>
+                                                        <label class="form-check-label" for="walking_on_country">Completed</label>
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="submit" class="btn btn-sm uca-btn-red">Save</button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleWalkingEdit()">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         {% else %}
-                                            <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                            <!-- View Only -->
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Completed</span>
+                                                {% if user.profile.walking_on_country %}
+                                                    <span class="badge bg-success rounded-pill px-3">Yes</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary rounded-pill px-3">No</span>
+                                                {% endif %}
+                                            </div>
                                         {% endif %}
                                     </div>
 
@@ -805,6 +844,19 @@
     function toggleWwccEdit() {
         const displayDiv = document.getElementById('wwcc-display');
         const formDiv = document.getElementById('wwcc-form');
+
+        if (displayDiv.classList.contains('d-none')) {
+            displayDiv.classList.remove('d-none');
+            formDiv.classList.add('d-none');
+        } else {
+            displayDiv.classList.add('d-none');
+            formDiv.classList.remove('d-none');
+        }
+    }
+
+    function toggleWalkingEdit() {
+        const displayDiv = document.getElementById('walking-display');
+        const formDiv = document.getElementById('walking-form');
 
         if (displayDiv.classList.contains('d-none')) {
             displayDiv.classList.remove('d-none');

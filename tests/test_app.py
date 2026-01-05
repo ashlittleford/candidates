@@ -107,5 +107,23 @@ class AppTestCase(unittest.TestCase):
             self.assertEqual(updated_candidate.profile.formation_panel.chair_name, 'Rev. Test')
             self.assertTrue(updated_candidate.profile.walking_on_country)
 
+    def test_candidate_update_walking_on_country(self):
+        self.login('candidate', 'candidate')
+
+        # Verify initial state (False by default)
+        with self.app.app_context():
+            candidate = User.query.filter_by(username='candidate').first()
+            self.assertFalse(candidate.profile.walking_on_country)
+
+        # Update to True
+        response = self.client.post('/profile/update_walking_on_country', data=dict(
+            walking_on_country='on'
+        ), follow_redirects=True)
+
+        # Verify changes in DB
+        with self.app.app_context():
+            updated_candidate = User.query.filter_by(username='candidate').first()
+            self.assertTrue(updated_candidate.profile.walking_on_country)
+
 if __name__ == '__main__':
     unittest.main()
