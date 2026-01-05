@@ -39,7 +39,10 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
                  <input type="text" id="candidateSearch" class="form-control w-25" placeholder="Search candidates...">
-                 <a href="{{ url_for('main.create_user') }}" class="btn uca-btn-red">Create New Candidate</a>
+                 <div>
+                     <a href="{{ url_for('main.invite_candidate') }}" class="btn uca-btn-red me-2">Invite Candidate</a>
+                     <a href="{{ url_for('main.create_user') }}" class="btn btn-secondary">Legacy Create</a>
+                 </div>
             </div>
             <div class="card shadow">
                 <div class="card-body">
@@ -126,7 +129,8 @@
     </div>
     <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
         <div class="d-flex justify-content-end mb-3">
-            <a href="{{ url_for('main.create_panel_member') }}" class="btn uca-btn-red">Add New Panel Member</a>
+            <a href="{{ url_for('main.invite_panel_member') }}" class="btn uca-btn-red me-2">Invite Panel Member</a>
+            <a href="{{ url_for('main.create_panel_member') }}" class="btn btn-secondary">Legacy Create</a>
         </div>
         <div class="card shadow">
             <div class="card-body">

@@ -6,10 +6,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=True)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_panel_member = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(150))
+
+    invitation_token = db.Column(db.String(100), unique=True, nullable=True)
+    invitation_expiry = db.Column(db.DateTime, nullable=True)
 
     formation_panel_id = db.Column(db.Integer, db.ForeignKey('formation_panel.id'), nullable=True)
     formation_panel = db.relationship('FormationPanel', backref='panel_member_users', foreign_keys=[formation_panel_id])
