@@ -6,8 +6,9 @@ from app.standards_loader import load_standards
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
+import uuid
 
 main = Blueprint('main', __name__)
 
@@ -259,6 +260,131 @@ def admin_dashboard():
     panel_members = User.query.filter_by(is_panel_member=True).all()
     panels = FormationPanel.query.all()
     return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members)
+
+@main.route('/admin/invite/candidate', methods=['GET', 'POST'])
+@login_required
+def invite_candidate():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+
+        if User.query.filter_by(username=email).first() or User.query.filter_by(email=email).first():
+            flash('User with this email already exists')
+        else:
+            token = str(uuid.uuid4())
+            expiry = datetime.utcnow() + timedelta(days=7) # 7 days expiry
+
+            # Create user with temporary username and password
+            new_user = User(
+                username=email, # Use email as temporary username
+                email=email,
+                name=name,
+                is_admin=False,
+                is_panel_member=False,
+                invitation_token=token,
+                invitation_expiry=expiry
+            )
+            new_user.set_password(str(uuid.uuid4())) # Random password
+
+            # Create empty profile
+            new_profile = Profile(user=new_user)
+            db.session.add(new_user)
+            db.session.add(new_profile)
+            db.session.commit()
+
+            # Simulate sending email
+            invite_link = url_for('main.accept_invitation', token=token, _external=True)
+            print(f"INVITATION LINK FOR {email}: {invite_link}") # For dev environment
+
+            flash(f'Invitation sent to {email}. Link: {invite_link}')
+            return redirect(url_for('main.admin_dashboard'))
+
+    return render_template('admin_invite_user.html', role='Candidate')
+
+@main.route('/admin/invite/panel_member', methods=['GET', 'POST'])
+@login_required
+def invite_panel_member():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        formation_panel_id = request.form.get('formation_panel_id')
+
+        if User.query.filter_by(username=email).first() or User.query.filter_by(email=email).first():
+            flash('User with this email already exists')
+        else:
+            token = str(uuid.uuid4())
+            expiry = datetime.utcnow() + timedelta(days=7)
+
+            new_user = User(
+                username=email,
+                email=email,
+                name=name,
+                is_admin=False,
+                is_panel_member=True,
+                formation_panel_id=formation_panel_id,
+                invitation_token=token,
+                invitation_expiry=expiry
+            )
+            new_user.set_password(str(uuid.uuid4()))
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            invite_link = url_for('main.accept_invitation', token=token, _external=True)
+            print(f"INVITATION LINK FOR {email}: {invite_link}")
+
+            flash(f'Invitation sent to {email}. Link: {invite_link}')
+            return redirect(url_for('main.admin_dashboard') + '#members')
+
+    panels = FormationPanel.query.all()
+    return render_template('admin_invite_user.html', role='Panel Member', panels=panels)
+
+@main.route('/setup-account/<token>', methods=['GET', 'POST'])
+def accept_invitation(token):
+    user = User.query.filter_by(invitation_token=token).first()
+
+    if not user:
+        flash('Invalid invitation token.')
+        return redirect(url_for('main.login'))
+
+    if user.invitation_expiry and user.invitation_expiry < datetime.utcnow():
+        flash('Invitation expired.')
+        return redirect(url_for('main.login'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return render_template('setup_account.html', user=user)
+
+        # Check if username is taken (if changed from email)
+        if username != user.username:
+             if User.query.filter_by(username=username).first():
+                 flash('Username already taken.')
+                 return render_template('setup_account.html', user=user)
+
+        user.username = username
+        user.set_password(password)
+        user.invitation_token = None # Clear token
+        user.invitation_expiry = None
+        db.session.commit()
+
+        login_user(user)
+        flash('Account set up successfully.')
+        return redirect(url_for('main.index'))
+
+    return render_template('setup_account.html', user=user)
 
 @main.route('/admin/create_panel_member', methods=['GET', 'POST'])
 @login_required

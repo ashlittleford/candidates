@@ -19,6 +19,38 @@ def check_and_upgrade_schema(app):
         db.create_all()
 
         inspector = inspect(db.engine)
+        if inspector.has_table("user"):
+            columns = [col['name'] for col in inspector.get_columns("user")]
+            if "email" not in columns:
+                print("Missing column 'email' detected in 'user' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN email VARCHAR(150)"))
+                        conn.commit()
+                    print("Successfully added 'email' column.")
+                except Exception as e:
+                    print(f"Failed to add 'email' column: {e}")
+
+            if "invitation_token" not in columns:
+                print("Missing column 'invitation_token' detected in 'user' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN invitation_token VARCHAR(100)"))
+                        conn.commit()
+                    print("Successfully added 'invitation_token' column.")
+                except Exception as e:
+                    print(f"Failed to add 'invitation_token' column: {e}")
+
+            if "invitation_expiry" not in columns:
+                print("Missing column 'invitation_expiry' detected in 'user' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN invitation_expiry DATETIME"))
+                        conn.commit()
+                    print("Successfully added 'invitation_expiry' column.")
+                except Exception as e:
+                    print(f"Failed to add 'invitation_expiry' column: {e}")
+
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
             if "current_church" not in columns:
