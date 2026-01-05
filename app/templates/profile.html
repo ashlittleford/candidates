@@ -42,6 +42,7 @@
                     {% endif %}
                 {% endif %}
             </div>
+
         </div>
     </div>
 </div>
@@ -57,6 +58,9 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="standards-tab" data-bs-toggle="tab" data-bs-target="#standards" type="button" role="tab" aria-controls="standards" aria-selected="false">Standards & Requirements</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">My Documents</button>
             </li>
         </ul>
 
@@ -165,89 +169,6 @@
                     {% endif %}
                 </div>
 
-                <!-- My Formation Panel Documents -->
-                <div class="mb-4">
-                    <h5 class="section-title">My Formation Panel Documents</h5>
-                    <div class="card border-0 shadow-sm p-4">
-                        {% if current_user.id == user.id %}
-                        <!-- Upload Form -->
-                        <div class="mb-3">
-                            <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="file" name="file" class="form-control form-control-sm w-auto" multiple required>
-
-                                <select name="day_label" class="form-select form-select-sm w-auto">
-                                    <option value="">Select Formation Day</option>
-                                    {% if global_settings.formation_panel_dates %}
-                                        {% for date_item in global_settings.formation_panel_dates.split(',') %}
-                                            {% set parts = date_item.split(':') %}
-                                            {% if parts|length > 1 %}
-                                                 <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
-                                            {% else %}
-                                                 <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                </select>
-
-                                <button type="submit" class="btn btn-sm uca-btn-red">Upload</button>
-                            </form>
-                            <small class="text-muted d-block mt-1">Upload documents for upcoming Formation Panel Day (around 5 files).</small>
-                        </div>
-                        {% endif %}
-
-                        <!-- Documents List -->
-                        {% if user.panel_documents %}
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Filename</th>
-                                            <th>For</th>
-                                            <th>Date Uploaded</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for doc in user.panel_documents %}
-                                        <tr>
-                                            <td>
-                                                <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none">
-                                                    <i class="fas fa-file me-2"></i>{{ doc.original_filename }}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                {% if doc.day_label %}
-                                                    <span class="badge bg-light text-dark border">{{ doc.day_label }}</span>
-                                                {% else %}
-                                                    <span class="text-muted small">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                            <td>
-                                                {% if current_user.id == user.id or current_user.is_admin %}
-                                                <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                                {% else %}
-                                                 <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
-                                                    <i class="fas fa-download"></i>
-                                                </a>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="text-muted mb-0">No documents uploaded yet.</p>
-                        {% endif %}
-                    </div>
-                </div>
 
                 <!-- Formation Details Section -->
                 <div class="mb-4">
@@ -592,6 +513,182 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- My Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+                <div class="mb-4">
+                    <h5 class="section-title">My Formation Panel Documents</h5>
+                    <div class="card border-0 shadow-sm p-4">
+                        {% if current_user.id == user.id %}
+                        <!-- Upload Form -->
+                        <div class="mb-3">
+                            <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="file" name="file" class="form-control form-control-sm w-auto" multiple required>
+
+                                <select name="day_label" class="form-select form-select-sm w-auto">
+                                    <option value="">Select Formation Day</option>
+                                    {% if global_settings.formation_panel_dates %}
+                                        {% for date_item in global_settings.formation_panel_dates.split(',') %}
+                                            {% set parts = date_item.split(':') %}
+                                            {% if parts|length > 1 %}
+                                                 <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
+                                            {% else %}
+                                                 <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+
+                                <button type="submit" class="btn btn-sm uca-btn-red">Upload</button>
+                            </form>
+                            <small class="text-muted d-block mt-1">Upload documents for upcoming Formation Panel Day (around 5 files).</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Accordion for Documents -->
+                        <div class="accordion mt-4" id="documentsAccordion">
+                            {% if global_settings.formation_panel_dates %}
+                                {% set dates_list = global_settings.formation_panel_dates.split(',') %}
+
+                                {% for date_item in dates_list %}
+                                    {% set parts = date_item.split(':') %}
+                                    {% set label = parts[0].strip() if parts|length > 1 else date_item.strip() %}
+                                    {% set full_date = date_item.strip() %}
+
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingDoc{{ loop.index }}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDoc{{ loop.index }}" aria-expanded="false" aria-controls="collapseDoc{{ loop.index }}">
+                                                {{ full_date }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapseDoc{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="headingDoc{{ loop.index }}" data-bs-parent="#documentsAccordion">
+                                            <div class="accordion-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover align-middle mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Filename</th>
+                                                                <th>Date Uploaded</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% set ns = namespace(found=false) %}
+                                                            {% for doc in user.panel_documents %}
+                                                                {% if doc.day_label == label %}
+                                                                    {% set ns.found = true %}
+                                                                    <tr>
+                                                                        <td>
+                                                                            <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none">
+                                                                                <i class="fas fa-file me-2"></i>{{ doc.original_filename }}
+                                                                            </a>
+                                                                        </td>
+                                                                        <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                                        <td>
+                                                                            {% if current_user.id == user.id or current_user.is_admin %}
+                                                                            <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                                                                                    <i class="fas fa-trash"></i>
+                                                                                </button>
+                                                                            </form>
+                                                                            {% else %}
+                                                                            <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
+                                                                                <i class="fas fa-download"></i>
+                                                                            </a>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% if not ns.found %}
+                                                                <tr><td colspan="3" class="text-muted text-center small">No documents.</td></tr>
+                                                            {% endif %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <!-- Other / Unassigned Documents -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingDocOther">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocOther" aria-expanded="false" aria-controls="collapseDocOther">
+                                        Other / Unassigned
+                                    </button>
+                                </h2>
+                                <div id="collapseDocOther" class="accordion-collapse collapse" aria-labelledby="headingDocOther" data-bs-parent="#documentsAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Filename</th>
+                                                        <th>For</th>
+                                                        <th>Date Uploaded</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% set ns = namespace(found=false) %}
+                                                    {% for doc in user.panel_documents %}
+                                                        <!-- Check if doc.day_label matches any of the known labels -->
+                                                        {% set loop_ns = namespace(match_found=false) %}
+                                                        {% if global_settings.formation_panel_dates %}
+                                                            {% for d in global_settings.formation_panel_dates.split(',') %}
+                                                                {% set p = d.split(':') %}
+                                                                {% set l = p[0].strip() if p|length > 1 else d.strip() %}
+                                                                {% if doc.day_label == l %}
+                                                                    {% set loop_ns.match_found = true %}
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endif %}
+
+                                                        {% if not loop_ns.match_found %}
+                                                            {% set ns.found = true %}
+                                                            <tr>
+                                                                <td>
+                                                                    <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none">
+                                                                        <i class="fas fa-file me-2"></i>{{ doc.original_filename }}
+                                                                    </a>
+                                                                </td>
+                                                                <td>{{ doc.day_label or '-' }}</td>
+                                                                <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                                <td>
+                                                                    {% if current_user.id == user.id or current_user.is_admin %}
+                                                                    <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                    {% else %}
+                                                                    <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
+                                                                        <i class="fas fa-download"></i>
+                                                                    </a>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if not ns.found %}
+                                                        <tr><td colspan="4" class="text-muted text-center small">No unassigned documents.</td></tr>
+                                                    {% endif %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
     </div>
