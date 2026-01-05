@@ -302,14 +302,27 @@ def create_user():
         else:
             new_user = User(username=username, name=name)
             new_user.set_password(password)
-            # Create empty profile
+
+            # Create profile with details
+            start_date = request.form.get('start_date')
+            presbytery = request.form.get('presbytery')
+            formation_panel_id = request.form.get('formation_panel_id')
+
             new_profile = Profile(user=new_user)
+            new_profile.start_date = start_date
+            new_profile.presbytery = presbytery
+
+            if formation_panel_id and formation_panel_id.isdigit():
+                new_profile.formation_panel_id = int(formation_panel_id)
+
             db.session.add(new_user)
             db.session.add(new_profile)
             db.session.commit()
             flash('User created successfully')
             return redirect(url_for('main.admin_dashboard'))
-    return render_template('admin_create_user.html')
+
+    panels = FormationPanel.query.all()
+    return render_template('admin_create_user.html', panels=panels)
 
 @main.route('/admin/edit/<int:user_id>', methods=['GET', 'POST'])
 @login_required
