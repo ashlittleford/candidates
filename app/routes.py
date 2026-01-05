@@ -124,6 +124,45 @@ def logout():
     logout_user()
     return redirect(url_for('main.login'))
 
+@main.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = user.get_reset_token()
+            reset_link = url_for('main.reset_token', token=token, _external=True)
+            # TODO: Integrate with an email service (e.g., Flask-Mail) here.
+            print(f"PASSWORD RESET LINK FOR {email}: {reset_link}") # For dev environment
+
+        # Always display the same message to prevent email enumeration
+        flash('If an account with that email exists, a password reset email has been sent.', 'info')
+        return redirect(url_for('main.login'))
+    return render_template('reset_request.html')
+
+@main.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('main.reset_request'))
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return render_template('reset_token.html')
+
+        user.set_password(password)
+        db.session.commit()
+        flash('Your password has been updated! You are now able to log in', 'success')
+        return redirect(url_for('main.login'))
+    return render_template('reset_token.html')
+
 @main.route('/profile')
 @login_required
 def profile():
