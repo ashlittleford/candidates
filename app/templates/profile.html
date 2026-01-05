@@ -520,10 +520,10 @@
                 <div class="mb-4">
                     <h5 class="section-title">My Formation Panel Documents</h5>
                     <div class="card border-0 shadow-sm p-4">
-                        {% if current_user.id == user.id %}
+                        {% if current_user.id == user.id or current_user.is_admin %}
                         <!-- Upload Form -->
                         <div class="mb-3">
-                            <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
+                            <form action="{{ url_for('main.upload_panel_document', user_id=user.id) }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="file" name="file" class="form-control form-control-sm w-auto" multiple required>
 

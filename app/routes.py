@@ -686,16 +686,16 @@ def edit_standard(standard_id):
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
-@main.route('/profile/upload_document', methods=['POST'])
+@main.route('/profile/<int:user_id>/upload_document', methods=['POST'])
 @login_required
-def upload_panel_document():
-    if current_user.is_admin or current_user.is_panel_member:
-        flash("Only candidates can upload formation panel documents.")
+def upload_panel_document(user_id):
+    if not (current_user.id == user_id or current_user.is_admin):
+        flash("Access denied.")
         return redirect(url_for('main.profile'))
 
     if 'file' not in request.files:
         flash('No file part')
-        return redirect(url_for('main.profile'))
+        return redirect(request.referrer or url_for('main.profile'))
 
     files = request.files.getlist('file')
     day_label = request.form.get('day_label')
@@ -711,7 +711,7 @@ def upload_panel_document():
             file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
 
             doc = PanelDocument(
-                user_id=current_user.id,
+                user_id=user_id,
                 filename=filename,
                 original_filename=original_filename,
                 day_label=day_label
@@ -720,7 +720,7 @@ def upload_panel_document():
 
     db.session.commit()
     flash('Documents uploaded successfully.')
-    return redirect(url_for('main.profile'))
+    return redirect(request.referrer or url_for('main.profile'))
 
 @main.route('/profile/delete_document/<int:doc_id>', methods=['POST'])
 @login_required
