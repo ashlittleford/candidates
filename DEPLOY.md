@@ -91,7 +91,8 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal`).
         3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
         4.  Create a **new file** named `.htaccess` (starts with a dot).
-        5.  Edit the file and paste the following content (you must update the paths!):
+        5.  Edit the file and paste the content from the `htaccess.example` file included in this repository.
+        6.  **IMPORTANT:** You must update the paths in the file to match your server environment!
             ```apache
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
             PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
