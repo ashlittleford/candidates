@@ -91,7 +91,8 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal`).
         3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
         4.  Create a **new file** named `.htaccess` (starts with a dot).
-        5.  Edit the file and paste the following content (you must update the paths!):
+        5.  Edit the file and paste the content from the `htaccess.example` file included in this repository.
+        6.  **IMPORTANT:** You must update the paths in the file to match your server environment!
             ```apache
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
             PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
@@ -128,3 +129,6 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
+*   **Error: `python3 -m venv venv` fails with "ensurepip" error**:
+    *   **Explanation**: This happens if you try to create a virtual environment manually using the system Python on shared hosting, which is often restricted or incomplete.
+    *   **Solution**: Do **NOT** create the virtual environment manually. Instead, use the **Command for entering virtual environment** provided by the "Setup Python App" tool in cPanel, as described in **Step 3**.

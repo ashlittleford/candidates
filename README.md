@@ -2,6 +2,8 @@
 
 A Flask-based web application for managing candidates, featuring user authentication, role-based access control (Admin and Candidate), and profile management.
 
+> **Deploying to cPanel?** Please refer to [DEPLOY.md](DEPLOY.md) for specific instructions tailored to cPanel environments. The standard installation steps below are for local development.
+
 ## Prerequisites
 
 - Python 3.x
