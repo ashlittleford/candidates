@@ -97,6 +97,13 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
         *   **If it is empty:** The Git Clone failed. Delete the folder and try **Step 1** again.
         *   **If you see another folder inside** (e.g., `candidate-portal` inside `candidate-portal`): Your files are nested too deep. Move them up one level so `app/`, `requirements.txt`, and `passenger_wsgi.py` are directly in the Application Root.
+*   **Error: "The following untracked working tree files would be overwritten by merge: passenger_wsgi.py"**:
+    *   This happens because cPanel or you created a `passenger_wsgi.py` file locally, but now one also exists in the git repository.
+    *   **Solution**:
+        1.  Open **File Manager** or **Terminal**.
+        2.  Navigate to your repository folder.
+        3.  Delete or rename the existing `passenger_wsgi.py` file (e.g., rename to `passenger_wsgi.py.bak`).
+        4.  Try the **Git Pull** or update operation again.
 *   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
     *   This means you are not in the exact folder containing the code files in the Terminal.
     *   Run `find . -maxdepth 3 -name init_db.py` to locate the file.
