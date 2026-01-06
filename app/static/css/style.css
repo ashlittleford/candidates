@@ -179,3 +179,15 @@ main {
     font-size: 0.5rem;
     vertical-align: middle;
 }
+
+.uca-btn-red {
+    background-color: var(--uca-red);
+    border-color: var(--uca-red);
+    color: var(--uca-white);
+}
+
+.uca-btn-red:hover {
+    background-color: #b91d21;
+    border-color: #b91d21;
+    color: var(--uca-white);
+}
