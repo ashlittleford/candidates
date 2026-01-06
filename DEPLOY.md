@@ -43,8 +43,15 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     ```
     *   You should see `requirements.txt`, `app/`, `run.py`, etc.
     *   **If you do not see these files:**
-        *   Check if they are in a subdirectory (e.g., `cd candidate-portal`).
-        *   Go back to **Git Version Control** and verify the "Repository Path".
+        *   **Use this command to find where the files are:**
+            ```bash
+            find . -maxdepth 3 -name init_db.py
+            ```
+        *   If it returns something like `./candidate-portal/init_db.py`, then type:
+            ```bash
+            cd candidate-portal
+            ```
+        *   Now you should be in the right place.
 6.  Run the following command to install dependencies:
     ```bash
     pip install -r requirements.txt
@@ -74,10 +81,9 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
-*   **Error: "No such file or directory: 'requirements.txt'"**:
-    *   This means you are not in the directory containing the code.
-    *   Run `ls -la` to see current files.
-    *   If the directory is empty, you might have skipped **Step 1** (Git Clone) or cloned into a different path.
-    *   If you see a folder named after your repo, `cd` into it.
+*   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
+    *   This means you are not in the exact folder containing the code files.
+    *   Run `find . -maxdepth 3 -name init_db.py` to locate the file.
+    *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
