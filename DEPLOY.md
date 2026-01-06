@@ -1,0 +1,105 @@
+# Deployment Guide for cPanel
+
+This guide provides step-by-step instructions for deploying the Candidate Portal application to a cPanel environment (like "ventrip").
+
+## Prerequisites
+*   Access to cPanel.
+*   The Git repository URL for this project.
+*   Domain or subdomain ready (e.g., `encounteradelaide.com.au/candidates`).
+
+## Step 1: Clone the Repository in cPanel
+
+1.  Log in to cPanel.
+2.  Navigate to **Git Version Control** (under "Files").
+3.  Click **Create**.
+4.  **Clone URL**: Enter the Git repository URL.
+5.  **Repository Path**: Enter a path, e.g., `repositories/candidate-portal`.
+6.  **Repository Name**: (Optional) Enter a name like "Candidate Portal".
+7.  Click **Create**.
+
+## Step 2: Setup Python App
+
+1.  Navigate to **Setup Python App** (under "Software").
+2.  Click **Create Application**.
+3.  **Python Version**: Select **3.9** or newer (recommended).
+4.  **Application Root**: Enter the path where you cloned the repo (e.g., `repositories/candidate-portal`).
+5.  **Application URL**: Select your domain and enter the sub-path if needed (e.g., `candidates`).
+6.  **Application Startup File**: Enter `passenger_wsgi.py`.
+    *   *Note: This file is included in the repository and configured to load the app correctly.*
+7.  **Application Entry Point**: Enter `application`.
+8.  Click **Create**.
+
+## Step 3: Install Dependencies
+
+1.  In the "Setup Python App" page, look for the **Command for entering virtual environment**. It will look something like:
+    `source /home/username/virtualenv/repositories/candidate-portal/3.9/bin/activate && cd /home/username/repositories/candidate-portal`
+2.  Copy this command.
+3.  Open **Terminal** in cPanel (or SSH into the server).
+4.  Paste the command to activate the virtual environment.
+    *   *Note: If the command doesn't automatically change directory (`cd`), you must manually navigate to your application root folder.*
+5.  **Verify you are in the correct directory:**
+    ```bash
+    ls -F
+    ```
+    *   You should see `requirements.txt`, `app/`, `run.py`, etc.
+    *   **If you do not see these files:**
+        *   **Use this command to find where the files are:**
+            ```bash
+            find . -maxdepth 3 -name init_db.py
+            ```
+        *   If it returns something like `./candidate-portal/init_db.py`, then type:
+            ```bash
+            cd candidate-portal
+            ```
+        *   Now you should be in the right place.
+6.  Run the following command to install dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Step 4: Initialize the Database
+
+1.  While still in the terminal (with the virtual environment active), run:
+    ```bash
+    python init_db.py
+    ```
+    *   This will create the database file `instance/site.db`, create an Admin user (admin/admin123), and populate initial data.
+
+## Step 5: Restart the Application
+
+1.  Go back to **Setup Python App** in cPanel.
+2.  Click **Restart** for your application.
+
+## Verification
+
+1.  Visit your URL (e.g., `https://encounteradelaide.com.au/candidates`).
+2.  You should see the login page.
+3.  **Default Credentials**:
+    *   **Admin**: username `admin`, password `admin123`
+    *   **Candidate**: username `candidate`, password `password123`
+4.  **Important**: Log in immediately and change the default passwords.
+
+## Troubleshooting
+
+*   **Problem: I see "Index of /candidates/" even though files are in the repository**:
+    *   This means the **link** between your URL and the Python App is broken. The web server is showing a file list instead of running the app.
+    *   **Solution 1: Restart the App**: Go to **Setup Python App** and click **Restart**. Wait a minute and refresh the page.
+    *   **Solution 2: Re-create the App**:
+        1.  In **Setup Python App**, find your application and click the **Delete (Trash/X)** icon. *This only deletes the configuration, not your code.*
+        2.  Create the application again (follow **Step 2**), ensuring the **Application URL** matches exactly (e.g., `candidates`).
+        3.  Click **Create**. This forces cPanel to generate the necessary `.htaccess` file in your public folder.
+    *   **Solution 3: Check .htaccess**:
+        1.  In File Manager, go to your **public** folder (e.g., `public_html/candidates`).
+        2.  Ensure "Show Hidden Files" is enabled (Settings > Show Hidden Files).
+        3.  You should see an `.htaccess` file. If not, try **Solution 2** again.
+
+*   **Problem: Files are nested too deep**:
+    *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
+        *   **If it is empty:** The Git Clone failed. Delete the folder and try **Step 1** again.
+        *   **If you see another folder inside** (e.g., `candidate-portal` inside `candidate-portal`): Your files are nested too deep. Move them up one level so `app/`, `requirements.txt`, and `passenger_wsgi.py` are directly in the Application Root.
+*   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
+    *   This means you are not in the exact folder containing the code files in the Terminal.
+    *   Run `find . -maxdepth 3 -name init_db.py` to locate the file.
+    *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
+*   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
+*   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
