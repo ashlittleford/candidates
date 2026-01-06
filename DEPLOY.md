@@ -36,7 +36,16 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 2.  Copy this command.
 3.  Open **Terminal** in cPanel (or SSH into the server).
 4.  Paste the command to activate the virtual environment.
-5.  Run the following command to install dependencies:
+    *   *Note: If the command doesn't automatically change directory (`cd`), you must manually navigate to your application root folder.*
+5.  **Verify you are in the correct directory:**
+    ```bash
+    ls -F
+    ```
+    *   You should see `requirements.txt`, `app/`, `run.py`, etc.
+    *   **If you do not see these files:**
+        *   Check if they are in a subdirectory (e.g., `cd candidate-portal`).
+        *   Go back to **Git Version Control** and verify the "Repository Path".
+6.  Run the following command to install dependencies:
     ```bash
     pip install -r requirements.txt
     ```
@@ -65,5 +74,10 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
+*   **Error: "No such file or directory: 'requirements.txt'"**:
+    *   This means you are not in the directory containing the code.
+    *   Run `ls -la` to see current files.
+    *   If the directory is empty, you might have skipped **Step 1** (Git Clone) or cloned into a different path.
+    *   If you see a folder named after your repo, `cd` into it.
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
