@@ -16,6 +16,7 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 5.  **Repository Path**: Enter a path, e.g., `repositories/candidate-portal`.
 6.  **Repository Name**: (Optional) Enter a name like "Candidate Portal".
 7.  Click **Create**.
+    *   **Note:** You may see an error stating "The system cannot deploy" or complaining about a missing `.cpanel.yml` file. **You can safely ignore this.** We are configuring the application to run directly from the repository using the "Setup Python App" tool in the next step, so we do not use the "Deploy" feature in the Git Version Control page.
 
 ## Step 2: Setup Python App
 
@@ -92,6 +93,17 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         1.  In File Manager, go to your **public** folder (e.g., `public_html/candidates`).
         2.  Ensure "Show Hidden Files" is enabled (Settings > Show Hidden Files).
         3.  You should see an `.htaccess` file. If not, try **Solution 2** again.
+    *   **Solution 4: Manually Create .htaccess (Emergency Fix)**:
+        *   If the app still shows "Index of...", create a new file named `.htaccess` in the same folder where you see the files (your repository folder).
+        *   Paste the following content, replacing the paths with YOUR actual paths found in the "Setup Python App" page:
+            ```apache
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+            PassengerAppRoot "/home/username/repositories/candidate-portal"
+            PassengerBaseURI "/candidates"
+            PassengerPython "/home/username/virtualenv/repositories/candidate-portal/3.9/bin/python"
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+            ```
+        *   *Tip:* You can find the exact paths for `PassengerAppRoot` and `PassengerPython` (Command for virtual env) in the **Setup Python App** dashboard.
 
 *   **Problem: Files are nested too deep**:
     *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
@@ -104,6 +116,8 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         2.  Navigate to your repository folder.
         3.  Delete or rename the existing `passenger_wsgi.py` file (e.g., rename to `passenger_wsgi.py.bak`).
         4.  Try the **Git Pull** or update operation again.
+*   **Error: "The system cannot deploy... A valid .cpanel.yml file exists..."**:
+    *   **Ignore this.** This error appears in the "Git Version Control" page if you click "Deploy HEAD" or if cPanel tries to auto-deploy. Since we are running the app directly from the source code folder (via Setup Python App), we do not need to "deploy" (copy) files to another location.
 *   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
     *   This means you are not in the exact folder containing the code files in the Terminal.
     *   Run `find . -maxdepth 3 -name init_db.py` to locate the file.
