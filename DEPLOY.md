@@ -81,8 +81,13 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
+*   **Problem: I see "Index of /candidate-portal/" or an Empty Directory listing in the browser**:
+    *   This means the folder is empty or the Python app is not handling the request.
+    *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
+        *   **If it is empty:** The Git Clone failed. Delete the folder and try **Step 1** again.
+        *   **If you see another folder inside** (e.g., `candidate-portal` inside `candidate-portal`): Your files are nested too deep. Move them up one level so `app/`, `requirements.txt`, and `passenger_wsgi.py` are directly in the Application Root.
 *   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
-    *   This means you are not in the exact folder containing the code files.
+    *   This means you are not in the exact folder containing the code files in the Terminal.
     *   Run `find . -maxdepth 3 -name init_db.py` to locate the file.
     *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
