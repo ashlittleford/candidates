@@ -81,8 +81,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
-*   **Problem: I see "Index of /candidate-portal/" or an Empty Directory listing in the browser**:
-    *   This means the folder is empty or the Python app is not handling the request.
+*   **Problem: I see "Index of /candidates/" even though files are in the repository**:
+    *   This means the **link** between your URL and the Python App is broken. The web server is showing a file list instead of running the app.
+    *   **Solution 1: Restart the App**: Go to **Setup Python App** and click **Restart**. Wait a minute and refresh the page.
+    *   **Solution 2: Re-create the App**:
+        1.  In **Setup Python App**, find your application and click the **Delete (Trash/X)** icon. *This only deletes the configuration, not your code.*
+        2.  Create the application again (follow **Step 2**), ensuring the **Application URL** matches exactly (e.g., `candidates`).
+        3.  Click **Create**. This forces cPanel to generate the necessary `.htaccess` file in your public folder.
+    *   **Solution 3: Check .htaccess**:
+        1.  In File Manager, go to your **public** folder (e.g., `public_html/candidates`).
+        2.  Ensure "Show Hidden Files" is enabled (Settings > Show Hidden Files).
+        3.  You should see an `.htaccess` file. If not, try **Solution 2** again.
+
+*   **Problem: Files are nested too deep**:
     *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
         *   **If it is empty:** The Git Clone failed. Delete the folder and try **Step 1** again.
         *   **If you see another folder inside** (e.g., `candidate-portal` inside `candidate-portal`): Your files are nested too deep. Move them up one level so `app/`, `requirements.txt`, and `passenger_wsgi.py` are directly in the Application Root.
