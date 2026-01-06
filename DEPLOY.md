@@ -82,28 +82,31 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
-*   **Problem: I see "Index of /candidates/" even though files are in the repository**:
-    *   This means the **link** between your URL and the Python App is broken. The web server is showing a file list instead of running the app.
-    *   **Solution 1: Restart the App**: Go to **Setup Python App** and click **Restart**. Wait a minute and refresh the page.
+*   **Problem: I see "Index of /candidates/" (Directory Listing)**:
+    *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
+    *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
+    *   **Solution 1: Manually Create `.htaccess` (Recommended Fix)**
+        1.  Go to **File Manager** in cPanel.
+        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal`).
+        3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
+        4.  Create a **new file** named `.htaccess` (starts with a dot).
+        5.  Edit the file and paste the following content (you must update the paths!):
+            ```apache
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+            PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
+            PassengerBaseURI "/candidates"
+            PassengerPython "/home/ventrip/virtualenv/repositories/candidate-portal/3.9/bin/python"
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+            ```
+        *   **How to find the correct paths?**
+            *   Open the Terminal in cPanel.
+            *   Navigate to your app folder (`cd repositories/candidate-portal`).
+            *   Type `pwd` and press Enter. This is your **PassengerAppRoot**.
+            *   The **PassengerPython** path is visible in the "Setup Python App" page as the "Command for entering virtual environment" (the path ending in `.../bin/python` inside the source command).
     *   **Solution 2: Re-create the App**:
         1.  In **Setup Python App**, find your application and click the **Delete (Trash/X)** icon. *This only deletes the configuration, not your code.*
         2.  Create the application again (follow **Step 2**), ensuring the **Application URL** matches exactly (e.g., `candidates`).
-        3.  Click **Create**. This forces cPanel to generate the necessary `.htaccess` file in your public folder.
-    *   **Solution 3: Check .htaccess**:
-        1.  In File Manager, go to your **public** folder (e.g., `public_html/candidates`).
-        2.  Ensure "Show Hidden Files" is enabled (Settings > Show Hidden Files).
-        3.  You should see an `.htaccess` file. If not, try **Solution 2** again.
-    *   **Solution 4: Manually Create .htaccess (Emergency Fix)**:
-        *   If the app still shows "Index of...", create a new file named `.htaccess` in the same folder where you see the files (your repository folder).
-        *   Paste the following content, replacing the paths with YOUR actual paths found in the "Setup Python App" page:
-            ```apache
-            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-            PassengerAppRoot "/home/username/repositories/candidate-portal"
-            PassengerBaseURI "/candidates"
-            PassengerPython "/home/username/virtualenv/repositories/candidate-portal/3.9/bin/python"
-            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
-            ```
-        *   *Tip:* You can find the exact paths for `PassengerAppRoot` and `PassengerPython` (Command for virtual env) in the **Setup Python App** dashboard.
+        3.  Click **Create**. This forces cPanel to generate the necessary `.htaccess` file.
 
 *   **Problem: Files are nested too deep**:
     *   **Check File Manager**: Go to cPanel > File Manager and look in your repository folder (e.g., `repositories/candidate-portal`).
