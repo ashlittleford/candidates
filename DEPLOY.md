@@ -95,11 +95,12 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         6.  **IMPORTANT:** You must update the paths in the file to match your server environment!
             ```apache
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-            PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
-            PassengerBaseURI "/candidates"
-            PassengerPython "/home/ventrip/virtualenv/repositories/candidate-portal/3.9/bin/python"
+            PassengerAppRoot "/home/encosnpm/repositories/candidate-portal"
+            PassengerBaseURI "/"
+            PassengerPython "/home/encosnpm/virtualenv/repositories/candidate-portal/3.12/bin/python"
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
             ```
+            *   **Note:** If you are deploying to a subfolder (e.g., `encounteradelaide.com.au/candidates`), change `PassengerBaseURI` to `"/candidates"`.
         *   **How to find the correct paths?**
             *   Open the Terminal in cPanel.
             *   Navigate to your app folder (`cd repositories/candidate-portal`).
