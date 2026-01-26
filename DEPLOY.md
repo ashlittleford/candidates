@@ -82,7 +82,7 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
-*   **Problem: I see "Index of /candidates/" (Directory Listing)**:
+*   **Problem: I see "Index of /candidates/" or "Index of /home/" (Directory Listing)**:
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
     *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
@@ -95,11 +95,12 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         6.  **IMPORTANT:** You must update the paths in the file to match your server environment!
             ```apache
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-            PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
-            PassengerBaseURI "/candidates"
-            PassengerPython "/home/ventrip/virtualenv/repositories/candidate-portal/3.9/bin/python"
+            PassengerAppRoot "/home/encosnpm/repositories/candidate-portal"
+            PassengerBaseURI "/"
+            PassengerPython "/home/encosnpm/virtualenv/repositories/candidate-portal/3.12/bin/python"
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
             ```
+            *   **Note:** If you are deploying to a subfolder (e.g., `encounteradelaide.com.au/candidates`), change `PassengerBaseURI` to `"/candidates"`.
         *   **How to find the correct paths?**
             *   Open the Terminal in cPanel.
             *   Navigate to your app folder (`cd repositories/candidate-portal`).

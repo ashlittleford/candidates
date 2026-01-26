@@ -8,7 +8,7 @@
 # PassengerPython: The absolute path to the Python executable in your virtual environment.
 
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home/ventrip/repositories/candidate-portal"
-PassengerBaseURI "/candidates"
-PassengerPython "/home/ventrip/virtualenv/repositories/candidate-portal/3.9/bin/python"
+PassengerAppRoot "/home/encosnpm/repositories/candidate-portal"
+PassengerBaseURI "/"
+PassengerPython "/home/encosnpm/virtualenv/repositories/candidate-portal/3.12/bin/python"
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
