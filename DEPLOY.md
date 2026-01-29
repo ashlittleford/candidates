@@ -86,9 +86,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
     *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
-    *   **Solution 1: Manually Create `.htaccess` (Recommended Fix)**
+    *   **Solution 0: Automatic Fix (Easiest)**
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to the folder you see in the "Index of" page (e.g., `cd repositories/candidate-portal` or `cd public_html/candidates`).
+        3.  Run the setup script:
+            ```bash
+            python setup_htaccess.py
+            ```
+        4.  It will generate the `.htaccess` file for you.
+        5.  **Check the output:** If it says `PassengerBaseURI "/"`, but you are hosting at `/candidates` (e.g. `encounteradelaide.com.au/candidates`), you must edit the file and change it to `"/candidates"`.
+
+    *   **Solution 1: Manually Create `.htaccess`**
         1.  Go to **File Manager** in cPanel.
-        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal`).
+        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal` or `public_html/candidates`).
         3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
         4.  Create a **new file** named `.htaccess` (starts with a dot).
         5.  Edit the file and paste the content from the `htaccess.example` file included in this repository.
@@ -101,6 +111,7 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
             ```
             *   **Note:** If you are deploying to a subfolder (e.g., `encounteradelaide.com.au/candidates`), change `PassengerBaseURI` to `"/candidates"`.
+            *   **Note:** If you cloned into `public_html`, your App Root might be `/home/encosnpm/public_html/candidates`.
         *   **How to find the correct paths?**
             *   Open the Terminal in cPanel.
             *   Navigate to your app folder (`cd repositories/candidate-portal`).

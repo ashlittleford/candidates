@@ -20,6 +20,42 @@ for f in files_to_check:
             print(f"    (Could not read file: {e})")
         print("    --- .htaccess content end ---")
 
+        # Validate .htaccess content
+        print("    Checking .htaccess configuration...")
+        try:
+            with open(f, 'r') as hf:
+                content = hf.read()
+
+                # Check App Root
+                import re
+                app_root_match = re.search(r'PassengerAppRoot\s+"([^"]+)"', content)
+                if app_root_match:
+                    config_root = app_root_match.group(1)
+                    current_root = os.getcwd()
+                    if config_root != current_root:
+                        print(f"    [WARNING] PassengerAppRoot mismatch!")
+                        print(f"        .htaccess: {config_root}")
+                        print(f"        Actual:    {current_root}")
+                    else:
+                        print(f"    [OK] PassengerAppRoot matches current directory.")
+                else:
+                    print("    [WARNING] Could not find PassengerAppRoot in .htaccess")
+
+                # Check Python Path
+                python_match = re.search(r'PassengerPython\s+"([^"]+)"', content)
+                if python_match:
+                    config_python = python_match.group(1)
+                    current_python = sys.executable
+                    # Simple check: paths might differ due to symlinks, but it's a good hint
+                    if config_python != current_python:
+                        print(f"    [NOTE] PassengerPython path differs (this might be okay if using symlinks):")
+                        print(f"        .htaccess: {config_python}")
+                        print(f"        Actual:    {current_python}")
+                    else:
+                        print(f"    [OK] PassengerPython matches current interpreter.")
+        except Exception as e:
+            print(f"    (Could not validate .htaccess: {e})")
+
 print("\nChecking Git Repository State...")
 if os.path.isdir('.git'):
     print("[OK] .git directory found.")
