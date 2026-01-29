@@ -88,13 +88,18 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
     *   **Solution 0: Automatic Fix (Easiest)**
         1.  Open **Terminal** in cPanel.
-        2.  Navigate to the folder you see in the "Index of" page (e.g., `cd repositories/candidate-portal` or `cd public_html/candidates`).
+        2.  Navigate to your **Repository Folder** (e.g., `cd repositories/candidate-portal`).
         3.  Run the setup script:
             ```bash
             python setup_htaccess.py
             ```
-        4.  It will generate the `.htaccess` file for you.
-        5.  **Check the output:** If it says `PassengerBaseURI "/"`, but you are hosting at `/candidates` (e.g. `encounteradelaide.com.au/candidates`), you must edit the file and change it to `"/candidates"`.
+        4.  **CHECK THE OUTPUT:** The script will tell you where it created the `.htaccess` file.
+        5.  **ACTION REQUIRED:**
+            *   **Case A:** If the website is serving files from this same folder (uncommon for proper setups), you are done.
+            *   **Case B (Most Likely):** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there:
+                *   You MUST **copy** the generated `.htaccess` file from the repository folder to that public folder.
+                *   Command example: `cp .htaccess ~/public_html/candidates/`
+        6.  **Verify:** Visit your website again. The "Index of" page should be gone.
 
     *   **Solution 1: Manually Create `.htaccess`**
         1.  Go to **File Manager** in cPanel.
