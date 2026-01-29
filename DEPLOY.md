@@ -130,3 +130,15 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
+*   **Error: (XID ...) "/usr/local/cpanel/3rdparty/bin/git" reported error code "128"... fatal: 'origin/master' is not a commit**:
+    *   This error usually appears in the "Git Version Control" page and indicates the local repository on the server is incomplete or out of sync with the remote.
+    *   **Solution**:
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to your repository folder (e.g., `cd repositories/candidate-portal`).
+        3.  Run the following commands to resync with GitHub:
+            ```bash
+            git fetch origin
+            git checkout master
+            ```
+            *   If `git checkout master` fails, try `git checkout -b master origin/master`.
+        4.  Run `python diagnose.py` to verify the git state.

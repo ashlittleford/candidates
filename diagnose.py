@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 print("--- DIAGNOSTIC SCRIPT START ---")
 print(f"Current Working Directory: {os.getcwd()}")
@@ -18,6 +19,32 @@ for f in files_to_check:
         except Exception as e:
             print(f"    (Could not read file: {e})")
         print("    --- .htaccess content end ---")
+
+print("\nChecking Git Repository State...")
+if os.path.isdir('.git'):
+    print("[OK] .git directory found.")
+    try:
+        print("    Running 'git remote -v':")
+        sys.stdout.flush()
+        subprocess.run(['git', 'remote', '-v'], check=False)
+
+        print("    Running 'git branch -a':")
+        sys.stdout.flush()
+        subprocess.run(['git', 'branch', '-a'], check=False)
+
+        print("    Running 'git status':")
+        sys.stdout.flush()
+        subprocess.run(['git', 'status'], check=False)
+
+        # Check for origin/master specifically
+        result = subprocess.run(['git', 'branch', '-r'], capture_output=True, text=True)
+        if 'origin/master' not in result.stdout and 'origin/main' not in result.stdout:
+            print("\n[WARNING] 'origin/master' (or main) seems missing from remote refs.")
+            print("SUGGESTION: Run 'git fetch origin' in the terminal to fix synchronization issues.")
+    except Exception as e:
+        print(f"[ERROR] Failed to run git commands: {e}")
+else:
+    print("[WARNING] .git directory NOT found. This does not appear to be a git repository.")
 
 print("\nAttempting to import app...")
 try:
