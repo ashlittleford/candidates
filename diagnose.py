@@ -32,12 +32,29 @@ for f in files_to_check:
                 if app_root_match:
                     config_root = app_root_match.group(1)
                     current_root = os.getcwd()
-                    if config_root != current_root:
+
+                    # 1. Check for Absolute Path
+                    if not config_root.startswith('/'):
+                        print(f"    [CRITICAL ERROR] PassengerAppRoot must be an ABSOLUTE path.")
+                        print(f"        Found:    {config_root}")
+                        print(f"        Expected: /home/username/repositories/candidate-portal (or similar)")
+                        print("    [FIX] Run 'python setup_htaccess.py' to regenerate the file with the correct path.")
+
+                    # 2. Check if path exists
+                    elif not os.path.exists(config_root):
+                        print(f"    [CRITICAL ERROR] The path specified in PassengerAppRoot DOES NOT EXIST on the server.")
+                        print(f"        Path: {config_root}")
+                        print("    [FIX] Check the path. Did you move the folder? Run 'python setup_htaccess.py' to regenerate.")
+
+                    # 3. Check for Match
+                    elif config_root != current_root:
                         print(f"    [WARNING] PassengerAppRoot mismatch!")
                         print(f"        .htaccess: {config_root}")
                         print(f"        Actual:    {current_root}")
+                        print("    [NOTE] This might be intended if you are running this script from a different location,")
+                        print("           but ensure the path in .htaccess is where your app code lives.")
                     else:
-                        print(f"    [OK] PassengerAppRoot matches current directory.")
+                        print(f"    [OK] PassengerAppRoot is valid and matches current directory.")
                 else:
                     print("    [WARNING] Could not find PassengerAppRoot in .htaccess")
 
