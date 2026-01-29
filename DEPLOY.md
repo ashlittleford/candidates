@@ -86,9 +86,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
     *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
-    *   **Solution 1: Manually Create `.htaccess` (Recommended Fix)**
+    *   **Solution 0: Automatic Fix (Easiest)**
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to the folder you see in the "Index of" page (e.g., `cd repositories/candidate-portal` or `cd public_html/candidates`).
+        3.  Run the setup script:
+            ```bash
+            python setup_htaccess.py
+            ```
+        4.  It will generate the `.htaccess` file for you.
+        5.  **Check the output:** If it says `PassengerBaseURI "/"`, but you are hosting at `/candidates` (e.g. `encounteradelaide.com.au/candidates`), you must edit the file and change it to `"/candidates"`.
+
+    *   **Solution 1: Manually Create `.htaccess`**
         1.  Go to **File Manager** in cPanel.
-        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal`).
+        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal` or `public_html/candidates`).
         3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
         4.  Create a **new file** named `.htaccess` (starts with a dot).
         5.  Edit the file and paste the content from the `htaccess.example` file included in this repository.
@@ -101,6 +111,7 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
             # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
             ```
             *   **Note:** If you are deploying to a subfolder (e.g., `encounteradelaide.com.au/candidates`), change `PassengerBaseURI` to `"/candidates"`.
+            *   **Note:** If you cloned into `public_html`, your App Root might be `/home/encosnpm/public_html/candidates`.
         *   **How to find the correct paths?**
             *   Open the Terminal in cPanel.
             *   Navigate to your app folder (`cd repositories/candidate-portal`).
@@ -130,3 +141,30 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
+*   **Error: (XID ...) "/usr/local/cpanel/3rdparty/bin/git" reported error code "128"... fatal: 'origin/master' is not a commit**:
+    *   This error usually appears in the "Git Version Control" page and indicates the local repository on the server is incomplete or out of sync with the remote.
+    *   **Solution**:
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to your repository folder (e.g., `cd repositories/candidate-portal`).
+        3.  Run the following commands to resync with GitHub:
+            ```bash
+            git fetch origin
+            git checkout master
+            ```
+            *   If `git checkout master` fails, try `git checkout -b master origin/master`.
+        4.  Run `python diagnose.py` to verify the git state.
+*   **Error: SyntaxError or "File ... line ..." errors**:
+    *   If you see errors like `SyntaxError` when running python scripts, it usually means a file on the server has been modified incorrectly (e.g., bad copy-paste).
+    *   **Solution**: Restore the file to its original state from the repository.
+        1.  Identify the file causing the error (e.g., `init_db.py`).
+        2.  Run the following command in Terminal to discard local changes and restore the file:
+            ```bash
+            git checkout init_db.py
+            ```
+            *(Replace `init_db.py` with the damaged filename)*
+    *   **Hard Reset (Last Resort)**:
+        *   If multiple files are broken or you want to force the server to match the GitHub repository exactly (WARNING: This will delete ALL local changes to code files):
+            ```bash
+            git fetch origin
+            git reset --hard origin/master
+            ```
