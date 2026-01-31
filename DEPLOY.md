@@ -93,12 +93,12 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
             ```bash
             python setup_htaccess.py
             ```
-        4.  **CHECK THE OUTPUT:** The script will tell you where it created the `.htaccess` file.
+            *   *Note: The script will ask for the Base URI (e.g., `/` or `/candidates`).*
+        4.  **CHECK THE OUTPUT:** The script will generate the file and **show you the exact command** to copy it to your public folder.
         5.  **ACTION REQUIRED:**
-            *   **Case A:** If the website is serving files from this same folder (uncommon for proper setups), you are done.
-            *   **Case B (Most Likely):** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there:
-                *   You MUST **copy** the generated `.htaccess` file from the repository folder to that public folder.
-                *   Command example: `cp .htaccess ~/public_html/candidates/`
+            *   **Most Likely:** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there, you MUST **copy** the generated `.htaccess` file.
+            *   **Run the command provided by the script output.**
+            *   Example: `cp .htaccess ~/public_html/candidates/`
         6.  **Verify:** Visit your website again. The "Index of" page should be gone.
 
     *   **Solution 1: Manually Create `.htaccess`**
