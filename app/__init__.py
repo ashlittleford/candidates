@@ -4,10 +4,23 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import inspect, text
 import os
+import re
+from markupsafe import Markup, escape
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+
+def bold_keywords_filter(text):
+    if not text:
+        return text
+    # Escape the text first to prevent XSS
+    text = str(escape(text))
+    # Bold "Key educational units:"
+    text = re.sub(r'(Key educational units:)', r'<strong>\1</strong>', text, flags=re.IGNORECASE)
+    # Bold "LFD #:" variants
+    text = re.sub(r'(LFD\s*\d+[:.])', r'<strong>\1</strong>', text, flags=re.IGNORECASE)
+    return Markup(text)
 
 def check_and_upgrade_schema(app):
     """
@@ -149,6 +162,8 @@ def create_app(test_config=None):
 
     from app.routes import main
     app.register_blueprint(main)
+
+    app.jinja_env.filters['bold_keywords'] = bold_keywords_filter
 
     # Run schema check and upgrade
     if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':

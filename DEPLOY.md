@@ -82,21 +82,46 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
-*   **Problem: I see "Index of /candidates/" (Directory Listing)**:
+*   **Problem: I see "Index of /candidates/" or "Index of /home/" (Directory Listing)**:
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
     *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
-    *   **Solution 1: Manually Create `.htaccess` (Recommended Fix)**
+    *   **Solution 0: Automatic Fix (Easiest)**
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to your **Repository Folder** (e.g., `cd repositories/candidate-portal`).
+        3.  Run the setup script:
+            ```bash
+            python setup_htaccess.py
+            ```
+        4.  **CHECK THE OUTPUT:** The script will tell you where it created the `.htaccess` file.
+        5.  **ACTION REQUIRED:**
+            *   **Case A:** If the website is serving files from this same folder (uncommon for proper setups), you are done.
+            *   **Case B (Most Likely):** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there:
+                *   You MUST **copy** the generated `.htaccess` file from the repository folder to that public folder.
+                *   Command example: `cp .htaccess ~/public_html/candidates/`
+        6.  **Verify:** Visit your website again. The "Index of" page should be gone.
+
+    *   **Solution 1: Manually Create `.htaccess`**
         1.  Go to **File Manager** in cPanel.
-        2.  Navigate to the folder you see in the "Index of" page.
+        2.  Navigate to the folder you see in the "Index of" page (likely `repositories/candidate-portal` or `public_html/candidates`).
         3.  Ensure **Settings > Show Hidden Files** is checked (top right corner).
-        4.  **Verify:** Do you see `passenger_wsgi.py` in this folder? If not, you are in the wrong folder.
-        5.  Create or Edit the file named `.htaccess`.
-        6.  Ensure it contains the Passenger configuration block.
-            *   **CRITICAL CHECK:** The `PassengerAppRoot` path inside the file **must match exactly** the folder where `passenger_wsgi.py` is located.
-            *   *Example:* If your files are in `/home/encosnpm/public_html/candidates`, the line must be:
-                `PassengerAppRoot "/home/encosnpm/public_html/candidates"`
-        7.  Save the file.
+        4.  Create a **new file** named `.htaccess` (starts with a dot).
+        5.  Edit the file and paste the content from the `htaccess.example` file included in this repository.
+        6.  **IMPORTANT:** You must update the paths in the file to match your server environment!
+            ```apache
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+            PassengerAppRoot "/home/encosnpm/repositories/candidate-portal"
+            PassengerBaseURI "/"
+            PassengerPython "/home/encosnpm/virtualenv/repositories/candidate-portal/3.12/bin/python"
+            # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+            ```
+            *   **Note:** If you are deploying to a subfolder (e.g., `encounteradelaide.com.au/candidates`), change `PassengerBaseURI` to `"/candidates"`.
+            *   **Note:** If you cloned into `public_html`, your App Root might be `/home/encosnpm/public_html/candidates`.
+        *   **How to find the correct paths?**
+            *   Open the Terminal in cPanel.
+            *   Navigate to your app folder (`cd repositories/candidate-portal`).
+            *   Type `pwd` and press Enter. This is your **PassengerAppRoot**.
+            *   The **PassengerPython** path is visible in the "Setup Python App" page as the "Command for entering virtual environment" (the path ending in `.../bin/python` inside the source command).
     *   **Solution 2: Re-create the App**:
         1.  In **Setup Python App**, find your application and click the **Delete (Trash/X)** icon. *This only deletes the configuration, not your code.*
         2.  Create the application again (follow **Step 2**), ensuring the **Application URL** matches exactly (e.g., `candidates`).
@@ -121,3 +146,15 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   `cd` into the directory shown in the result (e.g., `cd repositories/candidate-portal`).
 *   **500 Internal Server Error**: Check the error log in cPanel (often under `stderr.log` in the application root or via the "Errors" section in cPanel).
 *   **Database Read-Only**: Ensure the `instance` folder has write permissions. You can check this in cPanel File Manager (permissions should usually be 755 or 775).
+*   **Error: (XID ...) "/usr/local/cpanel/3rdparty/bin/git" reported error code "128"... fatal: 'origin/master' is not a commit**:
+    *   This error usually appears in the "Git Version Control" page and indicates the local repository on the server is incomplete or out of sync with the remote.
+    *   **Solution**:
+        1.  Open **Terminal** in cPanel.
+        2.  Navigate to your repository folder (e.g., `cd repositories/candidate-portal`).
+        3.  Run the following commands to resync with GitHub:
+            ```bash
+            git fetch origin
+            git checkout master
+            ```
+            *   If `git checkout master` fails, try `git checkout -b master origin/master`.
+        4.  Run `python diagnose.py` to verify the git state.
