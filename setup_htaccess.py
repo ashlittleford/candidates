@@ -27,11 +27,6 @@ def create_htaccess():
 
     print(f"Using Base URI: {base_uri}")
 
-    # Check for passenger_wsgi.py
-    if not os.path.exists(os.path.join(app_root, 'passenger_wsgi.py')):
-        print("[WARNING] 'passenger_wsgi.py' not found in the script directory.")
-        print("          Ensure this script is located in the root of your Git repository.")
-
     htaccess_content = f"""# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
 PassengerAppRoot "{app_root}"
 PassengerBaseURI "{base_uri}"
@@ -56,19 +51,35 @@ PassengerPython "{python_path}"
         print(htaccess_content.strip())
         print("-"*70)
 
+        # Detect Public HTML
+        home_dir = os.path.expanduser("~")
+        public_html = os.path.join(home_dir, "public_html")
+
+        # Deduce target directory from base_uri
+        # e.g. /candidates -> ~/public_html/candidates
+        # e.g. / -> ~/public_html
+
+        rel_path = base_uri.strip('/')
+        target_dir = os.path.join(public_html, rel_path)
+
         print("\n" + "#"*70)
         print("                     CRITICAL NEXT STEP")
         print("#"*70)
-        print("If you are seeing an 'Index of /' page, you MUST perform this step.")
+        print("You are seeing 'Index of' or 404/403 errors because this file")
+        print("is NOT in the correct location yet.")
         print("")
-        print("This .htaccess file is currently in your REPOSITORY folder.")
-        print("The web server looks for it in your PUBLIC_HTML (or subdomain) folder.")
-        print("")
-        print(">> ACTION REQUIRED: COPY THIS FILE")
-        print("   Copy the generated .htaccess file to the folder your domain points to.")
-        print("")
-        print("   Example Command (Adjust target path as needed):")
-        print(f"   cp {file_path} ~/public_html{base_uri if base_uri != '/' else ''}")
+
+        copy_cmd = f"cp {file_path} {target_dir}/"
+
+        if os.path.exists(target_dir):
+             print(f"Detected Public Directory: {target_dir}")
+             print(">> ACTION REQUIRED: COPY THIS FILE NOW")
+             print(f"   {copy_cmd}")
+        else:
+             print(">> ACTION REQUIRED: COPY THIS FILE")
+             print("   Copy the generated .htaccess file to the folder your domain points to.")
+             print(f"   Example Command: cp {file_path} ~/public_html{base_uri if base_uri != '/' else ''}")
+
         print("")
         print("#"*70 + "\n")
 

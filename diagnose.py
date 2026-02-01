@@ -1,77 +1,83 @@
 import os
 import sys
 import subprocess
+import re
 
 print("--- DIAGNOSTIC SCRIPT START ---")
 print(f"Current Working Directory: {os.getcwd()}")
 print(f"Script Directory: {os.path.dirname(os.path.abspath(__file__))}")
 
-print("\nChecking for critical files...")
+# --- Check Repository Files ---
+print("\nChecking for critical files in repository...")
 files_to_check = ['passenger_wsgi.py', 'requirements.txt', 'app/__init__.py', '.htaccess']
+repo_htaccess_content = None
+
 for f in files_to_check:
     exists = os.path.exists(f)
     print(f"[{'OK' if exists else 'MISSING'}] {f}")
     if f == '.htaccess' and exists:
-        print("    --- .htaccess content start ---")
         try:
             with open(f, 'r') as hf:
-                print(hf.read())
+                repo_htaccess_content = hf.read()
+                print("    [INFO] Repository .htaccess found.")
         except Exception as e:
-            print(f"    (Could not read file: {e})")
-        print("    --- .htaccess content end ---")
+            print(f"    [ERROR] Could not read .htaccess: {e}")
 
-        # Validate .htaccess content
-        print("    Checking .htaccess configuration...")
-        try:
-            with open(f, 'r') as hf:
-                content = hf.read()
+# --- Check Public Directory (Heuristic) ---
+print("\nChecking Public Directory (Heuristic)...")
+home_dir = os.path.expanduser("~")
+public_html = os.path.join(home_dir, "public_html")
+candidates_path = os.path.join(public_html, "candidates")
 
-                # Check App Root
-                import re
-                app_root_match = re.search(r'PassengerAppRoot\s+"([^"]+)"', content)
-                if app_root_match:
-                    config_root = app_root_match.group(1)
-                    current_root = os.getcwd()
-                    if config_root != current_root:
-                        print(f"    [WARNING] PassengerAppRoot mismatch!")
-                        print(f"        .htaccess: {config_root}")
-                        print(f"        Actual:    {current_root}")
-                    else:
-                        print(f"    [OK] PassengerAppRoot matches current directory.")
-                else:
-                    print("    [WARNING] Could not find PassengerAppRoot in .htaccess")
+if os.path.exists(public_html):
+    print(f"[OK] Found public_html at: {public_html}")
 
-                # Check Python Path
-                python_match = re.search(r'PassengerPython\s+"([^"]+)"', content)
-                if python_match:
-                    config_python = python_match.group(1)
-                    current_python = sys.executable
-                    # Simple check: paths might differ due to symlinks, but it's a good hint
-                    if config_python != current_python:
-                        print(f"    [NOTE] PassengerPython path differs (this might be okay if using symlinks):")
-                        print(f"        .htaccess: {config_python}")
-                        print(f"        Actual:    {current_python}")
-                    else:
-                        print(f"    [OK] PassengerPython matches current interpreter.")
-        except Exception as e:
-            print(f"    (Could not validate .htaccess: {e})")
+    # Try to guess the app folder
+    # We look for folders that might match the app name
+    potential_paths = [candidates_path]
 
+    # Check if we can deduce from .htaccess
+    if repo_htaccess_content:
+        base_uri_match = re.search(r'PassengerBaseURI\s+"([^"]+)"', repo_htaccess_content)
+        if base_uri_match:
+            uri = base_uri_match.group(1).strip('/')
+            if uri:
+                potential_paths.insert(0, os.path.join(public_html, uri))
+
+    target_found = False
+    for p in potential_paths:
+        if os.path.exists(p):
+            print(f"[INFO] Checking potential public app folder: {p}")
+            target_found = True
+            public_htaccess = os.path.join(p, '.htaccess')
+            if os.path.exists(public_htaccess):
+                print(f"    [OK] .htaccess found in {p}")
+                # Compare content?
+                try:
+                    with open(public_htaccess, 'r') as phf:
+                        public_content = phf.read()
+                        if "PassengerAppRoot" in public_content:
+                            print("    [OK] .htaccess appears to contain Passenger configuration.")
+                        else:
+                            print("    [WARNING] .htaccess exists but might NOT contain Passenger configuration.")
+                except:
+                    pass
+            else:
+                print(f"    [CRITICAL] .htaccess MISSING in {p}")
+                print(f"               This is likely causing 'Index of' errors.")
+                print(f"               Action: cp {os.path.join(os.getcwd(), '.htaccess')} {p}/")
+
+    if not target_found:
+        print("[INFO] Could not automatically locate the public app folder under public_html.")
+else:
+    print(f"[INFO] public_html not found at {public_html} (This is normal if not on cPanel or different layout).")
+
+
+# --- Git Check ---
 print("\nChecking Git Repository State...")
 if os.path.isdir('.git'):
     print("[OK] .git directory found.")
     try:
-        print("    Running 'git remote -v':")
-        sys.stdout.flush()
-        subprocess.run(['git', 'remote', '-v'], check=False)
-
-        print("    Running 'git branch -a':")
-        sys.stdout.flush()
-        subprocess.run(['git', 'branch', '-a'], check=False)
-
-        print("    Running 'git status':")
-        sys.stdout.flush()
-        subprocess.run(['git', 'status'], check=False)
-
         # Check for origin/master specifically
         result = subprocess.run(['git', 'branch', '-r'], capture_output=True, text=True)
         if 'origin/master' not in result.stdout and 'origin/main' not in result.stdout:
@@ -82,6 +88,7 @@ if os.path.isdir('.git'):
 else:
     print("[WARNING] .git directory NOT found. This does not appear to be a git repository.")
 
+# --- Import Check ---
 print("\nAttempting to import app...")
 try:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -90,7 +97,7 @@ try:
     print("[OK] Successfully imported 'app' and created application instance.")
 except Exception as e:
     print(f"[FAIL] Could not import app: {e}")
-    import traceback
-    traceback.print_exc()
+    # import traceback
+    # traceback.print_exc()
 
 print("--- DIAGNOSTIC SCRIPT END ---")
