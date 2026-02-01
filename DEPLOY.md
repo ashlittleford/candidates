@@ -138,6 +138,27 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         2.  Navigate to your repository folder.
         3.  Delete or rename the existing `passenger_wsgi.py` file (e.g., rename to `passenger_wsgi.py.bak`).
         4.  Try the **Git Pull** or update operation again.
+*   **Error: "Specified alias is already used by the other application"**:
+    *   **Cause:** cPanel thinks an application already exists for this URL (Alias). This happens if:
+        1.  The application is *already in the list* in "Setup Python App" (maybe you forgot about it).
+        2.  You deleted the app/folder but a "zombie" `.htaccess` file remains in your public folder (e.g., `public_html/candidates`), confusing cPanel.
+    *   **Solution 1: Check the List**
+        *   Look closely at the "Web Applications" list in "Setup Python App". If you see the app there, **Edit** it (pencil icon) or **Delete** it (trash icon) instead of creating a new one.
+    *   **Solution 2: Find and Delete the 'Zombie' File**
+        1.  Open **Terminal**.
+        2.  Run the diagnostic script to find conflicting files:
+            ```bash
+            python diagnose.py
+            ```
+        3.  If it reports a **"CONFLICT DETECTED"** in `public_html`, copy that file path.
+        4.  Delete or rename that file:
+            ```bash
+            rm /home/username/public_html/candidates/.htaccess
+            ```
+            *(Be careful to use the correct path from the diagnostic script!)*
+        5.  Now try creating the app in cPanel again.
+        6.  Once created, you can run `python setup_htaccess.py` again to restore the correct configuration.
+
 *   **Error: "No such application (or application not configured)" when clicking Restart**:
     *   **Cause:** The path you entered in "Application Root" (Step 2) does not match the actual folder name where your code is.
     *   **Example:** You entered `repositories/candidates` but the folder is actually named `repositories/candidate-portal`.

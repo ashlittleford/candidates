@@ -98,6 +98,38 @@ else:
     print(f"[INFO] public_html not found at {public_html} (This is normal if not on cPanel or different layout).")
 
 
+# --- ZOMBIE CONFIG SCAN ---
+print("\n" + "!"*60)
+print("SCANNING FOR CONFLICTING CONFIGURATIONS (ZOMBIE APPS)")
+print("!"*60)
+print("Searching public_html for hidden .htaccess files that might be blocking new app creation...")
+
+zombies_found = []
+if os.path.exists(public_html):
+    for root, dirs, files in os.walk(public_html):
+        if '.htaccess' in files:
+            full_path = os.path.join(root, '.htaccess')
+            try:
+                with open(full_path, 'r', errors='ignore') as f:
+                    content = f.read()
+                    if 'PassengerAppRoot' in content:
+                        zombies_found.append(full_path)
+            except:
+                pass
+
+if zombies_found:
+    print("\n[CRITICAL WARNING] Found existing Python App configurations!")
+    print("These files might cause 'Alias already used' errors when creating a new app in cPanel.")
+    print("If you are trying to create a NEW app for these paths, you must DELETE these files first.")
+    print("")
+    for z in zombies_found:
+        print(f"  -> {z}")
+    print("")
+    print("ACTION: If you are getting an error in cPanel, rename or delete the file(s) above.")
+else:
+    print("[OK] No conflicting .htaccess files found in public_html scan.")
+
+
 # --- Git Check ---
 print("\nChecking Git Repository State...")
 if os.path.isdir('.git'):

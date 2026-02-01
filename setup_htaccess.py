@@ -22,6 +22,12 @@ def create_htaccess():
     print("                  CONFIGURATION")
     print("="*60)
 
+    # WARNING about order of operations
+    print("\n[IMPORTANT WARNING]")
+    print("If you have NOT yet created the application in cPanel 'Setup Python App',")
+    print("DO NOT COPY the file yet! Doing so might block cPanel from creating the app.")
+    print("Create the app in cPanel first, THEN overwrite the .htaccess if needed.")
+
     # 1. Base URI
     if args.base_uri:
         base_uri = args.base_uri
@@ -101,6 +107,8 @@ PassengerPython "{python_path}"
         print("")
         print(f"   {copy_cmd}")
         print("")
+        print("[NOTE] If cPanel says 'Alias already used', DELETE the .htaccess in")
+        print(f"       {target_dir}/ first, create the app in cPanel, then copy this file.")
         print("#"*70 + "\n")
 
     except Exception as e:
