@@ -9,6 +9,15 @@ print(f"Script Directory: {os.path.dirname(os.path.abspath(__file__))}")
 
 # --- Check Repository Files ---
 print("\nChecking for critical files in repository...")
+
+# Verify CWD matches assumed structure
+cwd = os.getcwd()
+print(f"[INFO] Current Directory: {cwd}")
+if "repositories" in cwd:
+    parent_folder = os.path.basename(cwd)
+    print(f"[INFO] You seem to be in a repository folder: '{parent_folder}'")
+    print("       Ensure this matches the 'Application Root' in cPanel Setup Python App.")
+
 files_to_check = ['passenger_wsgi.py', 'requirements.txt', 'app/__init__.py', '.htaccess']
 repo_htaccess_content = None
 
