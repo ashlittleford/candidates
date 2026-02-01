@@ -138,6 +138,14 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
         2.  Navigate to your repository folder.
         3.  Delete or rename the existing `passenger_wsgi.py` file (e.g., rename to `passenger_wsgi.py.bak`).
         4.  Try the **Git Pull** or update operation again.
+*   **Error: "No such application (or application not configured)" when clicking Restart**:
+    *   **Cause:** The path you entered in "Application Root" (Step 2) does not match the actual folder name where your code is.
+    *   **Example:** You entered `repositories/candidates` but the folder is actually named `repositories/candidate-portal`.
+    *   **Solution:**
+        1.  Go to **File Manager**.
+        2.  Look inside `repositories/` and find the exact name of your folder.
+        3.  Go back to **Setup Python App**, delete the app (trash icon), and create it again with the **correct** folder path.
+
 *   **Error: "The system cannot deploy... A valid .cpanel.yml file exists..."**:
     *   **Ignore this.** This error appears in the "Git Version Control" page if you click "Deploy HEAD" or if cPanel tries to auto-deploy. Since we are running the app directly from the source code folder (via Setup Python App), we do not need to "deploy" (copy) files to another location.
 *   **Error: "No such file or directory: 'requirements.txt'" or "can't open file 'init_db.py'"**:
