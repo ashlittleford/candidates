@@ -82,6 +82,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 
 ## Troubleshooting
 
+*   **Error: "Specified alias is already used by the other application"**:
+    *   **Cause**: cPanel detects an existing configuration for the URL you are trying to use (e.g., `encounteradelaide.com.au/candidates`). This happens if:
+        1.  The application is already listed in the "Web Applications" list.
+        2.  You deleted the application previously, but the `.htaccess` file was left behind in the `public_html` folder (or the target folder for that URL).
+    *   **Solution**:
+        1.  **Check the List**: Look at the "Web Applications" table on the main "Setup Python App" page. If you see an app with the same URL, click the **Pencil (Edit)** icon to change it, or the **X (Delete)** icon to remove it before creating a new one.
+        2.  **Remove Zombie Config**:
+            *   Open **File Manager**.
+            *   Navigate to the public folder for that URL (e.g., `public_html/candidates` or just `public_html` if using the root domain).
+            *   Look for an `.htaccess` file.
+            *   **Edit** it to remove the "Passenger" lines (like `PassengerAppRoot`), or **Delete** the file entirely if it only contains Passenger config.
+            *   Try creating the application again.
+
 *   **Problem: I see "Index of /candidates/" or "Index of /home/" (Directory Listing)**:
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
     *   **Immediate Fix**: You **MUST** ensure an `.htaccess` file exists in the directory shown in the "Index of" page.
