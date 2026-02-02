@@ -43,17 +43,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     ls -F
     ```
     *   You should see `requirements.txt`, `app/`, `run.py`, etc.
-    *   **If you do not see these files:**
-        *   **Use this command to find where the files are:**
+    *   **If you do not see these files (or the folder is empty):**
+        *   **Possibility A: Failed Clone**: If `ls` shows nothing, your Git Clone (Step 1) likely failed or the folder path is wrong.
+            *   **Check**: Go to **File Manager** and look at the folder.
+            *   **Fix**: If it's empty, delete the folder, and **repeat Step 1**.
+        *   **Possibility B: Wrong Folder**: Use this command to find where the files are:
             ```bash
             find . -maxdepth 3 -name init_db.py
             ```
-        *   If it returns something like `./candidate-portal/init_db.py`, then type:
-            ```bash
-            cd candidate-portal
-            ```
-        *   Now you should be in the right place.
-6.  Run the following command to install dependencies:
+            *   If it returns something like `./candidate-portal/init_db.py`, then type:
+                ```bash
+                cd candidate-portal
+                ```
+6.  Run the following command to install dependencies (ensure you type `requirements.txt`, not `.py`):
     ```bash
     pip install -r requirements.txt
     ```
@@ -81,6 +83,19 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
 4.  **Important**: Log in immediately and change the default passwords.
 
 ## Troubleshooting
+
+*   **Error: "Specified alias is already used by the other application"**:
+    *   **Cause**: cPanel detects an existing configuration for the URL you are trying to use (e.g., `encounteradelaide.com.au/candidates`). This happens if:
+        1.  The application is already listed in the "Web Applications" list.
+        2.  You deleted the application previously, but the `.htaccess` file was left behind in the `public_html` folder (or the target folder for that URL).
+    *   **Solution**:
+        1.  **Check the List**: Look at the "Web Applications" table on the main "Setup Python App" page. If you see an app with the same URL, click the **Pencil (Edit)** icon to change it, or the **X (Delete)** icon to remove it before creating a new one.
+        2.  **Remove Zombie Config**:
+            *   Open **File Manager**.
+            *   Navigate to the public folder for that URL (e.g., `public_html/candidates` or just `public_html` if using the root domain).
+            *   Look for an `.htaccess` file.
+            *   **Edit** it to remove the "Passenger" lines (like `PassengerAppRoot`), or **Delete** the file entirely if it only contains Passenger config.
+            *   Try creating the application again.
 
 *   **Problem: I see "Index of /candidates/" or "Index of /home/" (Directory Listing)**:
     *   **Explanation**: This error confirms that the web server is looking at your files but **does not know it is a Python application**. It means the `.htaccess` file is missing or invalid.
