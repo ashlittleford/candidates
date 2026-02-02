@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import shutil
 
 def create_htaccess():
     # Parse arguments
@@ -72,9 +73,24 @@ PassengerPython "{python_path}"
         copy_cmd = f"cp {file_path} {target_dir}/"
 
         if os.path.exists(target_dir):
-             print(f"Detected Public Directory: {target_dir}")
-             print(">> ACTION REQUIRED: COPY THIS FILE NOW")
-             print(f"   {copy_cmd}")
+            print(f"Detected Public Directory: {target_dir}")
+
+            # Interactive prompt for automatic copy
+            print(f"\nDo you want to copy the .htaccess file to {target_dir} now?")
+            confirm = input("Copy now? [y/N]: ").strip().lower()
+
+            if confirm == 'y':
+                try:
+                    shutil.copy2(file_path, target_dir)
+                    print(f"\n[SUCCESS] File copied to {target_dir}/.htaccess")
+                    print("You should now be able to visit your website.")
+                except Exception as e:
+                    print(f"\n[ERROR] Could not copy file: {e}")
+                    print("Please copy it manually:")
+                    print(f"   {copy_cmd}")
+            else:
+                print("\n>> ACTION REQUIRED: COPY THIS FILE MANUALLY")
+                print(f"   {copy_cmd}")
         else:
              print(">> ACTION REQUIRED: COPY THIS FILE")
              print("   Copy the generated .htaccess file to the folder your domain points to.")

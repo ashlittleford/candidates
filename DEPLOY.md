@@ -109,12 +109,12 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
             python setup_htaccess.py
             ```
             *   *Note: The script will ask for the Base URI (e.g., `/` or `/candidates`).*
-        4.  **CHECK THE OUTPUT:** The script will generate the file and **show you the exact command** to copy it to your public folder.
-        5.  **ACTION REQUIRED:**
-            *   **Most Likely:** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there, you MUST **copy** the generated `.htaccess` file.
+        4.  **CHECK THE OUTPUT:** The script will generate the file.
+        5.  **Auto-Copy:** The script will ask: `Copy now? [y/N]:`. Type `y` and press Enter to automatically copy the file to the correct location.
+        6.  **Manual Copy (If you typed N):**
             *   **Run the command provided by the script output.**
             *   Example: `cp .htaccess ~/public_html/candidates/`
-        6.  **Verify:** Visit your website again. The "Index of" page should be gone.
+        7.  **Verify:** Visit your website again. The "Index of" page should be gone.
 
     *   **Solution 1: Manually Create `.htaccess`**
         1.  Go to **File Manager** in cPanel.
