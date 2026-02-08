@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import shutil
 
 def create_htaccess():
     # Parse arguments
@@ -63,19 +64,32 @@ PassengerPython "{python_path}"
         target_dir = os.path.join(public_html, rel_path)
 
         print("\n" + "#"*70)
-        print("                     CRITICAL NEXT STEP")
+        print("                     DEPLOYMENT STEP")
         print("#"*70)
-        print("You are seeing 'Index of' or 404/403 errors because this file")
-        print("is NOT in the correct location yet.")
-        print("")
-
-        copy_cmd = f"cp {file_path} {target_dir}/"
 
         if os.path.exists(target_dir):
-             print(f"Detected Public Directory: {target_dir}")
-             print(">> ACTION REQUIRED: COPY THIS FILE NOW")
-             print(f"   {copy_cmd}")
+            print(f"Detected Public Directory: {target_dir}")
+            target_file = os.path.join(target_dir, '.htaccess')
+
+            # Check if target file already exists
+            if os.path.exists(target_file):
+                print(f"[WARNING] An .htaccess file already exists at {target_file}")
+
+            confirm = input(f"Do you want to copy the generated .htaccess to {target_dir}? [y/N]: ").strip().lower()
+            if confirm == 'y':
+                try:
+                    shutil.copy2(file_path, target_file)
+                    print(f"\n[SUCCESS] Copied .htaccess to {target_file}")
+                    print("The website should be working now.")
+                except Exception as e:
+                    print(f"\n[ERROR] Failed to copy file: {e}")
+                    print(f"Please manually copy the file:\n   cp {file_path} {target_dir}/")
+            else:
+                print("\nSkipped automatic copy.")
+                print(f"Please manually copy the file if needed:\n   cp {file_path} {target_dir}/")
+
         else:
+             print(f"Could not automatically find the public directory: {target_dir}")
              print(">> ACTION REQUIRED: COPY THIS FILE")
              print("   Copy the generated .htaccess file to the folder your domain points to.")
              print(f"   Example Command: cp {file_path} ~/public_html{base_uri if base_uri != '/' else ''}")
