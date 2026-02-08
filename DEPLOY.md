@@ -101,17 +101,17 @@ This guide provides step-by-step instructions for deploying the Candidate Portal
     *   **Note**: This file is specific to your server (it contains your unique paths). **It should NOT be in your Git repository.** We have added it to `.gitignore` to prevent accidental commits.
     *   **Solution 0: Automatic Fix (Easiest)**
         1.  Open **Terminal** in cPanel.
-        2.  Navigate to your **Repository Folder** (e.g., `cd repositories/candidate-portal`).
-        3.  Run the setup script:
+        2.  **Activate Virtual Environment:**
+            *   You MUST activate your virtual environment, otherwise you may see `python: command not found` or the script will set the wrong Python path.
+            *   Go to **Setup Python App** in cPanel, copy the "Command for entering virtual environment" (starts with `source ...`).
+            *   Paste it into the Terminal and press Enter.
+        3.  Navigate to your **Repository Folder** (e.g., `cd repositories/candidate-portal`).
+        4.  Run the setup script:
             ```bash
             python setup_htaccess.py
             ```
             *   *Note: The script will ask for the Base URI (e.g., `/` or `/candidates`).*
-        4.  **CHECK THE OUTPUT:** The script will generate the file and **show you the exact command** to copy it to your public folder.
-        5.  **ACTION REQUIRED:**
-            *   **Most Likely:** If the website is serving files from a public folder (e.g., `public_html/candidates`) and you see an "Index of" page there, you MUST **copy** the generated `.htaccess` file.
-            *   **Run the command provided by the script output.**
-            *   Example: `cp .htaccess ~/public_html/candidates/`
+        5.  **FOLLOW THE PROMPTS:** The script will automatically detect your public folder and ask if you want to deploy the file. **Type `y` and press Enter** when asked.
         6.  **Verify:** Visit your website again. The "Index of" page should be gone.
 
     *   **Solution 1: Manually Create `.htaccess`**
