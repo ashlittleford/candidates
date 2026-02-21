@@ -2,5 +2,7 @@ __pycache__/
 *.pyc
 instance/
 *.db
-*.log
+# *.log - commented out to allow logs as per request for "actual files"
+# error.log is specifically requested
+!error.log
 verification/
