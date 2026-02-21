@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -35,101 +37,101 @@ def check_and_upgrade_schema(app):
         if inspector.has_table("user"):
             columns = [col['name'] for col in inspector.get_columns("user")]
             if "email" not in columns:
-                print("Missing column 'email' detected in 'user' table. Attempting to add it...")
+                app.logger.info("Missing column 'email' detected in 'user' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE user ADD COLUMN email VARCHAR(150)"))
                         conn.commit()
-                    print("Successfully added 'email' column.")
+                    app.logger.info("Successfully added 'email' column.")
                 except Exception as e:
-                    print(f"Failed to add 'email' column: {e}")
+                    app.logger.error(f"Failed to add 'email' column: {e}")
 
             if "invitation_token" not in columns:
-                print("Missing column 'invitation_token' detected in 'user' table. Attempting to add it...")
+                app.logger.info("Missing column 'invitation_token' detected in 'user' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE user ADD COLUMN invitation_token VARCHAR(100)"))
                         conn.commit()
-                    print("Successfully added 'invitation_token' column.")
+                    app.logger.info("Successfully added 'invitation_token' column.")
                 except Exception as e:
-                    print(f"Failed to add 'invitation_token' column: {e}")
+                    app.logger.error(f"Failed to add 'invitation_token' column: {e}")
 
             if "invitation_expiry" not in columns:
-                print("Missing column 'invitation_expiry' detected in 'user' table. Attempting to add it...")
+                app.logger.info("Missing column 'invitation_expiry' detected in 'user' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE user ADD COLUMN invitation_expiry DATETIME"))
                         conn.commit()
-                    print("Successfully added 'invitation_expiry' column.")
+                    app.logger.info("Successfully added 'invitation_expiry' column.")
                 except Exception as e:
-                    print(f"Failed to add 'invitation_expiry' column: {e}")
+                    app.logger.error(f"Failed to add 'invitation_expiry' column: {e}")
 
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
             if "current_church" not in columns:
-                print("Missing column 'current_church' detected in 'profile' table. Attempting to add it...")
+                app.logger.info("Missing column 'current_church' detected in 'profile' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE profile ADD COLUMN current_church VARCHAR(150)"))
                         conn.commit()
-                    print("Successfully added 'current_church' column.")
+                    app.logger.info("Successfully added 'current_church' column.")
                 except Exception as e:
-                    print(f"Failed to add 'current_church' column: {e}")
+                    app.logger.error(f"Failed to add 'current_church' column: {e}")
 
         if inspector.has_table("resource"):
             columns = [col['name'] for col in inspector.get_columns("resource")]
             if "category" not in columns:
-                print("Missing column 'category' detected in 'resource' table. Attempting to add it...")
+                app.logger.info("Missing column 'category' detected in 'resource' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE resource ADD COLUMN category VARCHAR(50) DEFAULT 'general'"))
                         conn.commit()
-                    print("Successfully added 'category' column.")
+                    app.logger.info("Successfully added 'category' column.")
                 except Exception as e:
-                    print(f"Failed to add 'category' column: {e}")
+                    app.logger.error(f"Failed to add 'category' column: {e}")
 
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
 
             if "code_of_ethics_signed" not in columns:
-                print("Missing column 'code_of_ethics_signed' detected in 'profile' table. Attempting to add it...")
+                app.logger.info("Missing column 'code_of_ethics_signed' detected in 'profile' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE profile ADD COLUMN code_of_ethics_signed BOOLEAN DEFAULT 0"))
                         conn.commit()
-                    print("Successfully added 'code_of_ethics_signed' column.")
+                    app.logger.info("Successfully added 'code_of_ethics_signed' column.")
                 except Exception as e:
-                    print(f"Failed to add 'code_of_ethics_signed' column: {e}")
+                    app.logger.error(f"Failed to add 'code_of_ethics_signed' column: {e}")
 
             if "code_of_ethics_date" not in columns:
-                print("Missing column 'code_of_ethics_date' detected in 'profile' table. Attempting to add it...")
+                app.logger.info("Missing column 'code_of_ethics_date' detected in 'profile' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE profile ADD COLUMN code_of_ethics_date VARCHAR(50)"))
                         conn.commit()
-                    print("Successfully added 'code_of_ethics_date' column.")
+                    app.logger.info("Successfully added 'code_of_ethics_date' column.")
                 except Exception as e:
-                    print(f"Failed to add 'code_of_ethics_date' column: {e}")
+                    app.logger.error(f"Failed to add 'code_of_ethics_date' column: {e}")
 
             if "wwcc_cleared" not in columns:
-                print("Missing column 'wwcc_cleared' detected in 'profile' table. Attempting to add it...")
+                app.logger.info("Missing column 'wwcc_cleared' detected in 'profile' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE profile ADD COLUMN wwcc_cleared BOOLEAN DEFAULT 0"))
                         conn.commit()
-                    print("Successfully added 'wwcc_cleared' column.")
+                    app.logger.info("Successfully added 'wwcc_cleared' column.")
                 except Exception as e:
-                    print(f"Failed to add 'wwcc_cleared' column: {e}")
+                    app.logger.error(f"Failed to add 'wwcc_cleared' column: {e}")
 
             if "wwcc_number" not in columns:
-                print("Missing column 'wwcc_number' detected in 'profile' table. Attempting to add it...")
+                app.logger.info("Missing column 'wwcc_number' detected in 'profile' table. Attempting to add it...")
                 try:
                     with db.engine.connect() as conn:
                         conn.execute(text("ALTER TABLE profile ADD COLUMN wwcc_number VARCHAR(100)"))
                         conn.commit()
-                    print("Successfully added 'wwcc_number' column.")
+                    app.logger.info("Successfully added 'wwcc_number' column.")
                 except Exception as e:
-                    print(f"Failed to add 'wwcc_number' column: {e}")
+                    app.logger.error(f"Failed to add 'wwcc_number' column: {e}")
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -165,6 +167,19 @@ def create_app(test_config=None):
 
     app.jinja_env.filters['bold_keywords'] = bold_keywords_filter
 
+    # Configure logging
+    if not app.testing:
+        # Use absolute path for error.log in project root
+        log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'error.log')
+        file_handler = RotatingFileHandler(log_path, maxBytes=1024 * 1024, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Application startup')
+
     # Run schema check and upgrade
     if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':
          check_and_upgrade_schema(app)
@@ -187,7 +202,7 @@ def seed_standards(app):
 
         try:
             if Standard.query.count() == 0:
-                print("Seeding Standards database from JSON...")
+                app.logger.info("Seeding Standards database from JSON...")
                 json_path = os.path.join(app.root_path, 'standards_data.json')
                 if os.path.exists(json_path):
                     with open(json_path, 'r') as f:
@@ -210,8 +225,8 @@ def seed_standards(app):
                         )
                         db.session.add(std)
                     db.session.commit()
-                    print("Standards seeded successfully.")
+                    app.logger.info("Standards seeded successfully.")
                 else:
-                    print(f"Warning: {json_path} not found. Skipping seeding.")
+                    app.logger.warning(f"Warning: {json_path} not found. Skipping seeding.")
         except Exception as e:
-            print(f"Error seeding standards: {e}")
+            app.logger.error(f"Error seeding standards: {e}")
