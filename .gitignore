@@ -6,3 +6,4 @@ instance/
 # error.log is specifically requested
 !error.log
 verification/
+tmp/
