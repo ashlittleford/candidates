@@ -75,6 +75,8 @@ The `init_db.py` script creates the following default users:
     -   Username: `panel_member`
     -   Password: `password123`
 
+**Important:** Please change these default passwords immediately after initial setup, especially in a production environment.
+
 ## Running Tests
 
 To run the unit tests:
