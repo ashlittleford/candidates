@@ -103,6 +103,63 @@ def view_candidate_profile(user_id):
 
     return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
 
+@main.route('/submit-document', methods=['GET', 'POST'])
+def public_submit_document():
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        global_settings = GlobalSettings()
+
+    users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        document_type = request.form.get('document_type')
+        day_label = request.form.get('day_label')
+
+        # Validation
+        if not user_id or not document_type:
+             flash('Please select a candidate and document type.')
+             return render_template('submit_document.html', users=users, global_settings=global_settings)
+
+        # Handle file
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        if file:
+            # Determine label based on type
+            final_label = None
+            if document_type == 'supervision_report':
+                final_label = 'Supervision Report'
+            elif document_type == 'formation_paper':
+                final_label = day_label # Use selected day label
+                if not final_label:
+                     flash('Please select a formation day.')
+                     return render_template('submit_document.html', users=users, global_settings=global_settings)
+
+            original_filename = secure_filename(file.filename)
+            filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{original_filename}"
+            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+
+            doc = PanelDocument(
+                user_id=int(user_id),
+                filename=filename,
+                original_filename=original_filename,
+                day_label=final_label
+            )
+            db.session.add(doc)
+            db.session.commit()
+
+            flash('Document submitted successfully!')
+            return redirect(url_for('main.public_submit_document'))
+
+    return render_template('submit_document.html', users=users, global_settings=global_settings)
+
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
