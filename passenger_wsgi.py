@@ -13,5 +13,5 @@ def load_source(modname, filename):
     loader.exec_module(module)
     return module
 
-wsgi = load_source('wsgi', 'passenger_wsgi.py')
+wsgi = load_source('wsgi', 'run.py')
 application = wsgi.application
