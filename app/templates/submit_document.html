@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header uca-bg-red text-white">
+                <h3 class="mb-0">Submit Document</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Use this form to submit documents for a candidate without logging in.
+                </p>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Candidate Selection -->
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label fw-bold">Select Candidate</label>
+                        <select name="user_id" id="user_id" class="form-select" required>
+                            <option value="">-- Select Candidate --</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Document Type Selection -->
+                    <div class="mb-3">
+                        <label for="document_type" class="form-label fw-bold">Document Type</label>
+                        <select name="document_type" id="document_type" class="form-select" required onchange="toggleFormationDay()">
+                            <option value="">-- Select Document Type --</option>
+                            <option value="formation_paper">Formation Panel Paper</option>
+                            <option value="supervision_report">Supervision Report</option>
+                        </select>
+                    </div>
+
+                    <!-- Formation Day Selection (Conditional) -->
+                    <div class="mb-3 d-none" id="formation_day_container">
+                        <label for="day_label" class="form-label fw-bold">Formation Day</label>
+                        <select name="day_label" id="day_label" class="form-select">
+                            <option value="">-- Select Formation Day --</option>
+                            {% if global_settings and global_settings.formation_panel_dates %}
+                                {% for date_item in global_settings.formation_panel_dates.split(',') %}
+                                    {% set parts = date_item.split(':') %}
+                                    {% if parts|length > 1 %}
+                                         <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
+                                    {% else %}
+                                         <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <div class="form-text text-muted">Required for Formation Panel Papers.</div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="mb-4">
+                        <label for="file" class="form-label fw-bold">Select File</label>
+                        <input type="file" name="file" id="file" class="form-control" required>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn uca-btn-red btn-lg">Submit Document</button>
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline-secondary">Back to Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFormationDay() {
+        const typeSelect = document.getElementById('document_type');
+        const dayContainer = document.getElementById('formation_day_container');
+        const daySelect = document.getElementById('day_label');
+
+        if (typeSelect.value === 'formation_paper') {
+            dayContainer.classList.remove('d-none');
+            daySelect.required = true;
+        } else {
+            dayContainer.classList.add('d-none');
+            daySelect.required = false;
+            daySelect.value = ""; // Reset value
+        }
+    }
+</script>
+{% endblock %}
