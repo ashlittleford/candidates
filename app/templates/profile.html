@@ -56,9 +56,11 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="formation-tab" data-bs-toggle="tab" data-bs-target="#formation" type="button" role="tab" aria-controls="formation" aria-selected="true">Formation Progress</button>
             </li>
+            {% if not current_user.is_panel_member %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="standards-tab" data-bs-toggle="tab" data-bs-target="#standards" type="button" role="tab" aria-controls="standards" aria-selected="false">Standards & Requirements</button>
             </li>
+            {% endif %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">My Documents</button>
             </li>
@@ -415,6 +417,7 @@
                 </div>
             </div>
 
+            {% if not current_user.is_panel_member %}
             <!-- Standards & Requirements Tab -->
             <div class="tab-pane fade" id="standards" role="tabpanel" aria-labelledby="standards-tab">
 
@@ -514,6 +517,7 @@
                 </div>
 
             </div>
+            {% endif %}
 
             <!-- My Documents Tab -->
             <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">

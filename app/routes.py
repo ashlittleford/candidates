@@ -352,10 +352,15 @@ def admin_dashboard():
     if not current_user.is_admin:
         flash('Access denied')
         return redirect(url_for('main.profile'))
+
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        global_settings = GlobalSettings()
+
     users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
     panel_members = User.query.filter_by(is_panel_member=True).all()
     panels = FormationPanel.query.all()
-    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members)
+    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members, global_settings=global_settings)
 
 @main.route('/admin/invite/candidate', methods=['GET', 'POST'])
 @login_required

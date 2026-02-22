@@ -31,7 +31,19 @@
                     <h5>Bulk Actions</h5>
                     <div class="input-group">
                          <span class="input-group-text">Add Formation Day</span>
-                         <input type="text" name="formation_day" class="form-control" placeholder="e.g. Monday 2 March 2026">
+                         <input type="text" name="formation_day" class="form-control" placeholder="e.g. Monday 2 March 2026" list="formationDaysList">
+                         <datalist id="formationDaysList">
+                            {% if global_settings and global_settings.upcoming_formation_dates %}
+                                {% if '\n' in global_settings.upcoming_formation_dates %}
+                                    {% set date_list = global_settings.upcoming_formation_dates.split('\n') %}
+                                {% else %}
+                                    {% set date_list = global_settings.upcoming_formation_dates.split(',') %}
+                                {% endif %}
+                                {% for date_item in date_list %}
+                                    <option value="{{ date_item.strip() }}">
+                                {% endfor %}
+                            {% endif %}
+                         </datalist>
                          <button type="submit" class="btn uca-btn-red">Add to Selected</button>
                     </div>
                 </div>
