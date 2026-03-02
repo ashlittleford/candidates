@@ -6,3 +6,5 @@ instance/
 # error.log is specifically requested
 !error.log
 verification/
+app/static/uploads/*
+!.gitkeep

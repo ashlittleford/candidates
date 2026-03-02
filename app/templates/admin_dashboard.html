@@ -198,12 +198,15 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <form action="{{ url_for('main.toggle_archive', user_id=member.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to {{ 'unarchive' if member.is_archived else 'archive' }} this panel member?');">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm {{ 'btn-warning' if member.is_archived else 'btn-outline-danger' }}">
-                                            {{ 'Unarchive' if member.is_archived else 'Archive' }}
-                                        </button>
-                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('main.edit_panel_member', user_id=member.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                        <form action="{{ url_for('main.toggle_archive', user_id=member.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to {{ 'unarchive' if member.is_archived else 'archive' }} this panel member?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm {{ 'btn-warning' if member.is_archived else 'btn-outline-danger' }}">
+                                                {{ 'Unarchive' if member.is_archived else 'Archive' }}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% else %}
