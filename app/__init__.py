@@ -64,6 +64,16 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'invitation_expiry' column: {e}")
 
+            if "is_archived" not in columns:
+                print("Missing column 'is_archived' detected in 'user' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN is_archived BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'is_archived' column.")
+                except Exception as e:
+                    print(f"Failed to add 'is_archived' column: {e}")
+
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
             if "current_church" not in columns:
@@ -141,6 +151,17 @@ def check_and_upgrade_schema(app):
                     print("Successfully added 'transition_panel' column.")
                 except Exception as e:
                     print(f"Failed to add 'transition_panel' column: {e}")
+        if inspector.has_table("panel_document"):
+            columns = [col['name'] for col in inspector.get_columns("panel_document")]
+            if "is_archived" not in columns:
+                print("Missing column 'is_archived' detected in 'panel_document' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE panel_document ADD COLUMN is_archived BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'is_archived' column.")
+                except Exception as e:
+                    print(f"Failed to add 'is_archived' column: {e}")
 
 def create_app(test_config=None):
     app = Flask(__name__)

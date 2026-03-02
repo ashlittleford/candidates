@@ -42,7 +42,8 @@ def panel_dashboard():
         candidates = User.query.join(Profile).filter(
             Profile.formation_panel_id == current_user.formation_panel_id,
             User.is_admin == False,
-            User.is_panel_member == False
+            User.is_panel_member == False,
+            User.is_archived == False
         ).all()
     else:
         candidates = []
@@ -109,7 +110,7 @@ def public_submit_document():
     if not global_settings:
         global_settings = GlobalSettings()
 
-    users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
+    users = User.query.filter(User.is_admin == False, User.is_panel_member == False, User.is_archived == False).all()
 
     if request.method == 'POST':
         user_id = request.form.get('user_id')
@@ -169,8 +170,11 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('main.index'))
+            if getattr(user, 'is_archived', False):
+                flash('This account has been archived')
+            else:
+                login_user(user)
+                return redirect(url_for('main.index'))
         else:
             flash('Invalid username or password')
     return render_template('login.html')
@@ -341,6 +345,23 @@ def admin_settings():
         settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
         settings.formation_panel_dates = request.form.get('formation_panel_dates')
         db.session.commit()
+
+        # Archive logic
+        new_labels = []
+        if settings.formation_panel_dates:
+            for d in settings.formation_panel_dates.split(','):
+                parts = d.split(':')
+                label = parts[0].strip() if len(parts) > 1 else d.strip()
+                if label:
+                    new_labels.append(label)
+
+        documents = PanelDocument.query.all()
+        for doc in documents:
+            if doc.day_label and doc.day_label not in new_labels:
+                doc.is_archived = True
+
+        db.session.commit()
+
         flash('Global settings updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
@@ -357,10 +378,17 @@ def admin_dashboard():
     if not global_settings:
         global_settings = GlobalSettings()
 
-    users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
-    panel_members = User.query.filter_by(is_panel_member=True).all()
+    show_archived = request.args.get('show_archived', '0') == '1'
+
+    if show_archived:
+        users = User.query.filter(User.is_admin == False, User.is_panel_member == False).all()
+        panel_members = User.query.filter_by(is_panel_member=True).all()
+    else:
+        users = User.query.filter(User.is_admin == False, User.is_panel_member == False, User.is_archived == False).all()
+        panel_members = User.query.filter_by(is_panel_member=True, is_archived=False).all()
+
     panels = FormationPanel.query.all()
-    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members, global_settings=global_settings)
+    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members, global_settings=global_settings, show_archived=show_archived)
 
 @main.route('/admin/invite/candidate', methods=['GET', 'POST'])
 @login_required
@@ -512,6 +540,27 @@ def create_panel_member():
 
     panels = FormationPanel.query.all()
     return render_template('admin_create_panel_member.html', panels=panels)
+
+@main.route('/admin/toggle_archive/<int:user_id>', methods=['POST'])
+@login_required
+def toggle_archive(user_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('You cannot archive yourself.')
+        return redirect(url_for('main.admin_dashboard'))
+
+    user.is_archived = not getattr(user, 'is_archived', False)
+    db.session.commit()
+
+    status = 'archived' if user.is_archived else 'unarchived'
+    flash(f'User {user.username} has been {status}.')
+
+    # Stay on the same view (show archived or not)
+    return redirect(request.referrer or url_for('main.admin_dashboard'))
 
 @main.route('/admin/create', methods=['GET', 'POST'])
 @login_required
