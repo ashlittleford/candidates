@@ -541,6 +541,43 @@ def create_panel_member():
     panels = FormationPanel.query.all()
     return render_template('admin_create_panel_member.html', panels=panels)
 
+@main.route('/admin/edit_panel_member/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_panel_member(user_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    member = User.query.get_or_404(user_id)
+    if not member.is_panel_member:
+        flash('User is not a panel member')
+        return redirect(url_for('main.admin_dashboard') + '#members')
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        if not name or not name.strip():
+            flash('Name cannot be empty')
+            return redirect(url_for('main.edit_panel_member', user_id=user_id))
+
+        member.name = name.strip()
+
+        panel_id = request.form.get('formation_panel_id')
+        if panel_id:
+            try:
+                member.formation_panel_id = int(panel_id)
+            except ValueError:
+                flash('Invalid formation panel ID')
+                return redirect(url_for('main.edit_panel_member', user_id=user_id))
+        else:
+            member.formation_panel_id = None
+
+        db.session.commit()
+        flash('Panel Member updated successfully')
+        return redirect(url_for('main.admin_dashboard') + '#members')
+
+    panels = FormationPanel.query.all()
+    return render_template('admin_edit_panel_member.html', member=member, panels=panels)
+
 @main.route('/admin/toggle_archive/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_archive(user_id):
