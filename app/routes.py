@@ -102,7 +102,29 @@ def view_candidate_profile(user_id):
     if target_user.profile and target_user.profile.presbytery:
         support_email = PRESBYTERY_EMAILS.get(target_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
+    import re
+    from datetime import datetime
+
+    most_recent_date = None
+    most_recent_dt = None
+    today = datetime.now().date()
+
+    for dt_info in upcoming_dates:
+        date_str = dt_info['date']
+        clean_str = re.sub(r'^[a-zA-Z]+\s', '', date_str).strip()
+        try:
+            dt = datetime.strptime(clean_str, "%d %B %Y").date()
+            if dt <= today:
+                if most_recent_dt is None or dt > most_recent_dt:
+                    most_recent_dt = dt
+                    most_recent_date = date_str
+        except ValueError:
+            pass
+
+    if most_recent_date is None and upcoming_dates:
+        most_recent_date = upcoming_dates[0]['date']
+
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email, most_recent_date=most_recent_date)
 
 @main.route('/submit-document', methods=['GET', 'POST'])
 def public_submit_document():
@@ -268,7 +290,29 @@ def profile():
     if current_user.profile and current_user.profile.presbytery:
         support_email = PRESBYTERY_EMAILS.get(current_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
+    import re
+    from datetime import datetime
+
+    most_recent_date = None
+    most_recent_dt = None
+    today = datetime.now().date()
+
+    for dt_info in upcoming_dates:
+        date_str = dt_info['date']
+        clean_str = re.sub(r'^[a-zA-Z]+\s', '', date_str).strip()
+        try:
+            dt = datetime.strptime(clean_str, "%d %B %Y").date()
+            if dt <= today:
+                if most_recent_dt is None or dt > most_recent_dt:
+                    most_recent_dt = dt
+                    most_recent_date = date_str
+        except ValueError:
+            pass
+
+    if most_recent_date is None and upcoming_dates:
+        most_recent_date = upcoming_dates[0]['date']
+
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email, most_recent_date=most_recent_date)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -718,8 +762,9 @@ def admin_resources():
         title = request.form.get('title')
         res_type = request.form.get('type')
         category = request.form.get('category')
+        formation_date = request.form.get('formation_date') if category == 'formation_day' else None
 
-        new_resource = Resource(title=title, type=res_type, category=category)
+        new_resource = Resource(title=title, type=res_type, category=category, formation_date=formation_date)
 
         if res_type == 'link':
             new_resource.url = request.form.get('url')
@@ -742,7 +787,34 @@ def admin_resources():
         return redirect(url_for('main.admin_resources'))
 
     resources = Resource.query.all()
-    return render_template('admin_resources.html', resources=resources)
+
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        global_settings = GlobalSettings()
+
+    upcoming_dates_raw = global_settings.upcoming_formation_dates
+    upcoming_dates = []
+
+    if upcoming_dates_raw:
+        if '\n' in upcoming_dates_raw:
+            raw_list = upcoming_dates_raw.split('\n')
+        else:
+            raw_list = upcoming_dates_raw.split(',')
+
+        for item in raw_list:
+            item = item.strip()
+            if not item:
+                continue
+
+            parts = item.split(':', 1)
+            if len(parts) > 1:
+                label = parts[0].strip()
+                date_str = parts[1].strip()
+                upcoming_dates.append({'label': label, 'date': date_str})
+            else:
+                upcoming_dates.append({'label': None, 'date': item})
+
+    return render_template('admin_resources.html', resources=resources, upcoming_dates=upcoming_dates)
 
 @main.route('/admin/resources/edit/<int:resource_id>', methods=['GET', 'POST'])
 @login_required
@@ -756,7 +828,9 @@ def edit_resource(resource_id):
     if request.method == 'POST':
         resource.title = request.form.get('title')
         res_type = request.form.get('type')
-        resource.category = request.form.get('category')
+        category = request.form.get('category')
+        resource.category = category
+        resource.formation_date = request.form.get('formation_date') if category == 'formation_day' else None
         resource.type = res_type
 
         if res_type == 'link':
@@ -776,7 +850,33 @@ def edit_resource(resource_id):
         flash('Resource updated successfully')
         return redirect(url_for('main.admin_resources'))
 
-    return render_template('admin_edit_resource.html', resource=resource)
+    global_settings = GlobalSettings.query.first()
+    if not global_settings:
+        global_settings = GlobalSettings()
+
+    upcoming_dates_raw = global_settings.upcoming_formation_dates
+    upcoming_dates = []
+
+    if upcoming_dates_raw:
+        if '\n' in upcoming_dates_raw:
+            raw_list = upcoming_dates_raw.split('\n')
+        else:
+            raw_list = upcoming_dates_raw.split(',')
+
+        for item in raw_list:
+            item = item.strip()
+            if not item:
+                continue
+
+            parts = item.split(':', 1)
+            if len(parts) > 1:
+                label = parts[0].strip()
+                date_str = parts[1].strip()
+                upcoming_dates.append({'label': label, 'date': date_str})
+            else:
+                upcoming_dates.append({'label': None, 'date': item})
+
+    return render_template('admin_edit_resource.html', resource=resource, upcoming_dates=upcoming_dates)
 
 @main.route('/admin/resources/delete/<int:resource_id>', methods=['POST'])
 @login_required

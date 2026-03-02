@@ -18,12 +18,21 @@
 
             <div class="mb-3">
                 <label for="category" class="form-label">Category</label>
-                <select class="form-select" id="category" name="category" required>
+                <select class="form-select" id="category" name="category" required onchange="toggleCategoryInput()">
                     <option value="general" {% if resource.category == 'general' %}selected{% endif %}>General Resource</option>
-                    <option value="recent_formation_day" {% if resource.category == 'recent_formation_day' %}selected{% endif %}>Most Recent Formation Day</option>
-                    <option value="previous_formation_days" {% if resource.category == 'previous_formation_days' %}selected{% endif %}>Previous Formation Days</option>
+                    <option value="formation_day" {% if resource.category == 'formation_day' %}selected{% endif %}>Formation Day</option>
                     <option value="panel_paper" {% if resource.category == 'panel_paper' %}selected{% endif %}>Formation Panel Paper</option>
                     <option value="transition_midterm_paper" {% if resource.category == 'transition_midterm_paper' %}selected{% endif %}>Transition / Mid-Term Paper</option>
+                </select>
+            </div>
+
+            <div class="mb-3 {% if resource.category != 'formation_day' %}d-none{% endif %}" id="formation-date-group">
+                <label for="formation_date" class="form-label">Formation Date</label>
+                <select class="form-select" id="formation_date" name="formation_date" {% if resource.category == 'formation_day' %}required{% endif %}>
+                    <option value="">-- Select a Date --</option>
+                    {% for dt in upcoming_dates %}
+                        <option value="{{ dt.date }}" {% if resource.formation_date == dt.date %}selected{% endif %}>{{ dt.label if dt.label else dt.date }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -54,6 +63,21 @@
 </div>
 
 <script>
+    function toggleCategoryInput() {
+        var category = document.getElementById('category').value;
+        var dateGroup = document.getElementById('formation-date-group');
+        var dateInput = document.getElementById('formation_date');
+
+        if (category === 'formation_day') {
+            dateGroup.classList.remove('d-none');
+            dateInput.setAttribute('required', 'required');
+        } else {
+            dateGroup.classList.add('d-none');
+            dateInput.removeAttribute('required');
+            dateInput.value = '';
+        }
+    }
+
     function toggleTypeInput() {
         var type = document.getElementById('type').value;
         var urlGroup = document.getElementById('url-input-group');

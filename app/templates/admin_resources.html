@@ -32,10 +32,9 @@
                                 <td>
                                     {% if resource.category == 'panel_paper' %}
                                         <span class="badge bg-secondary">Panel Paper</span>
-                                    {% elif resource.category == 'recent_formation_day' %}
-                                        <span class="badge bg-info">Recent Formation Day</span>
-                                    {% elif resource.category == 'previous_formation_days' %}
-                                        <span class="badge bg-info text-dark">Previous Formation Days</span>
+                                    {% elif resource.category == 'formation_day' %}
+                                        <span class="badge bg-info">Formation Day</span>
+                                        <small class="d-block text-muted">{{ resource.formation_date }}</small>
                                     {% elif resource.category == 'transition_midterm_paper' %}
                                         <span class="badge bg-dark">Transition/Mid-Term</span>
                                     {% else %}
@@ -95,12 +94,21 @@
 
                     <div class="mb-3">
                         <label for="category" class="form-label">Category</label>
-                        <select class="form-select" id="category" name="category" required>
+                        <select class="form-select" id="category" name="category" required onchange="toggleCategoryInput()">
                             <option value="general">General Resource</option>
-                            <option value="recent_formation_day">Most Recent Formation Day</option>
-                            <option value="previous_formation_days">Previous Formation Days</option>
+                            <option value="formation_day">Formation Day</option>
                             <option value="panel_paper">Formation Panel Paper</option>
                             <option value="transition_midterm_paper">Transition / Mid-Term Paper</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="formation-date-group">
+                        <label for="formation_date" class="form-label">Formation Date</label>
+                        <select class="form-select" id="formation_date" name="formation_date">
+                            <option value="">-- Select a Date --</option>
+                            {% for dt in upcoming_dates %}
+                                <option value="{{ dt.date }}">{{ dt.label if dt.label else dt.date }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
@@ -130,6 +138,21 @@
 </div>
 
 <script>
+    function toggleCategoryInput() {
+        var category = document.getElementById('category').value;
+        var dateGroup = document.getElementById('formation-date-group');
+        var dateInput = document.getElementById('formation_date');
+
+        if (category === 'formation_day') {
+            dateGroup.classList.remove('d-none');
+            dateInput.setAttribute('required', 'required');
+        } else {
+            dateGroup.classList.add('d-none');
+            dateInput.removeAttribute('required');
+            dateInput.value = '';
+        }
+    }
+
     function toggleTypeInput() {
         var type = document.getElementById('type').value;
         var urlGroup = document.getElementById('url-input-group');

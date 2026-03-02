@@ -97,6 +97,15 @@ def check_and_upgrade_schema(app):
                     print("Successfully added 'category' column.")
                 except Exception as e:
                     print(f"Failed to add 'category' column: {e}")
+            if "formation_date" not in columns:
+                print("Missing column 'formation_date' detected in 'resource' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE resource ADD COLUMN formation_date VARCHAR(100)"))
+                        conn.commit()
+                    print("Successfully added 'formation_date' column.")
+                except Exception as e:
+                    print(f"Failed to add 'formation_date' column: {e}")
 
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]

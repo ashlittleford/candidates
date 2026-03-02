@@ -107,6 +107,7 @@ class Resource(db.Model):
     category = db.Column(db.String(50), default='general') # 'general' or 'panel_paper'
     url = db.Column(db.String(500), nullable=True)
     filename = db.Column(db.String(250), nullable=True)
+    formation_date = db.Column(db.String(100), nullable=True)
 
 class GlobalSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
