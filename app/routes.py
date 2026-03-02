@@ -341,6 +341,23 @@ def admin_settings():
         settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
         settings.formation_panel_dates = request.form.get('formation_panel_dates')
         db.session.commit()
+
+        # Archive logic
+        new_labels = []
+        if settings.formation_panel_dates:
+            for d in settings.formation_panel_dates.split(','):
+                parts = d.split(':')
+                label = parts[0].strip() if len(parts) > 1 else d.strip()
+                if label:
+                    new_labels.append(label)
+
+        documents = PanelDocument.query.all()
+        for doc in documents:
+            if doc.day_label and doc.day_label not in new_labels:
+                doc.is_archived = True
+
+        db.session.commit()
+
         flash('Global settings updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
