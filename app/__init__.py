@@ -151,6 +151,26 @@ def check_and_upgrade_schema(app):
                     print("Successfully added 'transition_panel' column.")
                 except Exception as e:
                     print(f"Failed to add 'transition_panel' column: {e}")
+
+            if "ready_for_mid_term_panel" not in columns:
+                print("Missing column 'ready_for_mid_term_panel' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN ready_for_mid_term_panel BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'ready_for_mid_term_panel' column.")
+                except Exception as e:
+                    print(f"Failed to add 'ready_for_mid_term_panel' column: {e}")
+
+            if "ready_for_transition_panel" not in columns:
+                print("Missing column 'ready_for_transition_panel' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN ready_for_transition_panel BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'ready_for_transition_panel' column.")
+                except Exception as e:
+                    print(f"Failed to add 'ready_for_transition_panel' column: {e}")
         if inspector.has_table("panel_document"):
             columns = [col['name'] for col in inspector.get_columns("panel_document")]
             if "is_archived" not in columns:
