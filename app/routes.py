@@ -12,13 +12,6 @@ import uuid
 
 main = Blueprint('main', __name__)
 
-PRESBYTERY_EMAILS = {
-    "Generate Presbytery": "admin@generate.org.au",
-    "Wimala Presbytery": "admin@wimala.org.au",
-    "POSSA": "admin@possa.org.au"
-}
-DEFAULT_SUPPORT_EMAIL = "support@uca.org.au"
-
 @main.route('/')
 def index():
     if current_user.is_authenticated:
@@ -98,9 +91,17 @@ def view_candidate_profile(user_id):
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
 
-    support_email = DEFAULT_SUPPORT_EMAIL
-    if target_user.profile and target_user.profile.presbytery:
-        support_email = PRESBYTERY_EMAILS.get(target_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
+    support_email = "support@uca.org.au"
+    if global_settings:
+        support_email = global_settings.support_email_default or "support@uca.org.au"
+        if target_user.profile and target_user.profile.presbytery:
+            presbytery = target_user.profile.presbytery
+            if presbytery == "Generate Presbytery" and global_settings.support_email_generate_presbytery:
+                support_email = global_settings.support_email_generate_presbytery
+            elif presbytery == "Wimala Presbytery" and global_settings.support_email_wimala_presbytery:
+                support_email = global_settings.support_email_wimala_presbytery
+            elif presbytery == "POSSA" and global_settings.support_email_possa:
+                support_email = global_settings.support_email_possa
 
     return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
 
@@ -264,9 +265,17 @@ def profile():
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
 
-    support_email = DEFAULT_SUPPORT_EMAIL
-    if current_user.profile and current_user.profile.presbytery:
-        support_email = PRESBYTERY_EMAILS.get(current_user.profile.presbytery, DEFAULT_SUPPORT_EMAIL)
+    support_email = "support@uca.org.au"
+    if global_settings:
+        support_email = global_settings.support_email_default or "support@uca.org.au"
+        if current_user.profile and current_user.profile.presbytery:
+            presbytery = current_user.profile.presbytery
+            if presbytery == "Generate Presbytery" and global_settings.support_email_generate_presbytery:
+                support_email = global_settings.support_email_generate_presbytery
+            elif presbytery == "Wimala Presbytery" and global_settings.support_email_wimala_presbytery:
+                support_email = global_settings.support_email_wimala_presbytery
+            elif presbytery == "POSSA" and global_settings.support_email_possa:
+                support_email = global_settings.support_email_possa
 
     return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email)
 
@@ -336,7 +345,11 @@ def admin_settings():
     if not settings:
         settings = GlobalSettings(
             upcoming_formation_dates="Monday 2 March 2026, Monday 13 April 2026, Monday 4 May 2026, Monday 1 June 2026, Monday 3 August 2026, Monday 7 September 2026, Monday 12 October 2026, Monday 2 November 2026",
-            formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026"
+            formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026",
+            support_email_generate_presbytery="admin@generate.org.au",
+            support_email_wimala_presbytery="admin@wimala.org.au",
+            support_email_possa="admin@possa.org.au",
+            support_email_default="support@uca.org.au"
         )
         db.session.add(settings)
         db.session.commit()
@@ -344,6 +357,10 @@ def admin_settings():
     if request.method == 'POST':
         settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
         settings.formation_panel_dates = request.form.get('formation_panel_dates')
+        settings.support_email_generate_presbytery = request.form.get('support_email_generate_presbytery')
+        settings.support_email_wimala_presbytery = request.form.get('support_email_wimala_presbytery')
+        settings.support_email_possa = request.form.get('support_email_possa')
+        settings.support_email_default = request.form.get('support_email_default')
         db.session.commit()
 
         # Archive logic

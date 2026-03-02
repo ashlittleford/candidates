@@ -163,6 +163,49 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'is_archived' column: {e}")
 
+        if inspector.has_table("global_settings"):
+            columns = [col['name'] for col in inspector.get_columns("global_settings")]
+
+            if "support_email_generate_presbytery" not in columns:
+                print("Missing column 'support_email_generate_presbytery' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN support_email_generate_presbytery VARCHAR(150) DEFAULT 'admin@generate.org.au'"))
+                        conn.commit()
+                    print("Successfully added 'support_email_generate_presbytery' column.")
+                except Exception as e:
+                    print(f"Failed to add 'support_email_generate_presbytery' column: {e}")
+
+            if "support_email_wimala_presbytery" not in columns:
+                print("Missing column 'support_email_wimala_presbytery' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN support_email_wimala_presbytery VARCHAR(150) DEFAULT 'admin@wimala.org.au'"))
+                        conn.commit()
+                    print("Successfully added 'support_email_wimala_presbytery' column.")
+                except Exception as e:
+                    print(f"Failed to add 'support_email_wimala_presbytery' column: {e}")
+
+            if "support_email_possa" not in columns:
+                print("Missing column 'support_email_possa' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN support_email_possa VARCHAR(150) DEFAULT 'admin@possa.org.au'"))
+                        conn.commit()
+                    print("Successfully added 'support_email_possa' column.")
+                except Exception as e:
+                    print(f"Failed to add 'support_email_possa' column: {e}")
+
+            if "support_email_default" not in columns:
+                print("Missing column 'support_email_default' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN support_email_default VARCHAR(150) DEFAULT 'support@uca.org.au'"))
+                        conn.commit()
+                    print("Successfully added 'support_email_default' column.")
+                except Exception as e:
+                    print(f"Failed to add 'support_email_default' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
