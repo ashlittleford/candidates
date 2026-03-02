@@ -63,6 +63,11 @@
                     </div>
 
                     <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="transition_panel" name="transition_panel" {% if user.profile.transition_panel %}checked{% endif %}>
+                        <label class="form-check-label" for="transition_panel">Transition Panel / Going to Transition Panel</label>
+                    </div>
+
+                    <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="walking_on_country" name="walking_on_country" {% if user.profile.walking_on_country %}checked{% endif %}>
                         <label class="form-check-label" for="walking_on_country">Walking on Country</label>
                     </div>

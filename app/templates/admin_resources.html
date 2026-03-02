@@ -32,6 +32,12 @@
                                 <td>
                                     {% if resource.category == 'panel_paper' %}
                                         <span class="badge bg-secondary">Panel Paper</span>
+                                    {% elif resource.category == 'recent_formation_day' %}
+                                        <span class="badge bg-info">Recent Formation Day</span>
+                                    {% elif resource.category == 'previous_formation_days' %}
+                                        <span class="badge bg-info text-dark">Previous Formation Days</span>
+                                    {% elif resource.category == 'transition_midterm_paper' %}
+                                        <span class="badge bg-dark">Transition/Mid-Term</span>
                                     {% else %}
                                         <span class="badge bg-primary">General</span>
                                     {% endif %}
@@ -91,7 +97,10 @@
                         <label for="category" class="form-label">Category</label>
                         <select class="form-select" id="category" name="category" required>
                             <option value="general">General Resource</option>
+                            <option value="recent_formation_day">Most Recent Formation Day</option>
+                            <option value="previous_formation_days">Previous Formation Days</option>
                             <option value="panel_paper">Formation Panel Paper</option>
+                            <option value="transition_midterm_paper">Transition / Mid-Term Paper</option>
                         </select>
                     </div>
 
