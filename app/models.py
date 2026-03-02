@@ -146,3 +146,4 @@ class PanelDocument(db.Model):
     original_filename = db.Column(db.String(250), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     day_label = db.Column(db.String(50), nullable=True)
+    is_archived = db.Column(db.Boolean, default=False)
