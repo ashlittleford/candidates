@@ -725,22 +725,8 @@
                             </a>
                         {% endfor %}
 
-                        {# Display Global Resources #}
-                        {% set panel_papers = resources | selectattr("category", "equalto", "panel_paper") | list %}
-                        {% for resource in panel_papers %}
-                            {% if resource.type == 'link' %}
-                                <a href="{{ resource.url }}" class="resource-link" target="_blank">
-                                    <i class="fas fa-external-link-alt"></i> {{ resource.title }}
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
-                                    <i class="fas fa-file-download"></i> {{ resource.title }}
-                                </a>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if (user_docs|length == 0) and (panel_papers|length == 0) %}
-                            <p class="text-muted">No papers available.</p>
+                        {% if (user_docs|length == 0) %}
+                            <p class="text-muted">No submitted documents available.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -752,21 +738,108 @@
             <h5 class="section-title">Resources</h5>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex flex-column gap-2">
-                        {% set general_resources = resources | rejectattr("category", "equalto", "panel_paper") | list %}
-                        {% for resource in general_resources %}
-                            {% if resource.type == 'link' %}
-                                <a href="{{ resource.url }}" class="resource-link" target="_blank">
-                                    <i class="fas fa-external-link-alt"></i> {{ resource.title }}
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
-                                    <i class="fas fa-file-download"></i> {{ resource.title }}
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <p class="text-muted">No resources available.</p>
-                        {% endfor %}
+                    <ul class="nav nav-tabs mb-3" id="resourceTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="recent-day-tab" data-bs-toggle="tab" data-bs-target="#recent-day" type="button" role="tab" aria-controls="recent-day" aria-selected="true">Recent Formation Day</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="prev-days-tab" data-bs-toggle="tab" data-bs-target="#prev-days" type="button" role="tab" aria-controls="prev-days" aria-selected="false">Previous Formation Days</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="panel-papers-tab" data-bs-toggle="tab" data-bs-target="#panel-papers" type="button" role="tab" aria-controls="panel-papers" aria-selected="false">Panel Papers</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="general-res-tab" data-bs-toggle="tab" data-bs-target="#general-res" type="button" role="tab" aria-controls="general-res" aria-selected="false">General</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="resourceTabsContent">
+                        <!-- Recent Formation Day Tab -->
+                        <div class="tab-pane fade show active" id="recent-day" role="tabpanel" aria-labelledby="recent-day-tab">
+                            <div class="d-flex flex-column gap-2">
+                                {% set recent_resources = resources | selectattr("category", "equalto", "recent_formation_day") | list %}
+                                {% for resource in recent_resources %}
+                                    {% if resource.type == 'link' %}
+                                        <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-file-download"></i> {{ resource.title }}
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No resources available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Previous Formation Days Tab -->
+                        <div class="tab-pane fade" id="prev-days" role="tabpanel" aria-labelledby="prev-days-tab">
+                            <div class="d-flex flex-column gap-2">
+                                {% set prev_resources = resources | selectattr("category", "equalto", "previous_formation_days") | list %}
+                                {% for resource in prev_resources %}
+                                    {% if resource.type == 'link' %}
+                                        <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-file-download"></i> {{ resource.title }}
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No resources available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Panel Papers Tab -->
+                        <div class="tab-pane fade" id="panel-papers" role="tabpanel" aria-labelledby="panel-papers-tab">
+                            <div class="d-flex flex-column gap-2">
+                                {% set general_panel_papers = resources | selectattr("category", "equalto", "panel_paper") | list %}
+                                {% set transition_midterm_papers = resources | selectattr("category", "equalto", "transition_midterm_paper") | list %}
+
+                                {% set all_panel_papers = general_panel_papers %}
+                                {% if user.profile.mid_term_panel or user.profile.transition_panel %}
+                                    {% set all_panel_papers = all_panel_papers + transition_midterm_papers %}
+                                {% endif %}
+
+                                {% for resource in all_panel_papers %}
+                                    {% if resource.type == 'link' %}
+                                        <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-file-download"></i> {{ resource.title }}
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No resources available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- General Resources Tab -->
+                        <div class="tab-pane fade" id="general-res" role="tabpanel" aria-labelledby="general-res-tab">
+                            <div class="d-flex flex-column gap-2">
+                                {% set general_resources = resources | selectattr("category", "equalto", "general") | list %}
+                                {% for resource in general_resources %}
+                                    {% if resource.type == 'link' %}
+                                        <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                            <i class="fas fa-file-download"></i> {{ resource.title }}
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No resources available.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
