@@ -141,6 +141,16 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'wwcc_number' column: {e}")
 
+            if "transition_panel" not in columns:
+                print("Missing column 'transition_panel' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        # SQLite doesn't directly support BOOLEAN so we add an integer (which boolean is typically stored as) or boolean alias
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN transition_panel BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'transition_panel' column.")
+                except Exception as e:
+                    print(f"Failed to add 'transition_panel' column: {e}")
         if inspector.has_table("panel_document"):
             columns = [col['name'] for col in inspector.get_columns("panel_document")]
             if "is_archived" not in columns:
