@@ -10,17 +10,26 @@
     </div>
 </div>
 
-<ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="candidates-tab" data-bs-toggle="tab" data-bs-target="#candidates" type="button" role="tab" aria-controls="candidates" aria-selected="true">Candidates</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="panels-tab" data-bs-toggle="tab" data-bs-target="#panels" type="button" role="tab" aria-controls="panels" aria-selected="false">Formation Panels</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">Panel Members</button>
-    </li>
-</ul>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <ul class="nav nav-tabs border-0 flex-grow-1" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="candidates-tab" data-bs-toggle="tab" data-bs-target="#candidates" type="button" role="tab" aria-controls="candidates" aria-selected="true">Candidates</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="panels-tab" data-bs-toggle="tab" data-bs-target="#panels" type="button" role="tab" aria-controls="panels" aria-selected="false">Formation Panels</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="members-tab" data-bs-toggle="tab" data-bs-target="#members" type="button" role="tab" aria-controls="members" aria-selected="false">Panel Members</button>
+        </li>
+    </ul>
+    <div>
+        <a href="?show_archived={{ '0' if show_archived else '1' }}" class="btn btn-outline-secondary btn-sm">
+            {{ 'Hide Archived' if show_archived else 'Show Archived' }}
+        </a>
+    </div>
+</div>
+<!-- Border for tabs to make it look connected to the tab content -->
+<div class="border-bottom mb-4" style="margin-top: -1.5rem;"></div>
 
 <div class="tab-content" id="adminTabsContent">
     <div class="tab-pane fade show active" id="candidates" role="tabpanel" aria-labelledby="candidates-tab">
@@ -76,12 +85,25 @@
                                 <tr>
                                     <td><input type="checkbox" name="user_ids" value="{{ user.id }}"></td>
                                     <td>{{ user.id }}</td>
-                                    <td>{{ user.name }}</td>
+                                    <td>
+                                        {{ user.name }}
+                                        {% if user.is_archived %}
+                                        <span class="badge bg-secondary ms-2">Archived</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ user.profile.start_date }}</td>
                                     <td>{{ user.profile.presbytery or '' }}</td>
                                     <td>{{ user.profile.formation_panel.chair_name if user.profile.formation_panel else '' }}</td>
                                     <td>
-                                        <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('main.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">Edit Profile</a>
+                                            <form action="{{ url_for('main.toggle_archive', user_id=user.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to {{ 'unarchive' if user.is_archived else 'archive' }} this candidate?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm {{ 'btn-warning' if user.is_archived else 'btn-outline-danger' }}">
+                                                    {{ 'Unarchive' if user.is_archived else 'Archive' }}
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -161,7 +183,12 @@
                             {% for member in panel_members %}
                             <tr>
                                 <td>{{ member.id }}</td>
-                                <td>{{ member.name }}</td>
+                                <td>
+                                    {{ member.name }}
+                                    {% if member.is_archived %}
+                                    <span class="badge bg-secondary ms-2">Archived</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ member.username }}</td>
                                 <td>
                                     {% if member.formation_panel %}
@@ -171,8 +198,12 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <!-- Currently no specific edit for panel member, reuse delete or similar if implemented -->
-                                    <span class="text-muted">N/A</span>
+                                    <form action="{{ url_for('main.toggle_archive', user_id=member.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to {{ 'unarchive' if member.is_archived else 'archive' }} this panel member?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm {{ 'btn-warning' if member.is_archived else 'btn-outline-danger' }}">
+                                            {{ 'Unarchive' if member.is_archived else 'Archive' }}
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% else %}
