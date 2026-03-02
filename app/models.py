@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_panel_member = db.Column(db.Boolean, default=False)
+    is_archived = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(150))
 
     invitation_token = db.Column(db.String(100), unique=True, nullable=True)

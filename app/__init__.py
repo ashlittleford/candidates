@@ -64,6 +64,16 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'invitation_expiry' column: {e}")
 
+            if "is_archived" not in columns:
+                print("Missing column 'is_archived' detected in 'user' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE user ADD COLUMN is_archived BOOLEAN DEFAULT 0"))
+                        conn.commit()
+                    print("Successfully added 'is_archived' column.")
+                except Exception as e:
+                    print(f"Failed to add 'is_archived' column: {e}")
+
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
             if "current_church" not in columns:
