@@ -817,7 +817,15 @@
                         <!-- Recent Formation Day Tab -->
                         <div class="tab-pane fade show active" id="recent-day" role="tabpanel" aria-labelledby="recent-day-tab">
                             <div class="d-flex flex-column gap-2">
-                                {% set recent_resources = resources | selectattr("category", "equalto", "recent_formation_day") | list %}
+                                {% set recent_resources = [] %}
+                                {% for resource in resources %}
+                                    {% if resource.category == 'formation_day' and resource.formation_date == most_recent_date %}
+                                        {% set _ = recent_resources.append(resource) %}
+                                    {% elif resource.category == 'recent_formation_day' %}
+                                        {% set _ = recent_resources.append(resource) %}
+                                    {% endif %}
+                                {% endfor %}
+
                                 {% for resource in recent_resources %}
                                     {% if resource.type == 'link' %}
                                         <a href="{{ resource.url }}" class="resource-link" target="_blank">
@@ -837,17 +845,28 @@
                         <!-- Previous Formation Days Tab -->
                         <div class="tab-pane fade" id="prev-days" role="tabpanel" aria-labelledby="prev-days-tab">
                             <div class="d-flex flex-column gap-2">
-                                {% set prev_resources = resources | selectattr("category", "equalto", "previous_formation_days") | list %}
-                                {% for resource in prev_resources %}
-                                    {% if resource.type == 'link' %}
-                                        <a href="{{ resource.url }}" class="resource-link" target="_blank">
-                                            <i class="fas fa-external-link-alt"></i> {{ resource.title }}
-                                        </a>
-                                    {% else %}
-                                        <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
-                                            <i class="fas fa-file-download"></i> {{ resource.title }}
-                                        </a>
+                                {% set prev_resources = [] %}
+                                {% for resource in resources %}
+                                    {% if resource.category == 'formation_day' and resource.formation_date != most_recent_date %}
+                                        {% set _ = prev_resources.append(resource) %}
+                                    {% elif resource.category == 'previous_formation_days' %}
+                                        {% set _ = prev_resources.append(resource) %}
                                     {% endif %}
+                                {% endfor %}
+
+                                {% for resource in prev_resources %}
+                                    <div class="mb-2">
+                                        <div class="text-muted small fw-bold text-uppercase">{{ resource.formation_date or 'Previous' }}</div>
+                                        {% if resource.type == 'link' %}
+                                            <a href="{{ resource.url }}" class="resource-link" target="_blank">
+                                                <i class="fas fa-external-link-alt"></i> {{ resource.title }}
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('main.uploaded_file', filename=resource.filename) }}" class="resource-link" target="_blank">
+                                                <i class="fas fa-file-download"></i> {{ resource.title }}
+                                            </a>
+                                        {% endif %}
+                                    </div>
                                 {% else %}
                                     <p class="text-muted mb-0">No resources available.</p>
                                 {% endfor %}
