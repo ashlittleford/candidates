@@ -23,6 +23,29 @@
                         <div class="form-text">Enter the dates for the 3 formation panels for the year. Format: "Label: Date, Label: Date".</div>
                     </div>
 
+                    <hr class="my-4">
+                    <h4>Support Emails</h4>
+
+                    <div class="mb-3">
+                        <label class="form-label">Generate Presbytery Support Email</label>
+                        <input type="email" class="form-control" name="support_email_generate_presbytery" value="{{ settings.support_email_generate_presbytery }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Wimala Presbytery Support Email</label>
+                        <input type="email" class="form-control" name="support_email_wimala_presbytery" value="{{ settings.support_email_wimala_presbytery }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">POSSA Support Email</label>
+                        <input type="email" class="form-control" name="support_email_possa" value="{{ settings.support_email_possa }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Default Support Email (Fall-back)</label>
+                        <input type="email" class="form-control" name="support_email_default" value="{{ settings.support_email_default }}">
+                    </div>
+
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn uca-btn-red">Save Settings</button>
