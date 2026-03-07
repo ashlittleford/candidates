@@ -18,6 +18,12 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Prayer Room Sign In/Up Link</label>
+                        <input type="url" class="form-control" name="prayer_room_link" value="{{ settings.prayer_room_link or '' }}" placeholder="https://example.com/prayer-room">
+                        <div class="form-text">Enter the URL for the prayer room sign in/up page.</div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Formation Panels Dates (Yearly)</label>
                         <textarea class="form-control" name="formation_panel_dates" rows="3">{{ settings.formation_panel_dates }}</textarea>
                         <div class="form-text">Enter the dates for the 3 formation panels for the year. Format: "Label: Date, Label: Date".</div>

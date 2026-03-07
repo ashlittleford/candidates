@@ -172,6 +172,18 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'is_archived' column: {e}")
 
+        if inspector.has_table("global_settings"):
+            columns = [col['name'] for col in inspector.get_columns("global_settings")]
+            if "prayer_room_link" not in columns:
+                print("Missing column 'prayer_room_link' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN prayer_room_link VARCHAR(500)"))
+                        conn.commit()
+                    print("Successfully added 'prayer_room_link' column.")
+                except Exception as e:
+                    print(f"Failed to add 'prayer_room_link' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')

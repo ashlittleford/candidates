@@ -113,6 +113,7 @@ class GlobalSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
+    prayer_room_link = db.Column(db.String(500), nullable=True)
 
 class Standard(db.Model):
     id = db.Column(db.Integer, primary_key=True)

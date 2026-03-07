@@ -388,6 +388,7 @@ def admin_settings():
     if request.method == 'POST':
         settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
         settings.formation_panel_dates = request.form.get('formation_panel_dates')
+        settings.prayer_room_link = request.form.get('prayer_room_link')
         db.session.commit()
 
         # Archive logic

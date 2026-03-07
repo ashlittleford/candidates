@@ -107,5 +107,25 @@ class AppTestCase(unittest.TestCase):
             self.assertEqual(updated_candidate.profile.formation_panel.chair_name, 'Rev. Test')
             self.assertTrue(updated_candidate.profile.walking_on_country)
 
+    def test_prayer_room_link_update(self):
+        self.login('admin', 'admin')
+
+        # First visit the page to ensure settings are initialized
+        self.client.get('/admin/settings', follow_redirects=True)
+
+        response = self.client.post('/admin/settings', data=dict(
+            upcoming_formation_dates='Test Date',
+            formation_panel_dates='Test Panel',
+            prayer_room_link='https://example.com/prayer'
+        ), follow_redirects=True)
+
+        self.assertIn(b'Global settings updated successfully', response.data)
+
+        from app.models import GlobalSettings
+        with self.app.app_context():
+            settings = GlobalSettings.query.first()
+            self.assertEqual(settings.prayer_room_link, 'https://example.com/prayer')
+
+
 if __name__ == '__main__':
     unittest.main()
