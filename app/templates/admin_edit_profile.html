@@ -58,8 +58,18 @@
                     </div>
 
                     <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="ready_for_mid_term_panel" name="ready_for_mid_term_panel" {% if user.profile.ready_for_mid_term_panel %}checked{% endif %}>
+                        <label class="form-check-label" for="ready_for_mid_term_panel">Ready for Mid-Term Panel</label>
+                    </div>
+
+                    <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="mid_term_panel" name="mid_term_panel" {% if user.profile.mid_term_panel %}checked{% endif %}>
                         <label class="form-check-label" for="mid_term_panel">Mid-Term Panel Completed</label>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="ready_for_transition_panel" name="ready_for_transition_panel" {% if user.profile.ready_for_transition_panel %}checked{% endif %}>
+                        <label class="form-check-label" for="ready_for_transition_panel">Ready for Transition Panel</label>
                     </div>
 
                     <div class="mb-3 form-check">
