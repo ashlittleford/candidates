@@ -45,6 +45,24 @@ def get_upcoming_formation_days(rsvp_user=None):
         'rsvp_status': rsvp_by_day.get(d.id)
     } for d in days]
 
+def get_upcoming_formation_day_rsvp_summary():
+    """Upcoming formation days plus attending/not_attending/no_response counts for each."""
+    formation_days = FormationDay.query.filter(
+        FormationDay.date >= datetime.now().date()
+    ).order_by(FormationDay.date).all()
+
+    total_candidates = User.query.filter(
+        User.is_admin == False, User.is_panel_member == False, User.is_archived == False
+    ).count()
+
+    rsvp_counts = {}
+    for day_id, status, count in db.session.query(
+        FormationDayRSVP.formation_day_id, FormationDayRSVP.status, db.func.count(FormationDayRSVP.id)
+    ).group_by(FormationDayRSVP.formation_day_id, FormationDayRSVP.status).all():
+        rsvp_counts.setdefault(day_id, {'attending': 0, 'not_attending': 0})[status] = count
+
+    return formation_days, rsvp_counts, total_candidates
+
 def get_most_recent_formation_day_date(upcoming_dates):
     """
     Determines which formation day should be treated as "recent" for the
@@ -514,20 +532,7 @@ def admin_settings():
         FormationDay.date >= datetime.now().date()
     ).order_by(FormationDay.date).all()
 
-    total_candidates = User.query.filter(
-        User.is_admin == False, User.is_panel_member == False, User.is_archived == False
-    ).count()
-
-    rsvp_counts = {}
-    for day_id, status, count in db.session.query(
-        FormationDayRSVP.formation_day_id, FormationDayRSVP.status, db.func.count(FormationDayRSVP.id)
-    ).group_by(FormationDayRSVP.formation_day_id, FormationDayRSVP.status).all():
-        rsvp_counts.setdefault(day_id, {'attending': 0, 'not_attending': 0})[status] = count
-
-    return render_template(
-        'admin_global_settings.html', settings=settings, formation_days=formation_days,
-        rsvp_counts=rsvp_counts, total_candidates=total_candidates
-    )
+    return render_template('admin_global_settings.html', settings=settings, formation_days=formation_days)
 
 @main.route('/admin/formation_days/add', methods=['POST'])
 @login_required
@@ -668,7 +673,13 @@ def admin_dashboard():
         panel_members = User.query.filter_by(is_panel_member=True, is_archived=False).all()
 
     panels = FormationPanel.query.all()
-    return render_template('admin_dashboard.html', users=users, panels=panels, panel_members=panel_members, global_settings=global_settings, show_archived=show_archived)
+    formation_days, rsvp_counts, total_candidates = get_upcoming_formation_day_rsvp_summary()
+
+    return render_template(
+        'admin_dashboard.html', users=users, panels=panels, panel_members=panel_members,
+        global_settings=global_settings, show_archived=show_archived,
+        formation_days=formation_days, rsvp_counts=rsvp_counts, total_candidates=total_candidates
+    )
 
 @main.route('/admin/invite/candidate', methods=['GET', 'POST'])
 @login_required
