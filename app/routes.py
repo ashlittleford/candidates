@@ -1092,13 +1092,62 @@ def upload_panel_document():
     flash('Documents uploaded successfully.')
     return redirect(url_for('main.profile'))
 
+@main.route('/candidate/<int:user_id>/upload_report', methods=['POST'])
+@login_required
+def upload_panel_report(user_id):
+    if not (current_user.is_panel_member or current_user.is_admin):
+        flash('Only panel members can upload panel reports.')
+        return redirect(url_for('main.profile'))
+
+    target_user = User.query.get_or_404(user_id)
+
+    if current_user.is_panel_member and not current_user.is_admin:
+        if not target_user.profile or target_user.profile.formation_panel_id != current_user.formation_panel_id:
+            flash('Access denied to this profile.')
+            return redirect(url_for('main.panel_dashboard'))
+
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(url_for('main.view_candidate_profile', user_id=user_id))
+
+    files = request.files.getlist('file')
+    category = request.form.get('category')
+    if category not in DOCUMENT_CATEGORIES:
+        category = 'Other'
+
+    for file in files:
+        if file.filename == '':
+            continue
+
+        original_filename = secure_filename(file.filename)
+        filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{original_filename}"
+        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+
+        doc = PanelDocument(
+            user_id=target_user.id,
+            filename=filename,
+            original_filename=original_filename,
+            category=category,
+            source='panel_member'
+        )
+        db.session.add(doc)
+
+    db.session.commit()
+    flash('Report(s) uploaded successfully.')
+    return redirect(url_for('main.view_candidate_profile', user_id=user_id))
+
 @main.route('/profile/delete_document/<int:doc_id>', methods=['POST'])
 @login_required
 def delete_panel_document(doc_id):
     doc = PanelDocument.query.get_or_404(doc_id)
 
-    # Allow admin or owner to delete
-    if doc.user_id != current_user.id and not current_user.is_admin:
+    # Allow admin, the candidate owner, or a panel member (for panel-submitted reports) to delete
+    can_delete = (
+        current_user.is_admin
+        or doc.user_id == current_user.id
+        or (current_user.is_panel_member and doc.source == 'panel_member')
+    )
+    if not can_delete:
         flash('Access denied.')
         return redirect(url_for('main.profile'))
 
