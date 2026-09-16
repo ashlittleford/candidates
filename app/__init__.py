@@ -303,6 +303,7 @@ def create_app(test_config=None):
          seed_standards(app)
          seed_academic_requirements(app)
          migrate_formation_days(app)
+         migrate_academic_requirement_statuses(app)
 
     return app
 
@@ -396,3 +397,20 @@ def migrate_formation_days(app):
             print("FormationDay backfill complete.")
         except Exception as e:
             print(f"Error migrating formation days: {e}")
+
+def migrate_academic_requirement_statuses(app):
+    """
+    One-time value migration: the old 'pending'/'in_progress' status values
+    are renamed to 'not_completed'/'enrolled'.
+    """
+    from app.models import CandidateAcademicRequirement
+
+    with app.app_context():
+        try:
+            updated = CandidateAcademicRequirement.query.filter_by(status='pending').update({'status': 'not_completed'})
+            updated += CandidateAcademicRequirement.query.filter_by(status='in_progress').update({'status': 'enrolled'})
+            if updated:
+                db.session.commit()
+                print(f"Migrated {updated} academic requirement status value(s).")
+        except Exception as e:
+            print(f"Error migrating academic requirement statuses: {e}")

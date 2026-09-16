@@ -529,7 +529,7 @@
                                 <tr>
                                     <th scope="col">Requirement</th>
                                     <th scope="col">Status</th>
-                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Semester</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -539,10 +539,10 @@
                                     <td>
                                         {% if row.status == 'completed' %}
                                             <span class="badge bg-success">Completed</span>
-                                        {% elif row.status == 'in_progress' %}
-                                            <span class="badge bg-warning text-dark">In Progress</span>
+                                        {% elif row.status == 'enrolled' %}
+                                            <span class="badge bg-warning text-dark">Enrolled</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Pending</span>
+                                            <span class="badge bg-secondary">Not Completed</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ row.due_date or '-' }}</td>

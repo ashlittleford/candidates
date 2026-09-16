@@ -68,7 +68,7 @@ def get_candidate_academic_requirements(user):
     for req in requirements:
         row = existing.get(req.id)
         if row is None:
-            row = CandidateAcademicRequirement(user_id=user.id, requirement_id=req.id, status='pending')
+            row = CandidateAcademicRequirement(user_id=user.id, requirement_id=req.id, status='not_completed')
             db.session.add(row)
             row.requirement = req
             created = True
@@ -78,6 +78,15 @@ def get_candidate_academic_requirements(user):
         db.session.commit()
 
     return rows
+
+def parse_semester_year(due_date):
+    """Extract (semester, year) strings back out of a 'Semester N, YYYY' value."""
+    if not due_date:
+        return None, None
+    match = re.match(r'Semester\s+(\d),\s*(\d{4})', due_date)
+    if not match:
+        return None, None
+    return match.group(1), match.group(2)
 
 @main.route('/')
 def index():
@@ -752,8 +761,11 @@ def edit_user(user_id):
             if not row:
                 row = CandidateAcademicRequirement(user_id=user.id, requirement_id=int(requirement_id))
                 db.session.add(row)
-            row.status = request.form.get(f'academic_status_{requirement_id}', 'pending')
-            row.due_date = request.form.get(f'academic_due_date_{requirement_id}')
+            row.status = request.form.get(f'academic_status_{requirement_id}', 'not_completed')
+
+            semester = request.form.get(f'academic_semester_{requirement_id}')
+            year = request.form.get(f'academic_year_{requirement_id}')
+            row.due_date = f"Semester {semester}, {year}" if semester and year else None
 
         db.session.commit()
         flash('User updated successfully')
@@ -761,6 +773,8 @@ def edit_user(user_id):
 
     panels = FormationPanel.query.all()
     academic_requirements = get_candidate_academic_requirements(user)
+    for row in academic_requirements:
+        row.semester_value, row.year_value = parse_semester_year(row.due_date)
     return render_template('admin_edit_profile.html', user=user, panels=panels, academic_requirements=academic_requirements)
 
 @main.route('/admin/bulk_add_formation_day', methods=['POST'])
