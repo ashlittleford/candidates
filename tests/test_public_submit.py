@@ -41,7 +41,7 @@ class PublicSubmitTestCase(unittest.TestCase):
     def test_submit_supervisors_report(self):
         data = {
             'user_id': self.candidate.id,
-            'category': 'Supervisors Report',
+            'category': 'Mid-Term',
             'file': (io.BytesIO(b"test file content"), 'report.pdf')
         }
         response = self.client.post('/submit-document', data=data, content_type='multipart/form-data', follow_redirects=True)
@@ -50,14 +50,14 @@ class PublicSubmitTestCase(unittest.TestCase):
 
         doc = PanelDocument.query.filter_by(user_id=self.candidate.id).first()
         self.assertIsNotNone(doc)
-        self.assertEqual(doc.category, 'Supervisors Report')
+        self.assertEqual(doc.category, 'Mid-Term')
         self.assertEqual(doc.source, 'panel_member')
         self.assertIn('report.pdf', doc.original_filename)
 
     def test_submit_report_with_formation_day(self):
         data = {
             'user_id': self.candidate.id,
-            'category': 'Report',
+            'category': 'Selection Panel',
             'day_label': 'First',
             'file': (io.BytesIO(b"test file content"), 'paper.pdf')
         }
@@ -67,14 +67,14 @@ class PublicSubmitTestCase(unittest.TestCase):
 
         doc = PanelDocument.query.filter_by(user_id=self.candidate.id).first()
         self.assertIsNotNone(doc)
-        self.assertEqual(doc.category, 'Report')
+        self.assertEqual(doc.category, 'Selection Panel')
         self.assertEqual(doc.day_label, 'First')
         self.assertEqual(doc.source, 'panel_member')
 
     def test_submit_multiple_files(self):
         data = {
             'user_id': self.candidate.id,
-            'category': 'Study Plan',
+            'category': 'Transition',
             'file': [
                 (io.BytesIO(b"first file content"), 'plan1.pdf'),
                 (io.BytesIO(b"second file content"), 'plan2.pdf'),
@@ -86,7 +86,7 @@ class PublicSubmitTestCase(unittest.TestCase):
 
         docs = PanelDocument.query.filter_by(user_id=self.candidate.id).all()
         self.assertEqual(len(docs), 2)
-        self.assertTrue(all(doc.category == 'Study Plan' for doc in docs))
+        self.assertTrue(all(doc.category == 'Transition' for doc in docs))
 
     def test_submit_missing_category(self):
         data = {

@@ -648,65 +648,6 @@
 
                     <!-- Accordion for Documents -->
                     <div class="accordion accordion-flush" id="documentsAccordion">
-                        <!-- Panel Reports -->
-                        <div class="accordion-item mb-3 border rounded shadow-sm overflow-hidden">
-                            <h2 class="accordion-header" id="headingDocPanelReports">
-                                <button class="accordion-button collapsed bg-white fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocPanelReports" aria-expanded="false" aria-controls="collapseDocPanelReports">
-                                    Panel Reports
-                                </button>
-                            </h2>
-                            <div id="collapseDocPanelReports" class="accordion-collapse collapse" aria-labelledby="headingDocPanelReports" data-bs-parent="#documentsAccordion">
-                                <div class="accordion-body bg-white p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="ps-4">Filename</th>
-                                                    <th>Category</th>
-                                                    <th>Date Uploaded</th>
-                                                    <th class="text-end pe-4">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% set ns = namespace(found=false) %}
-                                                {% for doc in user.panel_documents %}
-                                                    {% if doc.source == 'panel_member' and not doc.is_archived %}
-                                                        {% set ns.found = true %}
-                                                        <tr>
-                                                            <td class="ps-4">
-                                                                <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="text-decoration-none text-dark fw-normal">
-                                                                    <i class="far fa-file-pdf me-2 text-danger"></i>{{ doc.original_filename }}
-                                                                </a>
-                                                            </td>
-                                                            <td class="text-muted small">{{ doc.category or 'Other' }}</td>
-                                                            <td class="text-muted small">{{ doc.upload_date.strftime('%d %b %Y') }}</td>
-                                                            <td class="text-end pe-4">
-                                                                {% if current_user.is_admin or current_user.is_panel_member %}
-                                                                <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
-                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete">
-                                                                        <i class="fas fa-trash-alt"></i>
-                                                                    </button>
-                                                                </form>
-                                                                {% else %}
-                                                                <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" target="_blank" class="btn btn-sm btn-outline-primary border-0" title="Download">
-                                                                    <i class="fas fa-download"></i>
-                                                                </a>
-                                                                {% endif %}
-                                                            </td>
-                                                        </tr>
-                                                    {% endif %}
-                                                {% endfor %}
-                                                {% if not ns.found %}
-                                                    <tr><td colspan="4" class="text-muted text-center py-3 small">No panel reports uploaded yet.</td></tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {% if global_settings.formation_panel_dates %}
                             {% set dates_list = global_settings.formation_panel_dates.split(',') %}
 
@@ -836,11 +777,11 @@
                             </div>
                         </div>
 
-                        <!-- Other / Unassigned Documents -->
+                        <!-- Panel Reports -->
                         <div class="accordion-item mb-3 border rounded shadow-sm overflow-hidden">
                             <h2 class="accordion-header" id="headingDocOther">
                                 <button class="accordion-button collapsed bg-white fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDocOther" aria-expanded="false" aria-controls="collapseDocOther">
-                                    Other / Unassigned
+                                    Panel Reports
                                 </button>
                             </h2>
                             <div id="collapseDocOther" class="accordion-collapse collapse" aria-labelledby="headingDocOther" data-bs-parent="#documentsAccordion">
@@ -850,7 +791,7 @@
                                             <thead class="bg-light">
                                                 <tr>
                                                     <th class="ps-4">Filename</th>
-                                                    <th>Label</th>
+                                                    <th>Category</th>
                                                     <th>Date Uploaded</th>
                                                     <th class="text-end pe-4">Actions</th>
                                                 </tr>
@@ -878,10 +819,11 @@
                                                                     <i class="far fa-file-alt me-2 text-secondary"></i>{{ doc.original_filename }}
                                                                 </a>
                                                             </td>
-                                                            <td class="text-muted small">{{ doc.day_label or '-' }}</td>
+                                                            <td class="text-muted small">{{ doc.category or 'Other' }}</td>
                                                             <td class="text-muted small">{{ doc.upload_date.strftime('%d %b %Y') }}</td>
                                                             <td class="text-end pe-4">
-                                                                {% if current_user.id == user.id or current_user.is_admin %}
+                                                                {% set can_delete = current_user.is_admin or (current_user.id == user.id and doc.source != 'panel_member') or (current_user.is_panel_member and doc.source == 'panel_member') %}
+                                                                {% if can_delete %}
                                                                 <form action="{{ url_for('main.delete_panel_document', doc_id=doc.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
                                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete">
@@ -898,7 +840,7 @@
                                                     {% endif %}
                                                 {% endfor %}
                                                 {% if not ns.found %}
-                                                    <tr><td colspan="4" class="text-muted text-center py-3 small">No unassigned documents.</td></tr>
+                                                    <tr><td colspan="4" class="text-muted text-center py-3 small">No panel reports uploaded yet.</td></tr>
                                                 {% endif %}
                                             </tbody>
                                         </table>
@@ -1078,6 +1020,20 @@
                     Contact your Presbytery Minister for any questions regarding your formation journey.
                 </p>
                 <a href="mailto:{{ support_email }}" class="support-link">{{ support_email }}</a>
+
+                {% if global_settings and (global_settings.student_chaplain_name or global_settings.student_chaplain_email or global_settings.student_chaplain_phone) %}
+                <hr class="my-3">
+                <div class="support-title">Student Chaplain</div>
+                <p class="support-text mb-1">
+                    {{ global_settings.student_chaplain_name or 'Contact the Student Chaplain' }} is also available for pastoral support.
+                </p>
+                {% if global_settings.student_chaplain_email %}
+                    <a href="mailto:{{ global_settings.student_chaplain_email }}" class="support-link d-block">{{ global_settings.student_chaplain_email }}</a>
+                {% endif %}
+                {% if global_settings.student_chaplain_phone %}
+                    <a href="tel:{{ global_settings.student_chaplain_phone }}" class="support-link d-block">{{ global_settings.student_chaplain_phone }}</a>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
         {% endif %}

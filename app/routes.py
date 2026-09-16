@@ -424,6 +424,9 @@ def admin_settings():
         settings.support_email_wimala_presbytery = request.form.get('support_email_wimala_presbytery')
         settings.support_email_possa = request.form.get('support_email_possa')
         settings.support_email_default = request.form.get('support_email_default')
+        settings.student_chaplain_name = request.form.get('student_chaplain_name')
+        settings.student_chaplain_email = request.form.get('student_chaplain_email')
+        settings.student_chaplain_phone = request.form.get('student_chaplain_phone')
         db.session.commit()
 
         # Archive logic
@@ -1141,10 +1144,11 @@ def upload_panel_report(user_id):
 def delete_panel_document(doc_id):
     doc = PanelDocument.query.get_or_404(doc_id)
 
-    # Allow admin, the candidate owner, or a panel member (for panel-submitted reports) to delete
+    # Allow admin, the candidate owner (for their own uploads only), or a panel member
+    # (for panel-submitted reports) to delete. Candidates can't delete panel-submitted reports.
     can_delete = (
         current_user.is_admin
-        or doc.user_id == current_user.id
+        or (doc.user_id == current_user.id and doc.source != 'panel_member')
         or (current_user.is_panel_member and doc.source == 'panel_member')
     )
     if not can_delete:
