@@ -343,9 +343,10 @@ def create_app(test_config=None):
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     # Kept outside static/ so uploaded files can't be fetched directly by URL,
     # bypassing the access control in the uploaded_file view.
-    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+    # UPLOAD_FOLDER can point at a mounted persistent disk (e.g. Render Disks)
+    # so uploads survive deploys/restarts instead of living on ephemeral storage.
+    app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', os.path.join(app.root_path, 'uploads'))
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     if test_config:
