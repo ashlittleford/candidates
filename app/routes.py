@@ -19,27 +19,6 @@ main = Blueprint('main', __name__)
 
 FORMATION_DAY_DISPLAY_FORMAT = "%A %d %B %Y"
 
-# TEMPORARY one-time maintenance route to unblock a Postgres database whose
-# "user" table was created with the old, too-short password_hash column
-# before the fix in app/__init__.py landed. No login is required because the
-# admin account can't exist yet if init_db.py never got past this error.
-# Remove this route once it has been used successfully.
-@main.route('/_maintenance/widen-password-hash')
-def _maintenance_widen_password_hash():
-    from sqlalchemy import text
-    expected_token = os.environ.get('MAINTENANCE_TOKEN')
-    if not expected_token or request.args.get('token') != expected_token:
-        return 'Not found', 404
-    if db.engine.dialect.name != 'postgresql':
-        return 'Not applicable: not using Postgres.', 400
-    try:
-        with db.engine.connect() as conn:
-            conn.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255)'))
-            conn.commit()
-        return 'password_hash column widened to VARCHAR(255) successfully. You can now run init_db.py again.'
-    except Exception as e:
-        return f'Failed: {e}', 500
-
 ALLOWED_UPLOAD_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'}
 
 def is_allowed_upload(filename):
