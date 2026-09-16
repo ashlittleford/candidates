@@ -42,16 +42,13 @@
                         <label for="day_label" class="form-label fw-bold">Formation Day</label>
                         <select name="day_label" id="day_label" class="form-select">
                             <option value="">-- Select Formation Day --</option>
-                            {% if global_settings and global_settings.formation_panel_dates %}
-                                {% for date_item in global_settings.formation_panel_dates.split(',') %}
-                                    {% set parts = date_item.split(':') %}
-                                    {% if parts|length > 1 %}
-                                         <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
-                                    {% else %}
-                                         <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
+                            {% for year, dates in (formation_panel_dates_by_year or {}).items() %}
+                                <optgroup label="{{ year }}">
+                                    {% for date_str in dates %}
+                                        <option value="{{ date_str }}">{{ date_str }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endfor %}
                         </select>
                         <div class="form-text text-muted">Optional — link this document to a specific formation panel day.</div>
                     </div>

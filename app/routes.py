@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
 import re
+from collections import OrderedDict
 from datetime import datetime, timedelta
 import hashlib
 import uuid
@@ -55,6 +56,42 @@ def get_most_recent_formation_day_date(upcoming_dates):
         most_recent_date = upcoming_dates[0]['date']
 
     return most_recent_date
+
+def get_formation_panel_dates_by_year(global_settings):
+    """
+    Parse GlobalSettings.formation_panel_dates as a plain comma-separated list of
+    dates (no labels) and group them by year, sorted chronologically within each year.
+    Tolerates leftover "Label: Date" entries from before labels were removed.
+    """
+    grouped = OrderedDict()
+    if not global_settings or not global_settings.formation_panel_dates:
+        return grouped
+
+    parsed = []
+    for raw in global_settings.formation_panel_dates.split(','):
+        date_str = raw.strip()
+        if not date_str:
+            continue
+        if ':' in date_str:
+            date_str = date_str.split(':', 1)[1].strip()
+
+        dt = None
+        for fmt in ("%A %d %B %Y", "%d %B %Y"):
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                break
+            except ValueError:
+                continue
+
+        year = str(dt.year) if dt else 'Other'
+        parsed.append((year, dt, date_str))
+
+    parsed.sort(key=lambda item: (item[0], item[1] or datetime.max))
+
+    for year, dt, date_str in parsed:
+        grouped.setdefault(year, []).append(date_str)
+
+    return grouped
 
 def get_candidate_academic_requirements(user):
     """
@@ -119,8 +156,9 @@ def panel_dashboard():
         candidates = []
 
     global_settings = GlobalSettings.query.first()
+    formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
 
-    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings)
+    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
 @main.route('/candidate/<int:user_id>')
 @login_required
@@ -163,8 +201,10 @@ def view_candidate_profile(user_id):
                 support_email = global_settings.support_email_possa
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
+    formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
+    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -208,6 +248,7 @@ def public_submit_document():
         global_settings = GlobalSettings()
 
     users = User.query.filter(User.is_admin == False, User.is_panel_member == False, User.is_archived == False).all()
+    formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
 
     if request.method == 'POST':
         user_id = request.form.get('user_id')
@@ -220,7 +261,7 @@ def public_submit_document():
         # Validation
         if not user_id or not request.form.get('category'):
              flash('Please select a candidate and document category.')
-             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES)
+             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
         # Handle files
         files = [f for f in request.files.getlist('file') if f.filename]
@@ -248,7 +289,7 @@ def public_submit_document():
         flash('Document submitted successfully!')
         return redirect(url_for('main.public_submit_document'))
 
-    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES)
+    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -343,8 +384,10 @@ def profile():
                 support_email = global_settings.support_email_possa
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
+    formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
+    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -412,7 +455,7 @@ def admin_settings():
     if not settings:
         settings = GlobalSettings(
             upcoming_formation_dates="Monday 2 March 2026, Monday 13 April 2026, Monday 4 May 2026, Monday 1 June 2026, Monday 3 August 2026, Monday 7 September 2026, Monday 12 October 2026, Monday 2 November 2026",
-            formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026",
+            formation_panel_dates="13 February 2026, 19 June 2026, 20 November 2026",
             support_email_generate_presbytery="admin@generate.org.au",
             support_email_wimala_presbytery="admin@wimala.org.au",
             support_email_possa="admin@possa.org.au",
@@ -432,14 +475,9 @@ def admin_settings():
         settings.student_chaplain_phone = request.form.get('student_chaplain_phone')
         db.session.commit()
 
-        # Archive logic
-        new_labels = []
-        if settings.formation_panel_dates:
-            for d in settings.formation_panel_dates.split(','):
-                parts = d.split(':')
-                label = parts[0].strip() if len(parts) > 1 else d.strip()
-                if label:
-                    new_labels.append(label)
+        # Archive logic: any document tagged with a date no longer in the list gets archived
+        new_dates_by_year = get_formation_panel_dates_by_year(settings)
+        new_labels = [d for dates in new_dates_by_year.values() for d in dates]
 
         documents = PanelDocument.query.all()
         for doc in documents:

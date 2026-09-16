@@ -36,24 +36,19 @@
     <div class="col-md-6">
         <h5 class="section-title">Upcoming Panel Dates</h5>
         <div class="card border-0 shadow-sm p-4">
-            {% if global_settings and global_settings.formation_panel_dates %}
-                {% set dates_list = global_settings.formation_panel_dates.split(',') %}
-                <div class="row g-3">
-                    {% for date_item in dates_list %}
-                    <div class="col-md-6">
-                        <div class="formation-date-card">
-                            {% set parts = date_item.split(':') %}
-                            {% if parts|length > 1 %}
-                                <div class="formation-term">{{ parts[0].strip() }}</div>
-                                <div class="formation-date">{{ parts[1].strip() }}</div>
-                            {% else %}
-                                <div class="formation-term">UPCOMING</div>
-                                <div class="formation-date">{{ date_item.strip() }}</div>
-                            {% endif %}
+            {% if formation_panel_dates_by_year %}
+                {% for year, dates in formation_panel_dates_by_year.items() %}
+                    <h6 class="text-muted fw-bold {% if not loop.first %}mt-3{% endif %} mb-2">{{ year }}</h6>
+                    <div class="row g-3">
+                        {% for date_str in dates %}
+                        <div class="col-md-6">
+                            <div class="formation-date-card">
+                                <div class="formation-date">{{ date_str }}</div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             {% else %}
                 <p class="text-muted mb-0">No panel dates scheduled.</p>
             {% endif %}
@@ -73,7 +68,7 @@
                                 <th>Name</th>
                                 <th>Current Church</th>
                                 <th>Presbytery</th>
-                                <th>Formation Progress</th>
+                                <th>Candidate Since</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -83,11 +78,7 @@
                                 <td class="fw-bold">{{ candidate.name }}</td>
                                 <td>{{ candidate.profile.current_church or '-' }}</td>
                                 <td>{{ candidate.profile.presbytery or '-' }}</td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">
-                                        {{ candidate.profile.computed_formation_days_count }} Days
-                                    </span>
-                                </td>
+                                <td>{{ candidate.profile.start_date or '-' }}</td>
                                 <td>
                                     <a href="{{ url_for('main.view_candidate_profile', user_id=candidate.id) }}" class="btn btn-sm uca-btn-red">
                                         View Profile

@@ -141,52 +141,21 @@
                     <!-- Formation Panel Dates -->
                     <h5 class="section-title">Formation Panel Dates</h5>
 
-                    {% if global_settings.formation_panel_dates %}
-                        <!-- Try to simulate the 3 terms. Assuming comma separation or just displaying as is but wrapped in boxes -->
-                        {% set dates_list = global_settings.formation_panel_dates.split(',') %}
-
-                        <div class="row g-3">
-                            {% for date_item in dates_list %}
-                            <div class="col-md-4">
-                                <div class="formation-date-card">
-                                    {% set parts = date_item.split(':') %}
-                                    {% if parts|length > 1 %}
-                                        <div class="formation-term">{{ parts[0].strip() }}</div>
-                                        <div class="formation-date">{{ parts[1].strip() }}</div>
-                                    {% else %}
-                                        <div class="formation-term">UPCOMING</div>
-                                        <div class="formation-date">{{ date_item.strip() }}</div>
-                                    {% endif %}
+                    {% if formation_panel_dates_by_year %}
+                        {% for year, dates in formation_panel_dates_by_year.items() %}
+                            <h6 class="text-muted fw-bold {% if not loop.first %}mt-3{% endif %} mb-2">{{ year }}</h6>
+                            <div class="row g-3">
+                                {% for date_str in dates %}
+                                <div class="col-md-4">
+                                    <div class="formation-date-card">
+                                        <div class="formation-date">{{ date_str }}</div>
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-
-                            {% if dates_list|length == 0 %}
-                             <div class="col-12"><p class="text-muted">No dates scheduled.</p></div>
-                            {% endif %}
-                        </div>
+                        {% endfor %}
                     {% else %}
-                        <div class="row g-3">
-                            <!-- Default Placeholders for Visual Match if empty -->
-                            <div class="col-md-4">
-                                <div class="formation-date-card">
-                                    <div class="formation-term">First</div>
-                                    <div class="formation-date">March 10-12</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="formation-date-card">
-                                    <div class="formation-term">Second</div>
-                                    <div class="formation-date">July 15-17</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="formation-date-card">
-                                    <div class="formation-term">Third</div>
-                                    <div class="formation-date">November 5-7</div>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="text-muted">No dates scheduled.</p>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -622,16 +591,13 @@
                                         <label for="daySelect" class="form-label small text-muted">Formation Day</label>
                                         <select name="day_label" id="daySelect" class="form-select">
                                             <option value="">Select Formation Day...</option>
-                                            {% if global_settings.formation_panel_dates %}
-                                                {% for date_item in global_settings.formation_panel_dates.split(',') %}
-                                                    {% set parts = date_item.split(':') %}
-                                                    {% if parts|length > 1 %}
-                                                         <option value="{{ parts[0].strip() }}">{{ date_item.strip() }}</option>
-                                                    {% else %}
-                                                         <option value="{{ date_item.strip() }}">{{ date_item.strip() }}</option>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
+                                            {% for year, dates in formation_panel_dates_by_year.items() %}
+                                                <optgroup label="{{ year }}">
+                                                    {% for date_str in dates %}
+                                                        <option value="{{ date_str }}">{{ date_str }}</option>
+                                                    {% endfor %}
+                                                </optgroup>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -657,21 +623,16 @@
 
                     <!-- Accordion for Documents -->
                     <div class="accordion accordion-flush" id="documentsAccordion">
-                        {% if global_settings.formation_panel_dates %}
-                            {% set dates_list = global_settings.formation_panel_dates.split(',') %}
-
-                            {% for date_item in dates_list %}
-                                {% set parts = date_item.split(':') %}
-                                {% set label = parts[0].strip() if parts|length > 1 else date_item.strip() %}
-                                {% set full_date = date_item.strip() %}
-
+                        {% for year, dates in formation_panel_dates_by_year.items() %}
+                            <h6 class="text-muted fw-bold {% if not loop.first %}mt-3{% endif %} mb-2">{{ year }}</h6>
+                            {% for date_str in dates %}
                                 <div class="accordion-item mb-3 border rounded shadow-sm overflow-hidden">
-                                    <h2 class="accordion-header" id="headingDoc{{ loop.index }}">
-                                        <button class="accordion-button collapsed bg-white fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDoc{{ loop.index }}" aria-expanded="false" aria-controls="collapseDoc{{ loop.index }}">
-                                            {{ full_date }}
+                                    <h2 class="accordion-header" id="headingDoc{{ year }}-{{ loop.index }}">
+                                        <button class="accordion-button collapsed bg-white fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDoc{{ year }}-{{ loop.index }}" aria-expanded="false" aria-controls="collapseDoc{{ year }}-{{ loop.index }}">
+                                            {{ date_str }}
                                         </button>
                                     </h2>
-                                    <div id="collapseDoc{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="headingDoc{{ loop.index }}" data-bs-parent="#documentsAccordion">
+                                    <div id="collapseDoc{{ year }}-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="headingDoc{{ year }}-{{ loop.index }}" data-bs-parent="#documentsAccordion">
                                         <div class="accordion-body bg-white p-0">
                                             <div class="table-responsive">
                                                 <table class="table table-hover align-middle mb-0">
@@ -686,7 +647,7 @@
                                                     <tbody>
                                                         {% set ns = namespace(found=false) %}
                                                         {% for doc in user.panel_documents %}
-                                                            {% if doc.day_label == label and not doc.is_archived %}
+                                                            {% if doc.day_label == date_str and not doc.is_archived %}
                                                                 {% set ns.found = true %}
                                                                 <tr>
                                                                     <td class="ps-4">
@@ -723,7 +684,7 @@
                                     </div>
                                 </div>
                             {% endfor %}
-                        {% endif %}
+                        {% endfor %}
 
                         <!-- Archived Documents -->
                         <div class="accordion-item mb-3 border rounded shadow-sm overflow-hidden">
@@ -808,19 +769,7 @@
                                             <tbody>
                                                 {% set ns = namespace(found=false) %}
                                                 {% for doc in user.panel_documents %}
-                                                    <!-- Check if doc.day_label matches any of the known labels -->
-                                                    {% set loop_ns = namespace(match_found=false) %}
-                                                    {% if global_settings.formation_panel_dates %}
-                                                        {% for d in global_settings.formation_panel_dates.split(',') %}
-                                                            {% set p = d.split(':') %}
-                                                            {% set l = p[0].strip() if p|length > 1 else d.strip() %}
-                                                            {% if doc.day_label == l %}
-                                                                {% set loop_ns.match_found = true %}
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    {% endif %}
-
-                                                    {% if not loop_ns.match_found and not doc.is_archived %}
+                                                    {% if doc.day_label not in formation_panel_dates_flat and not doc.is_archived %}
                                                         {% set ns.found = true %}
                                                         <tr>
                                                             <td class="ps-4">
