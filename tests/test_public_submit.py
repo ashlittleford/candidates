@@ -1,11 +1,14 @@
 import unittest
+import shutil
+import tempfile
 from app import create_app, db
 from app.models import User, GlobalSettings, PanelDocument, Profile
 import io
 
 class PublicSubmitTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app(test_config={'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:', 'WTF_CSRF_ENABLED': False})
+        self.upload_folder = tempfile.mkdtemp()
+        self.app = create_app(test_config={'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:', 'WTF_CSRF_ENABLED': False, 'UPLOAD_FOLDER': self.upload_folder})
         self.client = self.app.test_client()
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -27,6 +30,7 @@ class PublicSubmitTestCase(unittest.TestCase):
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
+        shutil.rmtree(self.upload_folder, ignore_errors=True)
 
     def test_submit_page_loads(self):
         response = self.client.get('/submit-document')
