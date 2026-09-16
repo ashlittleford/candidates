@@ -185,3 +185,15 @@ class FormationDay(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     label = db.Column(db.String(150), nullable=True)
     date = db.Column(db.Date, nullable=False)
+
+class FormationDayRSVP(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    formation_day_id = db.Column(db.Integer, db.ForeignKey('formation_day.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), nullable=False)  # 'attending' or 'not_attending'
+    responded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    formation_day = db.relationship('FormationDay', backref=db.backref('rsvps', cascade='all, delete-orphan'))
+    user = db.relationship('User')
+
+    __table_args__ = (db.UniqueConstraint('formation_day_id', 'user_id', name='uq_formation_day_rsvp_user'),)

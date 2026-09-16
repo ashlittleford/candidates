@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import (
     User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument,
-    AcademicRequirement, CandidateAcademicRequirement, FormationDay,
+    AcademicRequirement, CandidateAcademicRequirement, FormationDay, FormationDayRSVP,
     CANDIDATE_DOCUMENT_CATEGORIES, PANEL_DOCUMENT_CATEGORIES
 )
 from werkzeug.security import generate_password_hash
@@ -24,15 +24,26 @@ ALLOWED_UPLOAD_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'}
 def is_allowed_upload(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_UPLOAD_EXTENSIONS
 
-@main.before_request
-def prune_past_formation_days():
-    """Auto-delete formation days once their date has passed."""
-    FormationDay.query.filter(FormationDay.date < datetime.now().date()).delete()
-    db.session.commit()
+def get_upcoming_formation_days(rsvp_user=None):
+    """
+    rsvp_user: if given, each entry includes that user's RSVP status
+    ('attending' / 'not_attending' / None) for the day.
+    Only days from today onward are included; past days (and their RSVPs)
+    are kept in the database for the admin history view, not shown here.
+    """
+    days = FormationDay.query.filter(FormationDay.date >= datetime.now().date()).order_by(FormationDay.date).all()
 
-def get_upcoming_formation_days():
-    days = FormationDay.query.order_by(FormationDay.date).all()
-    return [{'label': d.label, 'date': d.date.strftime(FORMATION_DAY_DISPLAY_FORMAT)} for d in days]
+    rsvp_by_day = {}
+    if rsvp_user:
+        rsvps = FormationDayRSVP.query.filter_by(user_id=rsvp_user.id).all()
+        rsvp_by_day = {r.formation_day_id: r.status for r in rsvps}
+
+    return [{
+        'id': d.id,
+        'label': d.label,
+        'date': d.date.strftime(FORMATION_DAY_DISPLAY_FORMAT),
+        'rsvp_status': rsvp_by_day.get(d.id)
+    } for d in days]
 
 def get_most_recent_formation_day_date(upcoming_dates):
     """
@@ -188,7 +199,7 @@ def view_candidate_profile(user_id):
     if not global_settings:
         global_settings = GlobalSettings()
 
-    upcoming_dates = get_upcoming_formation_days()
+    upcoming_dates = get_upcoming_formation_days(rsvp_user=target_user)
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
     academic_requirements = get_candidate_academic_requirements(target_user)
@@ -376,7 +387,7 @@ def profile():
     if not global_settings:
         global_settings = GlobalSettings()
 
-    upcoming_dates = get_upcoming_formation_days()
+    upcoming_dates = get_upcoming_formation_days(rsvp_user=current_user)
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
     academic_requirements = get_candidate_academic_requirements(current_user)
@@ -499,8 +510,24 @@ def admin_settings():
         flash('Global settings updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
-    formation_days = FormationDay.query.order_by(FormationDay.date).all()
-    return render_template('admin_global_settings.html', settings=settings, formation_days=formation_days)
+    formation_days = FormationDay.query.filter(
+        FormationDay.date >= datetime.now().date()
+    ).order_by(FormationDay.date).all()
+
+    total_candidates = User.query.filter(
+        User.is_admin == False, User.is_panel_member == False, User.is_archived == False
+    ).count()
+
+    rsvp_counts = {}
+    for day_id, status, count in db.session.query(
+        FormationDayRSVP.formation_day_id, FormationDayRSVP.status, db.func.count(FormationDayRSVP.id)
+    ).group_by(FormationDayRSVP.formation_day_id, FormationDayRSVP.status).all():
+        rsvp_counts.setdefault(day_id, {'attending': 0, 'not_attending': 0})[status] = count
+
+    return render_template(
+        'admin_global_settings.html', settings=settings, formation_days=formation_days,
+        rsvp_counts=rsvp_counts, total_candidates=total_candidates
+    )
 
 @main.route('/admin/formation_days/add', methods=['POST'])
 @login_required
@@ -540,6 +567,85 @@ def delete_formation_day(day_id):
     db.session.commit()
     flash('Formation day removed.')
     return redirect(url_for('main.admin_settings'))
+
+@main.route('/formation_days/<int:day_id>/rsvp', methods=['POST'])
+@login_required
+def rsvp_formation_day(day_id):
+    if current_user.is_admin or current_user.is_panel_member:
+        flash('Only candidates can RSVP to formation days.')
+        return redirect(url_for('main.index'))
+
+    day = FormationDay.query.get_or_404(day_id)
+    status = request.form.get('status')
+    if status not in ('attending', 'not_attending'):
+        flash('Invalid RSVP response.')
+        return redirect(request.referrer or url_for('main.profile'))
+
+    rsvp = FormationDayRSVP.query.filter_by(formation_day_id=day.id, user_id=current_user.id).first()
+    if rsvp:
+        rsvp.status = status
+        rsvp.responded_at = datetime.utcnow()
+    else:
+        rsvp = FormationDayRSVP(formation_day_id=day.id, user_id=current_user.id, status=status)
+        db.session.add(rsvp)
+
+    db.session.commit()
+    flash('Your RSVP has been recorded.')
+    return redirect(request.referrer or url_for('main.profile'))
+
+@main.route('/admin/formation_days/<int:day_id>/rsvps')
+@login_required
+def admin_formation_day_rsvps(day_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    day = FormationDay.query.get_or_404(day_id)
+    is_past = day.date < datetime.now().date()
+
+    if is_past:
+        # Historical day: only show candidates who actually responded at the time,
+        # rather than every currently-active candidate (some may not have existed yet).
+        rsvps = FormationDayRSVP.query.filter_by(formation_day_id=day.id).join(User).order_by(User.name).all()
+        rows = [{'candidate': r.user, 'status': r.status, 'responded_at': r.responded_at} for r in rsvps]
+    else:
+        candidates = User.query.filter(
+            User.is_admin == False, User.is_panel_member == False, User.is_archived == False
+        ).order_by(User.name).all()
+
+        rsvp_by_user = {r.user_id: r for r in FormationDayRSVP.query.filter_by(formation_day_id=day.id).all()}
+
+        rows = []
+        for candidate in candidates:
+            rsvp = rsvp_by_user.get(candidate.id)
+            rows.append({
+                'candidate': candidate,
+                'status': rsvp.status if rsvp else None,
+                'responded_at': rsvp.responded_at if rsvp else None
+            })
+
+    return render_template('admin_formation_day_rsvps.html', day=day, rows=rows, is_past=is_past)
+
+@main.route('/admin/formation_days/history')
+@login_required
+def admin_formation_days_history():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    past_days = FormationDay.query.filter(
+        FormationDay.date < datetime.now().date()
+    ).order_by(FormationDay.date.desc()).all()
+
+    rsvp_counts = {}
+    for day_id, status, count in db.session.query(
+        FormationDayRSVP.formation_day_id, FormationDayRSVP.status, db.func.count(FormationDayRSVP.id)
+    ).filter(FormationDayRSVP.formation_day_id.in_([d.id for d in past_days])).group_by(
+        FormationDayRSVP.formation_day_id, FormationDayRSVP.status
+    ).all():
+        rsvp_counts.setdefault(day_id, {'attending': 0, 'not_attending': 0})[status] = count
+
+    return render_template('admin_formation_days_history.html', past_days=past_days, rsvp_counts=rsvp_counts)
 
 @main.route('/admin')
 @login_required
@@ -1319,7 +1425,7 @@ def download_ics():
                     "END:VEVENT"
                 )
 
-    for day in FormationDay.query.order_by(FormationDay.date).all():
+    for day in FormationDay.query.filter(FormationDay.date >= datetime.now().date()).order_by(FormationDay.date).all():
         summary = f"Formation Day: {day.label}" if day.label else "Formation Day"
         uid_source = f"{summary}-{day.date.strftime('%Y%m%d')}"
         uid = hashlib.md5(uid_source.encode('utf-8')).hexdigest() + "@ucasa.formation"

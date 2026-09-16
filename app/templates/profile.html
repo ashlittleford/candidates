@@ -96,6 +96,29 @@
                             <i class="fas fa-calendar-plus me-1"></i> Sync to Calendar
                         </a>
                     </div>
+                     {% macro rsvp_widget(item) %}
+                        {% if user.id == current_user.id %}
+                            <form method="POST" action="{{ url_for('main.rsvp_formation_day', day_id=item.id) }}" class="d-inline-block mt-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="submit" name="status" value="attending" class="btn {{ 'btn-success' if item.rsvp_status == 'attending' else 'btn-outline-success' }}">
+                                        <i class="fas fa-check"></i> Attending
+                                    </button>
+                                    <button type="submit" name="status" value="not_attending" class="btn {{ 'btn-secondary' if item.rsvp_status == 'not_attending' else 'btn-outline-secondary' }}">
+                                        <i class="fas fa-times"></i> Can't Attend
+                                    </button>
+                                </div>
+                            </form>
+                        {% else %}
+                            {% if item.rsvp_status == 'attending' %}
+                                <span class="badge bg-success">Attending</span>
+                            {% elif item.rsvp_status == 'not_attending' %}
+                                <span class="badge bg-secondary">Not attending</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">No response</span>
+                            {% endif %}
+                        {% endif %}
+                     {% endmacro %}
                      {% if upcoming_dates %}
                         <div class="card border-0 shadow-sm p-3 mb-4 bg-light">
                            <div class="d-flex align-items-start">
@@ -110,6 +133,7 @@
                                             {% else %}
                                                 {{ upcoming_dates[0].date }}
                                             {% endif %}
+                                            <div>{{ rsvp_widget(upcoming_dates[0]) }}</div>
                                         </li>
                                      </ul>
 
@@ -122,12 +146,13 @@
                                         <div class="collapse mt-2" id="moreDates">
                                             <ul class="mb-0 ps-3">
                                                 {% for item in upcoming_dates[1:] %}
-                                                    <li class="mb-1">
+                                                    <li class="mb-2">
                                                         {% if item.label %}
                                                             <strong>{{ item.label }}:</strong> {{ item.date }}
                                                         {% else %}
                                                             {{ item.date }}
                                                         {% endif %}
+                                                        <div>{{ rsvp_widget(item) }}</div>
                                                     </li>
                                                 {% endfor %}
                                             </ul>
