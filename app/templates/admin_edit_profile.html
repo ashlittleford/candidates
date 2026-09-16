@@ -130,7 +130,7 @@
                                         <input type="hidden" name="academic_requirement_id" value="{{ row.requirement_id }}">
                                     </td>
                                     <td>
-                                        <select class="form-select form-select-sm" name="academic_status_{{ row.requirement_id }}">
+                                        <select class="form-select form-select-sm" name="academic_status_{{ row.requirement_id }}" style="min-width: 150px;">
                                             <option value="not_completed" {% if row.status == 'not_completed' %}selected{% endif %}>Not Completed</option>
                                             <option value="enrolled" {% if row.status == 'enrolled' %}selected{% endif %}>Enrolled</option>
                                             <option value="completed" {% if row.status == 'completed' %}selected{% endif %}>Completed</option>
@@ -138,12 +138,12 @@
                                     </td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <select class="form-select form-select-sm" name="academic_semester_{{ row.requirement_id }}" style="max-width: 130px;">
+                                            <select class="form-select form-select-sm" name="academic_semester_{{ row.requirement_id }}" style="min-width: 110px; max-width: 130px;">
                                                 <option value="">Semester</option>
                                                 <option value="1" {% if row.semester_value == '1' %}selected{% endif %}>Semester 1</option>
                                                 <option value="2" {% if row.semester_value == '2' %}selected{% endif %}>Semester 2</option>
                                             </select>
-                                            <input type="number" class="form-control form-control-sm" name="academic_year_{{ row.requirement_id }}" value="{{ row.year_value or '' }}" placeholder="Year" style="max-width: 100px;">
+                                            <input type="number" class="form-control form-control-sm" name="academic_year_{{ row.requirement_id }}" value="{{ row.year_value or '' }}" placeholder="Year" style="min-width: 70px; max-width: 100px;">
                                         </div>
                                     </td>
                                 </tr>

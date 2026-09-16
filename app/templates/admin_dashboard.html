@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h2>Admin Dashboard</h2>
-    <div>
-        <a href="{{ url_for('main.admin_standards') }}" class="btn btn-secondary me-2">Manage Standards</a>
-        <a href="{{ url_for('main.admin_academic_requirements') }}" class="btn btn-secondary me-2">Academic Requirements</a>
-        <a href="{{ url_for('main.admin_resources') }}" class="btn btn-secondary me-2">Manage Resources</a>
-        <a href="{{ url_for('main.admin_settings') }}" class="btn btn-secondary me-2">Global Settings</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('main.admin_standards') }}" class="btn btn-secondary">Manage Standards</a>
+        <a href="{{ url_for('main.admin_academic_requirements') }}" class="btn btn-secondary">Academic Requirements</a>
+        <a href="{{ url_for('main.admin_resources') }}" class="btn btn-secondary">Manage Resources</a>
+        <a href="{{ url_for('main.admin_settings') }}" class="btn btn-secondary">Global Settings</a>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <ul class="nav nav-tabs border-0 flex-grow-1" id="adminTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="candidates-tab" data-bs-toggle="tab" data-bs-target="#candidates" type="button" role="tab" aria-controls="candidates" aria-selected="true">Candidates</button>
@@ -59,10 +59,10 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                 <input type="text" id="candidateSearch" class="form-control w-25" placeholder="Search candidates...">
-                 <div>
-                     <a href="{{ url_for('main.invite_candidate') }}" class="btn uca-btn-red me-2">Invite Candidate</a>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                 <input type="text" id="candidateSearch" class="form-control w-25 flex-grow-1 flex-md-grow-0" style="min-width: 200px;" placeholder="Search candidates...">
+                 <div class="d-flex flex-wrap gap-2">
+                     <a href="{{ url_for('main.invite_candidate') }}" class="btn uca-btn-red">Invite Candidate</a>
                      <a href="{{ url_for('main.create_user') }}" class="btn btn-secondary">Legacy Create</a>
                  </div>
             </div>
