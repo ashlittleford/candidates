@@ -572,11 +572,11 @@
                             <form action="{{ url_for('main.upload_panel_document') }}" method="POST" enctype="multipart/form-data">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-5">
+                                    <div class="col-md-4">
                                         <label for="fileUpload" class="form-label small text-muted">Select Files</label>
                                         <input type="file" name="file" id="fileUpload" class="form-control" multiple required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label for="daySelect" class="form-label small text-muted">Formation Day</label>
                                         <select name="day_label" id="daySelect" class="form-select">
                                             <option value="">Select Formation Day...</option>
@@ -593,12 +593,21 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
+                                        <label for="categorySelect" class="form-label small text-muted">Category</label>
+                                        <select name="category" id="categorySelect" class="form-select" required>
+                                            <option value="">Select Category...</option>
+                                            {% for cat in (document_categories or []) %}
+                                                <option value="{{ cat }}">{{ cat }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
                                         <button type="submit" class="btn uca-btn-red w-100">
                                             <i class="fas fa-upload me-2"></i>Upload
                                         </button>
                                     </div>
                                 </div>
-                                <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i>Please upload documents for the upcoming Formation Panel Day (approx. 5 files).</div>
+                                <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i>Please upload documents for the upcoming Formation Panel Day (approx. 5 files). The selected category applies to all files uploaded together.</div>
                             </form>
                         </div>
                     </div>
@@ -627,6 +636,7 @@
                                                     <thead class="bg-light">
                                                         <tr>
                                                             <th class="ps-4">Filename</th>
+                                                            <th>Category</th>
                                                             <th>Date Uploaded</th>
                                                             <th class="text-end pe-4">Actions</th>
                                                         </tr>
@@ -642,6 +652,7 @@
                                                                             <i class="far fa-file-pdf me-2 text-danger"></i>{{ doc.original_filename }}
                                                                         </a>
                                                                     </td>
+                                                                    <td class="text-muted small">{{ doc.category or 'Other' }}</td>
                                                                     <td class="text-muted small">{{ doc.upload_date.strftime('%d %b %Y') }}</td>
                                                                     <td class="text-end pe-4">
                                                                         {% if current_user.id == user.id or current_user.is_admin %}
@@ -661,7 +672,7 @@
                                                             {% endif %}
                                                         {% endfor %}
                                                         {% if not ns.found %}
-                                                            <tr><td colspan="3" class="text-muted text-center py-3 small">No documents uploaded for this session.</td></tr>
+                                                            <tr><td colspan="4" class="text-muted text-center py-3 small">No documents uploaded for this session.</td></tr>
                                                         {% endif %}
                                                     </tbody>
                                                 </table>
@@ -687,6 +698,7 @@
                                                 <tr>
                                                     <th class="ps-4">Filename</th>
                                                     <th>Label</th>
+                                                    <th>Category</th>
                                                     <th>Date Uploaded</th>
                                                     <th class="text-end pe-4">Actions</th>
                                                 </tr>
@@ -703,6 +715,7 @@
                                                                 </a>
                                                             </td>
                                                             <td class="text-muted small">{{ doc.day_label or '-' }}</td>
+                                                            <td class="text-muted small">{{ doc.category or 'Other' }}</td>
                                                             <td class="text-muted small">{{ doc.upload_date.strftime('%d %b %Y') }}</td>
                                                             <td class="text-end pe-4">
                                                                 {% if current_user.id == user.id or current_user.is_admin %}
@@ -722,7 +735,7 @@
                                                     {% endif %}
                                                 {% endfor %}
                                                 {% if not ns.found %}
-                                                    <tr><td colspan="4" class="text-muted text-center py-3 small">No archived documents.</td></tr>
+                                                    <tr><td colspan="5" class="text-muted text-center py-3 small">No archived documents.</td></tr>
                                                 {% endif %}
                                             </tbody>
                                         </table>
@@ -809,24 +822,24 @@
 
     <!-- Right Column -->
     <div class="col-lg-4">
-        <!-- Formation Panel Papers -->
+        <!-- Formation Panel Reports -->
         <div class="mb-5">
-            <h5 class="section-title">Formation Panel Papers</h5>
+            <h5 class="section-title">Formation Panel Reports</h5>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
-                        {# Display Recent User Panel Documents (Top 5) #}
-                        {% set active_user_docs = user.panel_documents | rejectattr('is_archived') | list %}
-                        {% set user_docs = active_user_docs | sort(attribute='upload_date', reverse=True) | list %}
-                        {% for doc in user_docs[:5] %}
+                        {# Display Recent Reports Submitted by Panel Members (Top 5) #}
+                        {% set active_panel_docs = user.panel_documents | selectattr('source', 'equalto', 'panel_member') | rejectattr('is_archived') | list %}
+                        {% set panel_docs = active_panel_docs | sort(attribute='upload_date', reverse=True) | list %}
+                        {% for doc in panel_docs[:5] %}
                              <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" class="resource-link" target="_blank">
                                 <i class="fas fa-file-pdf"></i> {{ doc.original_filename }}
-                                <small class="text-muted ms-1" style="font-size: 0.75em;">({{ doc.upload_date.strftime('%d %b') }})</small>
+                                <small class="text-muted ms-1" style="font-size: 0.75em;">({{ doc.category or 'Other' }} &middot; {{ doc.upload_date.strftime('%d %b') }})</small>
                             </a>
                         {% endfor %}
 
-                        {% if (user_docs|length == 0) %}
-                            <p class="text-muted">No submitted documents available.</p>
+                        {% if (panel_docs|length == 0) %}
+                            <p class="text-muted">No panel reports submitted yet.</p>
                         {% endif %}
                     </div>
                 </div>

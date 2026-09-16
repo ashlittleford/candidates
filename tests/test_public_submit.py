@@ -38,10 +38,10 @@ class PublicSubmitTestCase(unittest.TestCase):
         self.assertIn(b'Submit Document', response.data)
         self.assertIn(b'Test Candidate', response.data)
 
-    def test_submit_supervision_report(self):
+    def test_submit_supervisors_report(self):
         data = {
             'user_id': self.candidate.id,
-            'document_type': 'supervision_report',
+            'category': 'Supervisors Report',
             'file': (io.BytesIO(b"test file content"), 'report.pdf')
         }
         response = self.client.post('/submit-document', data=data, content_type='multipart/form-data', follow_redirects=True)
@@ -50,13 +50,14 @@ class PublicSubmitTestCase(unittest.TestCase):
 
         doc = PanelDocument.query.filter_by(user_id=self.candidate.id).first()
         self.assertIsNotNone(doc)
-        self.assertEqual(doc.day_label, 'Supervision Report')
+        self.assertEqual(doc.category, 'Supervisors Report')
+        self.assertEqual(doc.source, 'panel_member')
         self.assertIn('report.pdf', doc.original_filename)
 
-    def test_submit_formation_paper(self):
+    def test_submit_report_with_formation_day(self):
         data = {
             'user_id': self.candidate.id,
-            'document_type': 'formation_paper',
+            'category': 'Report',
             'day_label': 'First',
             'file': (io.BytesIO(b"test file content"), 'paper.pdf')
         }
@@ -66,17 +67,35 @@ class PublicSubmitTestCase(unittest.TestCase):
 
         doc = PanelDocument.query.filter_by(user_id=self.candidate.id).first()
         self.assertIsNotNone(doc)
+        self.assertEqual(doc.category, 'Report')
         self.assertEqual(doc.day_label, 'First')
+        self.assertEqual(doc.source, 'panel_member')
 
-    def test_submit_formation_paper_missing_day(self):
+    def test_submit_multiple_files(self):
         data = {
             'user_id': self.candidate.id,
-            'document_type': 'formation_paper',
+            'category': 'Study Plan',
+            'file': [
+                (io.BytesIO(b"first file content"), 'plan1.pdf'),
+                (io.BytesIO(b"second file content"), 'plan2.pdf'),
+            ]
+        }
+        response = self.client.post('/submit-document', data=data, content_type='multipart/form-data', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Document submitted successfully!', response.data)
+
+        docs = PanelDocument.query.filter_by(user_id=self.candidate.id).all()
+        self.assertEqual(len(docs), 2)
+        self.assertTrue(all(doc.category == 'Study Plan' for doc in docs))
+
+    def test_submit_missing_category(self):
+        data = {
+            'user_id': self.candidate.id,
             'file': (io.BytesIO(b"test file content"), 'paper.pdf')
         }
         response = self.client.post('/submit-document', data=data, content_type='multipart/form-data')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Please select a formation day.', response.data)
+        self.assertIn(b'Please select a candidate and document category.', response.data)
 
         doc = PanelDocument.query.filter_by(user_id=self.candidate.id).first()
         self.assertIsNone(doc)

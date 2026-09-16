@@ -150,6 +150,8 @@ class Standard(db.Model):
     def lfd_list(self):
         if not self.lfd: return []
         return [x.strip() for x in self.lfd.split('\n') if x.strip()]
+DOCUMENT_CATEGORIES = ['Report', 'Study Plan', 'Supervisors Report', 'Other']
+
 class PanelDocument(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -157,6 +159,8 @@ class PanelDocument(db.Model):
     original_filename = db.Column(db.String(250), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     day_label = db.Column(db.String(50), nullable=True)
+    category = db.Column(db.String(50), default='Other')
+    source = db.Column(db.String(20), default='candidate')  # 'candidate' or 'panel_member'
     is_archived = db.Column(db.Boolean, default=False)
 
 class AcademicRequirement(db.Model):

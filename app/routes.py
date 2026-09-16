@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import (
     User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument,
-    AcademicRequirement, CandidateAcademicRequirement, FormationDay
+    AcademicRequirement, CandidateAcademicRequirement, FormationDay, DOCUMENT_CATEGORIES
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -161,7 +161,7 @@ def view_candidate_profile(user_id):
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=DOCUMENT_CATEGORIES)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -208,35 +208,24 @@ def public_submit_document():
 
     if request.method == 'POST':
         user_id = request.form.get('user_id')
-        document_type = request.form.get('document_type')
-        day_label = request.form.get('day_label')
+        category = request.form.get('category')
+        day_label = request.form.get('day_label') or None
+
+        if category not in DOCUMENT_CATEGORIES:
+            category = 'Other'
 
         # Validation
-        if not user_id or not document_type:
-             flash('Please select a candidate and document type.')
-             return render_template('submit_document.html', users=users, global_settings=global_settings)
+        if not user_id or not request.form.get('category'):
+             flash('Please select a candidate and document category.')
+             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=DOCUMENT_CATEGORIES)
 
-        # Handle file
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-
-        file = request.files['file']
-        if file.filename == '':
+        # Handle files
+        files = [f for f in request.files.getlist('file') if f.filename]
+        if not files:
             flash('No selected file')
             return redirect(request.url)
 
-        if file:
-            # Determine label based on type
-            final_label = None
-            if document_type == 'supervision_report':
-                final_label = 'Supervision Report'
-            elif document_type == 'formation_paper':
-                final_label = day_label # Use selected day label
-                if not final_label:
-                     flash('Please select a formation day.')
-                     return render_template('submit_document.html', users=users, global_settings=global_settings)
-
+        for file in files:
             original_filename = secure_filename(file.filename)
             filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{original_filename}"
             file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
@@ -245,15 +234,18 @@ def public_submit_document():
                 user_id=int(user_id),
                 filename=filename,
                 original_filename=original_filename,
-                day_label=final_label
+                day_label=day_label,
+                category=category,
+                source='panel_member'
             )
             db.session.add(doc)
-            db.session.commit()
 
-            flash('Document submitted successfully!')
-            return redirect(url_for('main.public_submit_document'))
+        db.session.commit()
 
-    return render_template('submit_document.html', users=users, global_settings=global_settings)
+        flash('Document submitted successfully!')
+        return redirect(url_for('main.public_submit_document'))
+
+    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=DOCUMENT_CATEGORIES)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -349,7 +341,7 @@ def profile():
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=DOCUMENT_CATEGORIES)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -1072,6 +1064,9 @@ def upload_panel_document():
 
     files = request.files.getlist('file')
     day_label = request.form.get('day_label')
+    category = request.form.get('category')
+    if category not in DOCUMENT_CATEGORIES:
+        category = 'Other'
 
     for file in files:
         if file.filename == '':
@@ -1087,7 +1082,9 @@ def upload_panel_document():
                 user_id=current_user.id,
                 filename=filename,
                 original_filename=original_filename,
-                day_label=day_label
+                day_label=day_label,
+                category=category,
+                source='candidate'
             )
             db.session.add(doc)
 

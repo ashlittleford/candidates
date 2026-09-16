@@ -212,6 +212,26 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'is_archived' column: {e}")
 
+            if "category" not in columns:
+                print("Missing column 'category' detected in 'panel_document' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE panel_document ADD COLUMN category VARCHAR(50) DEFAULT 'Other'"))
+                        conn.commit()
+                    print("Successfully added 'category' column.")
+                except Exception as e:
+                    print(f"Failed to add 'category' column: {e}")
+
+            if "source" not in columns:
+                print("Missing column 'source' detected in 'panel_document' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE panel_document ADD COLUMN source VARCHAR(20) DEFAULT 'candidate'"))
+                        conn.commit()
+                    print("Successfully added 'source' column.")
+                except Exception as e:
+                    print(f"Failed to add 'source' column: {e}")
+
         if inspector.has_table("global_settings"):
             columns = [col['name'] for col in inspector.get_columns("global_settings")]
 
