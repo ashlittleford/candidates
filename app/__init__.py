@@ -275,6 +275,36 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'support_email_default' column: {e}")
 
+            if "student_chaplain_name" not in columns:
+                print("Missing column 'student_chaplain_name' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN student_chaplain_name VARCHAR(150)"))
+                        conn.commit()
+                    print("Successfully added 'student_chaplain_name' column.")
+                except Exception as e:
+                    print(f"Failed to add 'student_chaplain_name' column: {e}")
+
+            if "student_chaplain_email" not in columns:
+                print("Missing column 'student_chaplain_email' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN student_chaplain_email VARCHAR(150)"))
+                        conn.commit()
+                    print("Successfully added 'student_chaplain_email' column.")
+                except Exception as e:
+                    print(f"Failed to add 'student_chaplain_email' column: {e}")
+
+            if "student_chaplain_phone" not in columns:
+                print("Missing column 'student_chaplain_phone' detected in 'global_settings' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE global_settings ADD COLUMN student_chaplain_phone VARCHAR(50)"))
+                        conn.commit()
+                    print("Successfully added 'student_chaplain_phone' column.")
+                except Exception as e:
+                    print(f"Failed to add 'student_chaplain_phone' column: {e}")
+
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')

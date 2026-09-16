@@ -3,7 +3,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import (
     User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument,
-    AcademicRequirement, CandidateAcademicRequirement, FormationDay, DOCUMENT_CATEGORIES
+    AcademicRequirement, CandidateAcademicRequirement, FormationDay,
+    CANDIDATE_DOCUMENT_CATEGORIES, PANEL_DOCUMENT_CATEGORIES
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -161,7 +162,7 @@ def view_candidate_profile(user_id):
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=DOCUMENT_CATEGORIES)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -211,13 +212,13 @@ def public_submit_document():
         category = request.form.get('category')
         day_label = request.form.get('day_label') or None
 
-        if category not in DOCUMENT_CATEGORIES:
+        if category not in PANEL_DOCUMENT_CATEGORIES:
             category = 'Other'
 
         # Validation
         if not user_id or not request.form.get('category'):
              flash('Please select a candidate and document category.')
-             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=DOCUMENT_CATEGORIES)
+             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES)
 
         # Handle files
         files = [f for f in request.files.getlist('file') if f.filename]
@@ -245,7 +246,7 @@ def public_submit_document():
         flash('Document submitted successfully!')
         return redirect(url_for('main.public_submit_document'))
 
-    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=DOCUMENT_CATEGORIES)
+    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -341,7 +342,7 @@ def profile():
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=DOCUMENT_CATEGORIES)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -1068,7 +1069,7 @@ def upload_panel_document():
     files = request.files.getlist('file')
     day_label = request.form.get('day_label')
     category = request.form.get('category')
-    if category not in DOCUMENT_CATEGORIES:
+    if category not in CANDIDATE_DOCUMENT_CATEGORIES:
         category = 'Other'
 
     for file in files:
@@ -1115,7 +1116,7 @@ def upload_panel_report(user_id):
 
     files = request.files.getlist('file')
     category = request.form.get('category')
-    if category not in DOCUMENT_CATEGORIES:
+    if category not in PANEL_DOCUMENT_CATEGORIES:
         category = 'Other'
 
     for file in files:

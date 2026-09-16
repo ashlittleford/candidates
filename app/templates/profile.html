@@ -580,7 +580,7 @@
                                         <label for="reportCategorySelect" class="form-label small text-muted">Category</label>
                                         <select name="category" id="reportCategorySelect" class="form-select" required>
                                             <option value="">Select Category...</option>
-                                            {% for cat in (document_categories or []) %}
+                                            {% for cat in (panel_report_categories or []) %}
                                                 <option value="{{ cat }}">{{ cat }}</option>
                                             {% endfor %}
                                         </select>

@@ -153,7 +153,8 @@ class Standard(db.Model):
     def lfd_list(self):
         if not self.lfd: return []
         return [x.strip() for x in self.lfd.split('\n') if x.strip()]
-DOCUMENT_CATEGORIES = ['Selection Panel', 'Mid-Term', 'Transition', 'Other']
+CANDIDATE_DOCUMENT_CATEGORIES = ['Report', 'Study Plan', 'Supervisors Report', 'Other']
+PANEL_DOCUMENT_CATEGORIES = ['Selection Panel', 'Mid-Term', 'Transition', 'Other']
 
 class PanelDocument(db.Model):
     id = db.Column(db.Integer, primary_key=True)
