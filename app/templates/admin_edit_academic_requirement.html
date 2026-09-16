@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-3">{{ 'Edit' if requirement else 'Add' }} Academic Requirement</h1>
+        <a href="{{ url_for('main.admin_academic_requirements') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Academic Requirements</a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-3">
+                <label for="name" class="form-label fw-bold">Name</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ requirement.name if requirement else '' }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="sort_order" class="form-label fw-bold">Sort Order</label>
+                <input type="number" class="form-control" id="sort_order" name="sort_order" value="{{ requirement.sort_order if requirement else 0 }}">
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('main.admin_academic_requirements') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn uca-btn-red">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

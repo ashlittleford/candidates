@@ -1,7 +1,6 @@
-from app import create_app, db
-from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard
+from app import create_app, db, migrate_formation_days
+from app.models import User, Profile, GlobalSettings, FormationPanel
 import os
-import json
 
 app = create_app()
 
@@ -80,40 +79,15 @@ with app.app_context():
         formation_panel_dates="First: 13 February 2026, Second: 19 June 2026, Third: 20 November 2026"
         )
         db.session.add(settings)
+        db.session.commit()
         print("Created Global Settings.")
     else:
         print("Global Settings already exist.")
 
-    # Initialize Standards
-    if Standard.query.count() == 0:
-        json_path = os.path.join(app.root_path, 'standards_data.json')
-        if os.path.exists(json_path):
-            with open(json_path, 'r') as f:
-                data = json.load(f)
-
-            print(f"Found {len(data)} standards in JSON. Populating database...")
-
-            for item in data:
-                # Join lists with newlines
-                beginning_text = "\n".join(item.get('beginning', []))
-                developing_text = "\n".join(item.get('developing', []))
-                established_text = "\n".join(item.get('established', []))
-                lfd_text = "\n".join(item.get('lfd', []))
-
-                std = Standard(
-                    id=item['id'],
-                    attribute=item['attribute'],
-                    beginning=beginning_text,
-                    developing=developing_text,
-                    established=established_text,
-                    lfd=lfd_text
-                )
-                db.session.add(std)
-            print("Standards populated.")
-        else:
-            print(f"Warning: {json_path} not found.")
-    else:
-        print("Standards already exist in DB.")
+    # Standards and Academic Requirements are seeded automatically by create_app()
+    # (seed_standards / seed_academic_requirements). FormationDay backfill runs once
+    # more here in case GlobalSettings didn't exist yet when create_app() first ran.
+    migrate_formation_days(app)
 
     db.session.commit()
     print("Database initialized.")

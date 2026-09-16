@@ -180,6 +180,26 @@ def check_and_upgrade_schema(app):
                     print("Successfully added 'ready_for_transition_panel' column.")
                 except Exception as e:
                     print(f"Failed to add 'ready_for_transition_panel' column: {e}")
+
+            if "phase" not in columns:
+                print("Missing column 'phase' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN phase INTEGER DEFAULT 2"))
+                        conn.commit()
+                    print("Successfully added 'phase' column.")
+                except Exception as e:
+                    print(f"Failed to add 'phase' column: {e}")
+
+            if "ordination_date" not in columns:
+                print("Missing column 'ordination_date' detected in 'profile' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE profile ADD COLUMN ordination_date VARCHAR(50)"))
+                        conn.commit()
+                    print("Successfully added 'ordination_date' column.")
+                except Exception as e:
+                    print(f"Failed to add 'ordination_date' column: {e}")
         if inspector.has_table("panel_document"):
             columns = [col['name'] for col in inspector.get_columns("panel_document")]
             if "is_archived" not in columns:
@@ -238,14 +258,22 @@ def check_and_upgrade_schema(app):
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    # Use absolute path to instance/site.db to avoid path issues
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    instance_path = os.path.join(base_dir, '..', 'instance')
-    if not os.path.exists(instance_path):
-        os.makedirs(instance_path)
 
-    db_path = os.path.join(instance_path, 'site.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # Render (like Heroku) provides postgres:// but SQLAlchemy requires postgresql://
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        # Use absolute path to instance/site.db to avoid path issues
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        instance_path = os.path.join(base_dir, '..', 'instance')
+        if not os.path.exists(instance_path):
+            os.makedirs(instance_path)
+
+        db_path = os.path.join(instance_path, 'site.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
@@ -273,49 +301,98 @@ def create_app(test_config=None):
     if not test_config or test_config.get('SQLALCHEMY_DATABASE_URI') != 'sqlite:///:memory:':
          check_and_upgrade_schema(app)
          seed_standards(app)
+         seed_academic_requirements(app)
+         migrate_formation_days(app)
 
     return app
 
 def seed_standards(app):
     """
-    Checks if the Standard table is empty and populates it from the JSON file.
+    Upserts the Standard table from standards_data.json on every boot, so
+    corrected data always overwrites whatever is currently in the database.
     """
-    import json
-    from app.models import Standard
+    from app.standards_loader import upsert_standards
 
     with app.app_context():
-        # Ensure table exists first (created by db.create_all() in check_and_upgrade_schema or init_db)
-        # But check_and_upgrade_schema only does specific upgrades.
-        # db.create_all() is typically called in init_db.py, but we can call it here to be safe if it's cheap?
-        # Actually, check_and_upgrade_schema calls db.create_all(). So we are good.
-
         try:
-            if Standard.query.count() == 0:
-                print("Seeding Standards database from JSON...")
-                json_path = os.path.join(app.root_path, 'standards_data.json')
+            upsert_standards()
+        except Exception as e:
+            print(f"Error seeding standards: {e}")
+
+def seed_academic_requirements(app):
+    """
+    Checks if the AcademicRequirement table is empty and populates it from the JSON file.
+    """
+    import json
+    from app.models import AcademicRequirement
+
+    with app.app_context():
+        try:
+            if AcademicRequirement.query.count() == 0:
+                print("Seeding Academic Requirements database from JSON...")
+                json_path = os.path.join(app.root_path, 'academic_requirements_data.json')
                 if os.path.exists(json_path):
                     with open(json_path, 'r') as f:
                         data = json.load(f)
 
                     for item in data:
-                        # Join lists with newlines
-                        beginning_text = "\n".join(item.get('beginning', []))
-                        developing_text = "\n".join(item.get('developing', []))
-                        established_text = "\n".join(item.get('established', []))
-                        lfd_text = "\n".join(item.get('lfd', []))
-
-                        std = Standard(
+                        req = AcademicRequirement(
                             id=item['id'],
-                            attribute=item['attribute'],
-                            beginning=beginning_text,
-                            developing=developing_text,
-                            established=established_text,
-                            lfd=lfd_text
+                            name=item['name'],
+                            sort_order=item.get('sort_order', 0)
                         )
-                        db.session.add(std)
+                        db.session.add(req)
                     db.session.commit()
-                    print("Standards seeded successfully.")
+                    print("Academic Requirements seeded successfully.")
                 else:
                     print(f"Warning: {json_path} not found. Skipping seeding.")
         except Exception as e:
-            print(f"Error seeding standards: {e}")
+            print(f"Error seeding academic requirements: {e}")
+
+def migrate_formation_days(app):
+    """
+    One-time backfill: if the FormationDay table is empty and GlobalSettings has
+    legacy free-text upcoming_formation_dates, parse it into FormationDay rows.
+    """
+    import re
+    from datetime import datetime
+    from app.models import FormationDay, GlobalSettings
+
+    with app.app_context():
+        try:
+            if FormationDay.query.count() > 0:
+                return
+
+            settings = GlobalSettings.query.first()
+            if not settings or not settings.upcoming_formation_dates:
+                return
+
+            raw = settings.upcoming_formation_dates
+            items = raw.split('\n') if '\n' in raw else raw.split(',')
+
+            print("Backfilling FormationDay rows from legacy upcoming_formation_dates...")
+            for item in items:
+                item = item.strip()
+                if not item:
+                    continue
+
+                if ':' in item:
+                    label, date_str = item.split(':', 1)
+                    label = label.strip()
+                    date_str = date_str.strip()
+                else:
+                    label = None
+                    date_str = item
+
+                clean_str = re.sub(r'^[a-zA-Z]+\s', '', date_str).strip()
+                try:
+                    parsed = datetime.strptime(clean_str, "%d %B %Y").date()
+                except ValueError:
+                    continue
+
+                db.session.add(FormationDay(label=label, date=parsed))
+
+            db.session.commit()
+            print("FormationDay backfill complete.")
+        except Exception as e:
+            print(f"Error migrating formation days: {e}")

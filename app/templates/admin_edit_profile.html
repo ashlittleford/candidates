@@ -82,6 +82,68 @@
                         <label class="form-check-label" for="walking_on_country">Walking on Country</label>
                     </div>
 
+                    <h5 class="mt-4">Phase</h5>
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Phase</label>
+                        <p class="form-control-plaintext">
+                            {% if user.profile.phase == 3 %}
+                                <span class="badge bg-success">Phase 3</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Phase 2</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ordination Date</label>
+                        <input type="text" class="form-control" name="ordination_date" value="{{ user.profile.ordination_date or '' }}" placeholder="e.g. 15 November 2026">
+                    </div>
+
+                    {% if user.profile.phase == 3 %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="revert_to_phase_2" name="revert_to_phase_2">
+                        <label class="form-check-label" for="revert_to_phase_2">Revert to Phase 2 (undo transition)</label>
+                    </div>
+                    {% else %}
+                    <div class="form-text mb-3">Use "Transition to Phase 3" from the candidate's profile page to transition them.</div>
+                    {% endif %}
+
+                    <h5 class="mt-4">Academic Requirements</h5>
+                    <hr>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Requirement</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in academic_requirements %}
+                                <tr>
+                                    <td>
+                                        {{ row.requirement.name }}
+                                        <input type="hidden" name="academic_requirement_id" value="{{ row.requirement_id }}">
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="academic_status_{{ row.requirement_id }}">
+                                            <option value="pending" {% if row.status == 'pending' %}selected{% endif %}>Pending</option>
+                                            <option value="in_progress" {% if row.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                            <option value="completed" {% if row.status == 'completed' %}selected{% endif %}>Completed</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="academic_due_date_{{ row.requirement_id }}" value="{{ row.due_date or '' }}" placeholder="e.g. Nov 2026">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary">Cancel</a>

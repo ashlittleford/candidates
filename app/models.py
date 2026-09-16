@@ -76,6 +76,9 @@ class Profile(db.Model):
     wwcc_cleared = db.Column(db.Boolean, default=False)
     wwcc_number = db.Column(db.String(100), nullable=True)
 
+    phase = db.Column(db.Integer, default=2)
+    ordination_date = db.Column(db.String(50), nullable=True)
+
     @property
     def computed_formation_days_count(self):
         txt = self.formation_days_completed
@@ -155,3 +158,22 @@ class PanelDocument(db.Model):
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     day_label = db.Column(db.String(50), nullable=True)
     is_archived = db.Column(db.Boolean, default=False)
+
+class AcademicRequirement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+
+class CandidateAcademicRequirement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    requirement_id = db.Column(db.Integer, db.ForeignKey('academic_requirement.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending' / 'in_progress' / 'completed'
+    due_date = db.Column(db.String(50), nullable=True)
+
+    requirement = db.relationship('AcademicRequirement')
+
+class FormationDay(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(150), nullable=True)
+    date = db.Column(db.Date, nullable=False)

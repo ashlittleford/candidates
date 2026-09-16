@@ -1,16 +1,83 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, send_from_directory, Response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument
-from app.standards_loader import load_standards
+from app.models import (
+    User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument,
+    AcademicRequirement, CandidateAcademicRequirement, FormationDay
+)
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
+import re
 from datetime import datetime, timedelta
 import hashlib
 import uuid
 
 main = Blueprint('main', __name__)
+
+FORMATION_DAY_DISPLAY_FORMAT = "%A %d %B %Y"
+
+@main.before_request
+def prune_past_formation_days():
+    """Auto-delete formation days once their date has passed."""
+    FormationDay.query.filter(FormationDay.date < datetime.now().date()).delete()
+    db.session.commit()
+
+def get_upcoming_formation_days():
+    days = FormationDay.query.order_by(FormationDay.date).all()
+    return [{'label': d.label, 'date': d.date.strftime(FORMATION_DAY_DISPLAY_FORMAT)} for d in days]
+
+def get_most_recent_formation_day_date(upcoming_dates):
+    """
+    Determines which formation day should be treated as "recent" for the
+    Resources tab, based on Resource.formation_date values (decoupled from
+    the upcoming-days list so pruning past formation days doesn't break it).
+    """
+    today = datetime.now().date()
+    most_recent_dt = None
+    most_recent_date = None
+
+    resources = Resource.query.filter_by(category='formation_day').all()
+    for r in resources:
+        if not r.formation_date:
+            continue
+        clean_str = re.sub(r'^[a-zA-Z]+\s', '', r.formation_date).strip()
+        try:
+            dt = datetime.strptime(clean_str, "%d %B %Y").date()
+        except ValueError:
+            continue
+        if dt <= today and (most_recent_dt is None or dt > most_recent_dt):
+            most_recent_dt = dt
+            most_recent_date = r.formation_date
+
+    if most_recent_date is None and upcoming_dates:
+        most_recent_date = upcoming_dates[0]['date']
+
+    return most_recent_date
+
+def get_candidate_academic_requirements(user):
+    """
+    Get-or-create a CandidateAcademicRequirement row for every AcademicRequirement,
+    for the given candidate, so the tab always shows the full current subject list.
+    """
+    requirements = AcademicRequirement.query.order_by(AcademicRequirement.sort_order, AcademicRequirement.id).all()
+    existing = {c.requirement_id: c for c in CandidateAcademicRequirement.query.filter_by(user_id=user.id).all()}
+
+    created = False
+    rows = []
+    for req in requirements:
+        row = existing.get(req.id)
+        if row is None:
+            row = CandidateAcademicRequirement(user_id=user.id, requirement_id=req.id, status='pending')
+            db.session.add(row)
+            row.requirement = req
+            created = True
+        rows.append(row)
+
+    if created:
+        db.session.commit()
+
+    return rows
 
 @main.route('/')
 def index():
@@ -66,30 +133,10 @@ def view_candidate_profile(user_id):
     if not global_settings:
         global_settings = GlobalSettings()
 
-    upcoming_dates_raw = global_settings.upcoming_formation_dates
-    upcoming_dates = []
-
-    if upcoming_dates_raw:
-        if '\n' in upcoming_dates_raw:
-            raw_list = upcoming_dates_raw.split('\n')
-        else:
-            raw_list = upcoming_dates_raw.split(',')
-
-        for item in raw_list:
-            item = item.strip()
-            if not item:
-                continue
-
-            parts = item.split(':', 1)
-            if len(parts) > 1:
-                label = parts[0].strip()
-                date_str = parts[1].strip()
-                upcoming_dates.append({'label': label, 'date': date_str})
-            else:
-                upcoming_dates.append({'label': None, 'date': item})
-
+    upcoming_dates = get_upcoming_formation_days()
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
+    academic_requirements = get_candidate_academic_requirements(target_user)
 
     support_email = "support@uca.org.au"
     if global_settings:
@@ -103,29 +150,44 @@ def view_candidate_profile(user_id):
             elif presbytery == "POSSA" and global_settings.support_email_possa:
                 support_email = global_settings.support_email_possa
 
-    import re
-    from datetime import datetime
+    most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    most_recent_date = None
-    most_recent_dt = None
-    today = datetime.now().date()
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date)
 
-    for dt_info in upcoming_dates:
-        date_str = dt_info['date']
-        clean_str = re.sub(r'^[a-zA-Z]+\s', '', date_str).strip()
-        try:
-            dt = datetime.strptime(clean_str, "%d %B %Y").date()
-            if dt <= today:
-                if most_recent_dt is None or dt > most_recent_dt:
-                    most_recent_dt = dt
-                    most_recent_date = date_str
-        except ValueError:
-            pass
+@main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
+@login_required
+def transition_phase3(user_id):
+    target_user = User.query.get_or_404(user_id)
 
-    if most_recent_date is None and upcoming_dates:
-        most_recent_date = upcoming_dates[0]['date']
+    allowed = False
+    if current_user.is_admin:
+        allowed = True
+    elif current_user.is_panel_member:
+        if target_user.profile and target_user.profile.formation_panel_id == current_user.formation_panel_id:
+            allowed = True
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email, most_recent_date=most_recent_date)
+    if not allowed:
+        flash("Access denied to this profile.")
+        return redirect(url_for('main.index'))
+
+    if not target_user.profile:
+        flash("This candidate has no profile to transition.")
+        return redirect(url_for('main.index'))
+
+    target_user.profile.phase = 3
+    target_user.profile.transition_panel = True
+
+    ordination_date = request.form.get('ordination_date')
+    if ordination_date:
+        target_user.profile.ordination_date = ordination_date
+
+    current_church = request.form.get('current_church')
+    if current_church:
+        target_user.profile.current_church = current_church
+
+    db.session.commit()
+    flash(f'{target_user.name} has been transitioned to Phase 3.')
+    return redirect(url_for('main.view_candidate_profile', user_id=target_user.id))
 
 @main.route('/submit-document', methods=['GET', 'POST'])
 def public_submit_document():
@@ -259,33 +321,10 @@ def profile():
     if not global_settings:
         global_settings = GlobalSettings()
 
-    # Parse upcoming_formation_dates
-    # Supports newline or comma separation
-    # Supports "Label: Date" format
-    upcoming_dates_raw = global_settings.upcoming_formation_dates
-    upcoming_dates = []
-
-    if upcoming_dates_raw:
-        if '\n' in upcoming_dates_raw:
-            raw_list = upcoming_dates_raw.split('\n')
-        else:
-            raw_list = upcoming_dates_raw.split(',')
-
-        for item in raw_list:
-            item = item.strip()
-            if not item:
-                continue
-
-            parts = item.split(':', 1)
-            if len(parts) > 1:
-                label = parts[0].strip()
-                date_str = parts[1].strip()
-                upcoming_dates.append({'label': label, 'date': date_str})
-            else:
-                upcoming_dates.append({'label': None, 'date': item})
-
+    upcoming_dates = get_upcoming_formation_days()
     resources = Resource.query.all()
     standards = Standard.query.order_by(Standard.id).all()
+    academic_requirements = get_candidate_academic_requirements(current_user)
 
     support_email = "support@uca.org.au"
     if global_settings:
@@ -299,29 +338,9 @@ def profile():
             elif presbytery == "POSSA" and global_settings.support_email_possa:
                 support_email = global_settings.support_email_possa
 
-    import re
-    from datetime import datetime
+    most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
 
-    most_recent_date = None
-    most_recent_dt = None
-    today = datetime.now().date()
-
-    for dt_info in upcoming_dates:
-        date_str = dt_info['date']
-        clean_str = re.sub(r'^[a-zA-Z]+\s', '', date_str).strip()
-        try:
-            dt = datetime.strptime(clean_str, "%d %B %Y").date()
-            if dt <= today:
-                if most_recent_dt is None or dt > most_recent_dt:
-                    most_recent_dt = dt
-                    most_recent_date = date_str
-        except ValueError:
-            pass
-
-    if most_recent_date is None and upcoming_dates:
-        most_recent_date = upcoming_dates[0]['date']
-
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, support_email=support_email, most_recent_date=most_recent_date)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -399,7 +418,6 @@ def admin_settings():
         db.session.commit()
 
     if request.method == 'POST':
-        settings.upcoming_formation_dates = request.form.get('upcoming_formation_dates')
         settings.formation_panel_dates = request.form.get('formation_panel_dates')
         settings.support_email_generate_presbytery = request.form.get('support_email_generate_presbytery')
         settings.support_email_wimala_presbytery = request.form.get('support_email_wimala_presbytery')
@@ -426,7 +444,47 @@ def admin_settings():
         flash('Global settings updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
-    return render_template('admin_global_settings.html', settings=settings)
+    formation_days = FormationDay.query.order_by(FormationDay.date).all()
+    return render_template('admin_global_settings.html', settings=settings, formation_days=formation_days)
+
+@main.route('/admin/formation_days/add', methods=['POST'])
+@login_required
+def add_formation_day():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    label = request.form.get('label')
+    date_str = request.form.get('date')
+
+    if not date_str:
+        flash('Please provide a date.')
+        return redirect(url_for('main.admin_settings'))
+
+    try:
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash('Invalid date format.')
+        return redirect(url_for('main.admin_settings'))
+
+    day = FormationDay(label=label.strip() if label else None, date=parsed_date)
+    db.session.add(day)
+    db.session.commit()
+    flash('Formation day added.')
+    return redirect(url_for('main.admin_settings'))
+
+@main.route('/admin/formation_days/delete/<int:day_id>', methods=['POST'])
+@login_required
+def delete_formation_day(day_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    day = FormationDay.query.get_or_404(day_id)
+    db.session.delete(day)
+    db.session.commit()
+    flash('Formation day removed.')
+    return redirect(url_for('main.admin_settings'))
 
 @main.route('/admin')
 @login_required
@@ -680,14 +738,30 @@ def edit_user(user_id):
         user.profile.walking_on_country = True if request.form.get('walking_on_country') else False
         user.profile.presbytery = request.form.get('presbytery')
         user.profile.current_church = request.form.get('current_church')
+        user.profile.ordination_date = request.form.get('ordination_date')
         # upcoming_formation_dates and formation_panel_dates are now global and not edited here
+
+        if request.form.get('revert_to_phase_2'):
+            user.profile.phase = 2
+
+        # Academic requirement statuses (rows rendered per AcademicRequirement)
+        for requirement_id in request.form.getlist('academic_requirement_id'):
+            row = CandidateAcademicRequirement.query.filter_by(
+                user_id=user.id, requirement_id=int(requirement_id)
+            ).first()
+            if not row:
+                row = CandidateAcademicRequirement(user_id=user.id, requirement_id=int(requirement_id))
+                db.session.add(row)
+            row.status = request.form.get(f'academic_status_{requirement_id}', 'pending')
+            row.due_date = request.form.get(f'academic_due_date_{requirement_id}')
 
         db.session.commit()
         flash('User updated successfully')
         return redirect(url_for('main.admin_dashboard'))
 
     panels = FormationPanel.query.all()
-    return render_template('admin_edit_profile.html', user=user, panels=panels)
+    academic_requirements = get_candidate_academic_requirements(user)
+    return render_template('admin_edit_profile.html', user=user, panels=panels, academic_requirements=academic_requirements)
 
 @main.route('/admin/bulk_add_formation_day', methods=['POST'])
 @login_required
@@ -806,32 +880,7 @@ def admin_resources():
         return redirect(url_for('main.admin_resources'))
 
     resources = Resource.query.all()
-
-    global_settings = GlobalSettings.query.first()
-    if not global_settings:
-        global_settings = GlobalSettings()
-
-    upcoming_dates_raw = global_settings.upcoming_formation_dates
-    upcoming_dates = []
-
-    if upcoming_dates_raw:
-        if '\n' in upcoming_dates_raw:
-            raw_list = upcoming_dates_raw.split('\n')
-        else:
-            raw_list = upcoming_dates_raw.split(',')
-
-        for item in raw_list:
-            item = item.strip()
-            if not item:
-                continue
-
-            parts = item.split(':', 1)
-            if len(parts) > 1:
-                label = parts[0].strip()
-                date_str = parts[1].strip()
-                upcoming_dates.append({'label': label, 'date': date_str})
-            else:
-                upcoming_dates.append({'label': None, 'date': item})
+    upcoming_dates = get_upcoming_formation_days()
 
     return render_template('admin_resources.html', resources=resources, upcoming_dates=upcoming_dates)
 
@@ -869,31 +918,7 @@ def edit_resource(resource_id):
         flash('Resource updated successfully')
         return redirect(url_for('main.admin_resources'))
 
-    global_settings = GlobalSettings.query.first()
-    if not global_settings:
-        global_settings = GlobalSettings()
-
-    upcoming_dates_raw = global_settings.upcoming_formation_dates
-    upcoming_dates = []
-
-    if upcoming_dates_raw:
-        if '\n' in upcoming_dates_raw:
-            raw_list = upcoming_dates_raw.split('\n')
-        else:
-            raw_list = upcoming_dates_raw.split(',')
-
-        for item in raw_list:
-            item = item.strip()
-            if not item:
-                continue
-
-            parts = item.split(':', 1)
-            if len(parts) > 1:
-                label = parts[0].strip()
-                date_str = parts[1].strip()
-                upcoming_dates.append({'label': label, 'date': date_str})
-            else:
-                upcoming_dates.append({'label': None, 'date': item})
+    upcoming_dates = get_upcoming_formation_days()
 
     return render_template('admin_edit_resource.html', resource=resource, upcoming_dates=upcoming_dates)
 
@@ -951,6 +976,70 @@ def edit_standard(standard_id):
         return redirect(url_for('main.admin_standards'))
 
     return render_template('admin_edit_standard.html', standard=standard)
+
+# --- Academic Requirements Management Routes ---
+
+@main.route('/admin/academic_requirements')
+@login_required
+def admin_academic_requirements():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    requirements = AcademicRequirement.query.order_by(AcademicRequirement.sort_order, AcademicRequirement.id).all()
+    return render_template('admin_academic_requirements.html', requirements=requirements)
+
+@main.route('/admin/academic_requirements/create', methods=['GET', 'POST'])
+@login_required
+def create_academic_requirement():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        sort_order = request.form.get('sort_order') or 0
+
+        req = AcademicRequirement(name=name, sort_order=int(sort_order))
+        db.session.add(req)
+        db.session.commit()
+        flash('Academic requirement created successfully')
+        return redirect(url_for('main.admin_academic_requirements'))
+
+    return render_template('admin_edit_academic_requirement.html', requirement=None)
+
+@main.route('/admin/academic_requirements/edit/<int:requirement_id>', methods=['GET', 'POST'])
+@login_required
+def edit_academic_requirement(requirement_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    requirement = AcademicRequirement.query.get_or_404(requirement_id)
+
+    if request.method == 'POST':
+        requirement.name = request.form.get('name')
+        requirement.sort_order = int(request.form.get('sort_order') or 0)
+
+        db.session.commit()
+        flash('Academic requirement updated successfully')
+        return redirect(url_for('main.admin_academic_requirements'))
+
+    return render_template('admin_edit_academic_requirement.html', requirement=requirement)
+
+@main.route('/admin/academic_requirements/delete/<int:requirement_id>', methods=['POST'])
+@login_required
+def delete_academic_requirement(requirement_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    requirement = AcademicRequirement.query.get_or_404(requirement_id)
+    CandidateAcademicRequirement.query.filter_by(requirement_id=requirement.id).delete()
+    db.session.delete(requirement)
+    db.session.commit()
+    flash('Academic requirement deleted')
+    return redirect(url_for('main.admin_academic_requirements'))
 
 @main.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -1081,7 +1170,20 @@ def download_ics():
                     "END:VEVENT"
                 )
 
-    add_events(global_settings.upcoming_formation_dates, "Formation Day")
+    for day in FormationDay.query.order_by(FormationDay.date).all():
+        summary = f"Formation Day: {day.label}" if day.label else "Formation Day"
+        uid_source = f"{summary}-{day.date.strftime('%Y%m%d')}"
+        uid = hashlib.md5(uid_source.encode('utf-8')).hexdigest() + "@ucasa.formation"
+        dtstamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        events.append(
+            "BEGIN:VEVENT\n"
+            f"UID:{uid}\n"
+            f"DTSTAMP:{dtstamp}\n"
+            f"SUMMARY:{summary}\n"
+            f"DTSTART;VALUE=DATE:{day.date.strftime('%Y%m%d')}\n"
+            "END:VEVENT"
+        )
+
     add_events(global_settings.formation_panel_dates, "Formation Panel")
 
     ics_content = (

@@ -8,14 +8,58 @@
                 <h3>Global Settings</h3>
             </div>
             <div class="card-body">
+                <h4>Upcoming Formation Days</h4>
+                <p class="text-muted small">These dates apply to all candidates. Days are removed automatically once their date has passed.</p>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in formation_days %}
+                            <tr>
+                                <td>{{ day.label or '-' }}</td>
+                                <td>{{ day.date.strftime('%A %d %B %Y') }}</td>
+                                <td>
+                                    <form action="{{ url_for('main.delete_formation_day', day_id=day.id) }}" method="POST" onsubmit="return confirm('Remove this formation day?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-muted text-center">No upcoming formation days.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <form action="{{ url_for('main.add_formation_day') }}" method="POST" class="row g-2 align-items-end mb-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-md-5">
+                        <label class="form-label">Label (optional)</label>
+                        <input type="text" class="form-control" name="label" placeholder="e.g. Orientation">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn uca-btn-red w-100">Add Formation Day</button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                    <div class="mb-3">
-                        <label class="form-label">Upcoming Dates of Formation Days</label>
-                        <textarea class="form-control" name="upcoming_formation_dates" rows="5">{{ settings.upcoming_formation_dates }}</textarea>
-                        <div class="form-text">These dates will apply to all candidates. Enter each date on a new line. You can optionally add a label, e.g., "Orientation: March 10".</div>
-                    </div>
 
                     <div class="mb-3">
                         <label class="form-label">Formation Panels Dates (Yearly)</label>
