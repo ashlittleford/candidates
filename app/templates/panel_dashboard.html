@@ -8,6 +8,59 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-md-6 mb-4 mb-md-0">
+        <h5 class="section-title">Panel Members</h5>
+        <div class="card border-0 shadow-sm p-4">
+            {% if current_user.formation_panel %}
+                <!-- Chair -->
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                    <span class="fw-bold">{{ current_user.formation_panel.chair_name }}</span>
+                    <span class="badge bg-white text-secondary border">Chair</span>
+                </div>
+                <!-- Members -->
+                {% if current_user.formation_panel.members %}
+                    {% for member in current_user.formation_panel.members.split(',') %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                            <span class="fw-bold">{{ member.strip() }}</span>
+                            <span class="badge bg-white text-secondary border">Member</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% else %}
+                <p class="text-muted mb-0">No panel assigned.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h5 class="section-title">Upcoming Panel Dates</h5>
+        <div class="card border-0 shadow-sm p-4">
+            {% if global_settings and global_settings.formation_panel_dates %}
+                {% set dates_list = global_settings.formation_panel_dates.split(',') %}
+                <div class="row g-3">
+                    {% for date_item in dates_list %}
+                    <div class="col-md-6">
+                        <div class="formation-date-card">
+                            {% set parts = date_item.split(':') %}
+                            {% if parts|length > 1 %}
+                                <div class="formation-term">{{ parts[0].strip() }}</div>
+                                <div class="formation-date">{{ parts[1].strip() }}</div>
+                            {% else %}
+                                <div class="formation-term">UPCOMING</div>
+                                <div class="formation-date">{{ date_item.strip() }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No panel dates scheduled.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <h5 class="section-title">Assigned Candidates</h5>

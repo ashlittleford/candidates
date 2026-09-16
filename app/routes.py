@@ -118,7 +118,9 @@ def panel_dashboard():
     else:
         candidates = []
 
-    return render_template('panel_dashboard.html', candidates=candidates)
+    global_settings = GlobalSettings.query.first()
+
+    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings)
 
 @main.route('/candidate/<int:user_id>')
 @login_required
