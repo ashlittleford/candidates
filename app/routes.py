@@ -19,6 +19,32 @@ main = Blueprint('main', __name__)
 
 FORMATION_DAY_DISPLAY_FORMAT = "%A %d %B %Y"
 
+# TEMPORARY one-time maintenance route to unblock a Postgres database whose
+# "user" table was created with the old, too-short password_hash column
+# before the fix in app/__init__.py landed. No login is required because the
+# admin account can't exist yet if init_db.py never got past this error.
+# Remove this route once it has been used successfully.
+@main.route('/_maintenance/widen-password-hash')
+def _maintenance_widen_password_hash():
+    from sqlalchemy import text
+    expected_token = os.environ.get('MAINTENANCE_TOKEN')
+    if not expected_token or request.args.get('token') != expected_token:
+        return 'Not found', 404
+    if db.engine.dialect.name != 'postgresql':
+        return 'Not applicable: not using Postgres.', 400
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255)'))
+            conn.commit()
+        return 'password_hash column widened to VARCHAR(255) successfully. You can now run init_db.py again.'
+    except Exception as e:
+        return f'Failed: {e}', 500
+
+ALLOWED_UPLOAD_EXTENSIONS = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'}
+
+def is_allowed_upload(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_UPLOAD_EXTENSIONS
+
 @main.before_request
 def prune_past_formation_days():
     """Auto-delete formation days once their date has passed."""
@@ -259,7 +285,8 @@ def public_submit_document():
             category = 'Other'
 
         # Validation
-        if not user_id or not request.form.get('category'):
+        valid_user_ids = {str(u.id) for u in users}
+        if not user_id or user_id not in valid_user_ids or not request.form.get('category'):
              flash('Please select a candidate and document category.')
              return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
@@ -267,6 +294,10 @@ def public_submit_document():
         files = [f for f in request.files.getlist('file') if f.filename]
         if not files:
             flash('No selected file')
+            return redirect(request.url)
+
+        if not all(is_allowed_upload(f.filename) for f in files):
+            flash('One or more files have an unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF.')
             return redirect(request.url)
 
         for file in files:
@@ -919,6 +950,9 @@ def admin_resources():
             if file.filename == '':
                 flash('No selected file')
                 return redirect(request.url)
+            if not is_allowed_upload(file.filename):
+                flash('Unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF.')
+                return redirect(request.url)
             if file:
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
@@ -959,6 +993,9 @@ def edit_resource(resource_id):
             if 'file' in request.files:
                 file = request.files['file']
                 if file and file.filename != '':
+                    if not is_allowed_upload(file.filename):
+                        flash('Unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF.')
+                        return redirect(request.url)
                     # Delete old file if exists? Maybe better not to automatically delete for now.
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
@@ -1092,8 +1129,28 @@ def delete_academic_requirement(requirement_id):
     return redirect(url_for('main.admin_academic_requirements'))
 
 @main.route('/uploads/<filename>')
+@login_required
 def uploaded_file(filename):
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+    doc = PanelDocument.query.filter_by(filename=filename).first()
+    if doc:
+        allowed = current_user.is_admin or doc.user_id == current_user.id
+        if not allowed and current_user.is_panel_member:
+            owner = User.query.get(doc.user_id)
+            allowed = bool(
+                owner and owner.profile
+                and owner.profile.formation_panel_id == current_user.formation_panel_id
+            )
+        if not allowed:
+            flash('Access denied to this document.')
+            return redirect(url_for('main.index'))
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+    # Resources (templates, book lists, etc.) are shared with any logged-in user.
+    resource = Resource.query.filter_by(filename=filename).first()
+    if resource:
+        return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+    return "File not found", 404
 
 @main.route('/profile/upload_document', methods=['POST'])
 @login_required
@@ -1117,6 +1174,10 @@ def upload_panel_document():
             continue
 
         if file:
+            if not is_allowed_upload(file.filename):
+                flash(f'"{file.filename}" has an unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF.')
+                continue
+
             original_filename = secure_filename(file.filename)
             # Add timestamp to ensure uniqueness
             filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{original_filename}"
@@ -1161,6 +1222,10 @@ def upload_panel_report(user_id):
 
     for file in files:
         if file.filename == '':
+            continue
+
+        if not is_allowed_upload(file.filename):
+            flash(f'"{file.filename}" has an unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, GIF.')
             continue
 
         original_filename = secure_filename(file.filename)
