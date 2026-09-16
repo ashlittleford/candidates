@@ -4,3 +4,4 @@ flask-login
 werkzeug
 Flask-WTF
 itsdangerous
+gunicorn
