@@ -80,7 +80,7 @@ def check_and_upgrade_schema(app):
                     print("Widening 'password_hash' column in 'user' table to VARCHAR(255)...")
                     try:
                         with db.engine.connect() as conn:
-                            conn.execute(text("ALTER TABLE user ALTER COLUMN password_hash TYPE VARCHAR(255)"))
+                            conn.execute(text('ALTER TABLE "user" ALTER COLUMN password_hash TYPE VARCHAR(255)'))
                             conn.commit()
                         print("Successfully widened 'password_hash' column.")
                     except Exception as e:
