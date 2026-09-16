@@ -74,6 +74,18 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'is_archived' column: {e}")
 
+            if db.engine.dialect.name == "postgresql":
+                password_hash_col = next((col for col in inspector.get_columns("user") if col['name'] == 'password_hash'), None)
+                if password_hash_col and getattr(password_hash_col['type'], 'length', None) and password_hash_col['type'].length < 255:
+                    print("Widening 'password_hash' column in 'user' table to VARCHAR(255)...")
+                    try:
+                        with db.engine.connect() as conn:
+                            conn.execute(text("ALTER TABLE user ALTER COLUMN password_hash TYPE VARCHAR(255)"))
+                            conn.commit()
+                        print("Successfully widened 'password_hash' column.")
+                    except Exception as e:
+                        print(f"Failed to widen 'password_hash' column: {e}")
+
         if inspector.has_table("profile"):
             columns = [col['name'] for col in inspector.get_columns("profile")]
             if "current_church" not in columns:
@@ -308,6 +320,11 @@ def check_and_upgrade_schema(app):
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') != 'development'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['REMEMBER_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') != 'development'
+    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
     database_url = os.environ.get('DATABASE_URL')
     if database_url:
@@ -324,7 +341,11 @@ def create_app(test_config=None):
 
         db_path = os.path.join(instance_path, 'site.db')
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
+    # Kept outside static/ so uploaded files can't be fetched directly by URL,
+    # bypassing the access control in the uploaded_file view.
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     if test_config:
