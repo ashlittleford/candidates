@@ -18,19 +18,9 @@
                         <td style="padding:32px;">
                             <p style="font-size:16px; color:#222222; margin:0 0 16px;">Hi {{ name }},</p>
 
-                            {% if role == 'Panel Member' %}
                             <p style="font-size:15px; color:#444444; line-height:1.5; margin:0 0 16px;">
-                                You've been invited to join the Candidate Portal as a <strong>Formation Panel Member</strong>.
-                                From your dashboard you'll be able to see the candidates assigned to your panel, review their
-                                submitted documents and reports, and record RSVPs for upcoming formation panel dates.
+                                {{ intro | safe }}
                             </p>
-                            {% else %}
-                            <p style="font-size:15px; color:#444444; line-height:1.5; margin:0 0 16px;">
-                                You've been invited to join the Candidate Portal as a <strong>Candidate</strong>. The portal is
-                                where you'll track your formation progress, RSVP to upcoming formation days, upload documents
-                                and reports for your formation panel, and see key dates and resources relevant to your journey.
-                            </p>
-                            {% endif %}
 
                             <p style="font-size:15px; color:#444444; line-height:1.5; margin:0 0 24px;">
                                 To get started, set up your password and confirm a few details below. This link expires in

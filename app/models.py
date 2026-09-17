@@ -209,3 +209,14 @@ class FormationDayRSVP(db.Model):
     user = db.relationship('User')
 
     __table_args__ = (db.UniqueConstraint('formation_day_id', 'user_id', name='uq_formation_day_rsvp_user'),)
+
+class EditableContent(db.Model):
+    """
+    Admin-editable overrides for small blocks of copy (email intros, the
+    setup-account welcome text) that would otherwise require a code deploy
+    to change. Falls back to a hardcoded default when no row exists for a
+    given key -- see EDITABLE_CONTENT_DEFAULTS in email_utils.py.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    content = db.Column(db.Text, nullable=False)

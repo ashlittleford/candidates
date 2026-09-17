@@ -1,6 +1,7 @@
 import os
 import resend
 from flask import render_template
+from app.editable_content import render_content
 
 
 class EmailNotConfiguredError(Exception):
@@ -29,7 +30,9 @@ def send_invitation_email(to_email, name, role, setup_link):
     Raises EmailNotConfiguredError if RESEND_API_KEY isn't set, so callers
     can fall back to showing the admin the link directly (e.g. in local dev).
     """
-    html = render_template('emails/invite.html', name=name, role=role, setup_link=setup_link)
+    intro_key = 'invite_email_panel_member_intro' if role == 'Panel Member' else 'invite_email_candidate_intro'
+    intro = render_content(intro_key, name=name, role=role, setup_link=setup_link)
+    html = render_template('emails/invite.html', name=name, role=role, setup_link=setup_link, intro=intro)
     _send(to_email, "You're invited to the Uniting Church Candidate Portal", html)
 
 
@@ -39,7 +42,9 @@ def send_password_reset_email(to_email, name, reset_link, triggered_by_admin=Fal
     Raises EmailNotConfiguredError if RESEND_API_KEY isn't set, so callers
     can fall back to showing the admin the link directly (e.g. in local dev).
     """
+    intro = render_content('reset_password_email_intro', name=name, reset_link=reset_link)
     html = render_template(
-        'emails/reset_password.html', name=name, reset_link=reset_link, triggered_by_admin=triggered_by_admin
+        'emails/reset_password.html', name=name, reset_link=reset_link,
+        triggered_by_admin=triggered_by_admin, intro=intro
     )
     _send(to_email, "Reset your Candidate Portal password", html)

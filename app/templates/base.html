@@ -45,7 +45,12 @@
 
     <footer class="uca-footer text-center">
         <div class="container">
-            <p class="mb-0 small">&copy; 2025 Uniting Church in Australia. All Rights Reserved.</p>
+            <p class="mb-0 small">
+                &copy; 2025 Uniting Church in Australia. All Rights Reserved.
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    &middot; <a href="{{ url_for('main.admin_system') }}" class="text-muted">System</a>
+                {% endif %}
+            </p>
         </div>
     </footer>
 

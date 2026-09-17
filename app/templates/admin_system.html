@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">System</h3>
+            <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+        </div>
+        <p class="text-muted small">Low-traffic settings: content that rarely changes, or that only needs occasional wording tweaks.</p>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Editable Content</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for item in items %}
+                <a href="{{ url_for('main.edit_editable_content', key=item.key) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">{{ item.label }}</div>
+                        <div class="text-muted small">{{ item.description }}</div>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Reference Data</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('main.admin_standards') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">Manage Standards</div>
+                        <div class="text-muted small">The 14 Standards of Ministry reference content &mdash; static, rarely changes.</div>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

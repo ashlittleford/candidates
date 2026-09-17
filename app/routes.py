@@ -4,11 +4,12 @@ from app import db
 from app.models import (
     User, Profile, GlobalSettings, FormationPanel, Resource, Standard, PanelDocument,
     AcademicRequirement, CandidateAcademicRequirement, FormationDay, FormationDayRSVP,
-    CANDIDATE_DOCUMENT_CATEGORIES, PANEL_DOCUMENT_CATEGORIES
+    EditableContent, CANDIDATE_DOCUMENT_CATEGORIES, PANEL_DOCUMENT_CATEGORIES
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from app.email_utils import send_invitation_email, send_password_reset_email, EmailNotConfiguredError
+from app.editable_content import EDITABLE_CONTENT_DEFAULTS, get_raw_content, render_content
 import os
 import re
 from collections import OrderedDict
@@ -1038,6 +1039,8 @@ def accept_invitation(token):
         flash('Invitation expired.')
         return redirect(url_for('main.login'))
 
+    setup_intro = render_content('setup_account_intro', name=user.name)
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -1045,13 +1048,13 @@ def accept_invitation(token):
 
         if password != confirm_password:
             flash('Passwords do not match.')
-            return render_template('setup_account.html', user=user)
+            return render_template('setup_account.html', user=user, setup_intro=setup_intro)
 
         # Check if username is taken (if changed from email)
         if username != user.username:
              if User.query.filter_by(username=username).first():
                  flash('Username already taken.')
-                 return render_template('setup_account.html', user=user)
+                 return render_template('setup_account.html', user=user, setup_intro=setup_intro)
 
         user.username = username
         user.set_password(password)
@@ -1071,7 +1074,7 @@ def accept_invitation(token):
         flash('Account set up successfully.')
         return redirect(url_for('main.index'))
 
-    return render_template('setup_account.html', user=user)
+    return render_template('setup_account.html', user=user, setup_intro=setup_intro)
 
 @main.route('/admin/toggle_archive/<int:user_id>', methods=['POST'])
 @login_required
@@ -1388,6 +1391,55 @@ def delete_resource(resource_id):
     db.session.commit()
     flash('Resource deleted successfully')
     return redirect(url_for('main.admin_resources'))
+
+# --- System Area (low-traffic admin tools: editable content, standards) ---
+
+@main.route('/admin/system')
+@login_required
+def admin_system():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    items = [
+        {'key': key, 'label': meta['label'], 'description': meta['description']}
+        for key, meta in EDITABLE_CONTENT_DEFAULTS.items()
+    ]
+    return render_template('admin_system.html', items=items)
+
+@main.route('/admin/system/content/<key>', methods=['GET', 'POST'])
+@login_required
+def edit_editable_content(key):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    if key not in EDITABLE_CONTENT_DEFAULTS:
+        flash('Unknown content block.')
+        return redirect(url_for('main.admin_system'))
+
+    meta = EDITABLE_CONTENT_DEFAULTS[key]
+
+    if request.method == 'POST':
+        if request.form.get('reset_to_default'):
+            EditableContent.query.filter_by(key=key).delete()
+            db.session.commit()
+            flash(f'{meta["label"]} reset to the default text.')
+        else:
+            content = request.form.get('content', '')
+            row = EditableContent.query.filter_by(key=key).first()
+            if row:
+                row.content = content
+            else:
+                row = EditableContent(key=key, content=content)
+                db.session.add(row)
+            db.session.commit()
+            flash(f'{meta["label"]} updated.')
+        return redirect(url_for('main.admin_system'))
+
+    current_value = get_raw_content(key)
+    is_customized = EditableContent.query.filter_by(key=key).first() is not None
+    return render_template('admin_edit_content.html', key=key, meta=meta, current_value=current_value, is_customized=is_customized)
 
 # --- Standards Management Routes ---
 
