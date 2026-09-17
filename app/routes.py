@@ -1137,6 +1137,30 @@ def accept_invitation(token):
 
     return render_template('setup_account.html', user=user, setup_intro=setup_intro)
 
+@main.route('/admin/panel_members/assign', methods=['POST'])
+@login_required
+def assign_panel_member():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user_id = request.form.get('user_id')
+    member = User.query.get_or_404(int(user_id)) if user_id else None
+    if not member or not member.is_panel_member:
+        flash('That user is not a panel member.')
+        return redirect(request.referrer or url_for('main.admin_dashboard'))
+
+    formation_panel_id = request.form.get('formation_panel_id')
+    member.formation_panel_id = int(formation_panel_id) if formation_panel_id else None
+    db.session.commit()
+
+    if member.formation_panel_id:
+        flash(f'{member.name} assigned to {member.formation_panel.display_name}.')
+    else:
+        flash(f'{member.name} removed from their panel.')
+
+    return redirect(request.referrer or url_for('main.admin_dashboard'))
+
 @main.route('/admin/toggle_archive/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_archive(user_id):
@@ -1323,6 +1347,10 @@ def edit_panel(panel_id):
         return redirect(url_for('main.profile'))
 
     panel = FormationPanel.query.get_or_404(panel_id)
+    available_members = User.query.filter(
+        User.is_panel_member == True, User.is_archived == False,
+        db.or_(User.formation_panel_id == None, User.formation_panel_id != panel.id)
+    ).all()
 
     if request.method == 'POST':
         panel.name = request.form.get('name')
@@ -1333,7 +1361,7 @@ def edit_panel(panel_id):
             valid = chair_user and chair_user in panel.panel_member_users
             if not valid:
                 flash('Chair must be a panel member already assigned to this panel.')
-                return render_template('admin_create_edit_panel.html', panel=panel)
+                return render_template('admin_create_edit_panel.html', panel=panel, available_members=available_members)
             panel.chair_user_id = chair_user.id
             panel.chair_name = chair_user.name
         else:
@@ -1344,7 +1372,7 @@ def edit_panel(panel_id):
         flash('Formation Panel updated successfully')
         return redirect(url_for('main.admin_dashboard') + '#panels')
 
-    return render_template('admin_create_edit_panel.html', panel=panel)
+    return render_template('admin_create_edit_panel.html', panel=panel, available_members=available_members)
 
 # --- Resource Management Routes ---
 

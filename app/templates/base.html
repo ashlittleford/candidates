@@ -21,6 +21,11 @@
             <nav>
                 {% if current_user.is_authenticated %}
                     <span class="text-dark me-3 fw-bold d-none d-sm-inline">Welcome, {{ current_user.name }}</span>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('main.admin_system') }}" class="btn btn-outline-secondary btn-sm me-2">
+                        <i class="fas fa-cog me-1"></i> System
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger btn-sm">
                         <i class="fas fa-sign-out-alt me-1"></i> Logout
                     </a>
@@ -45,12 +50,7 @@
 
     <footer class="uca-footer text-center">
         <div class="container">
-            <p class="mb-0 small">
-                &copy; 2025 Uniting Church in Australia. All Rights Reserved.
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                    &middot; <a href="{{ url_for('main.admin_system') }}" class="text-muted">System</a>
-                {% endif %}
-            </p>
+            <p class="mb-0 small">&copy; 2025 Uniting Church in Australia. All Rights Reserved.</p>
         </div>
     </footer>
 

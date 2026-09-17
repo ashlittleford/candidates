@@ -188,11 +188,19 @@
                                 </td>
                                 <td>{{ member.username }}</td>
                                 <td>
-                                    {% if member.formation_panel %}
-                                        {{ member.formation_panel.display_name }}
-                                    {% else %}
-                                        <span class="text-danger">Not Assigned</span>
-                                    {% endif %}
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm" name="formation_panel_id" form="assignPanel{{ member.id }}">
+                                            <option value="">Not assigned</option>
+                                            {% for panel in panels %}
+                                                <option value="{{ panel.id }}" {% if member.formation_panel_id == panel.id %}selected{% endif %}>{{ panel.display_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <form id="assignPanel{{ member.id }}" action="{{ url_for('main.assign_panel_member') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="user_id" value="{{ member.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                                        </form>
+                                    </div>
                                 </td>
                                 <td>
                                     <form action="{{ url_for('main.send_password_reset', user_id=member.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Send a password reset email to {{ member.name }}?');">
@@ -271,7 +279,10 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var hash = window.location.hash;
+        // Remember the active tab across reloads/redirects (form submits on this
+        // page don't preserve URL hashes, since the server can't see them).
+        var STORAGE_KEY = 'adminDashboardActiveTab';
+        var hash = window.location.hash || localStorage.getItem(STORAGE_KEY);
         if (hash) {
             var triggerEl = document.querySelector('button[data-bs-target="' + hash + '"]');
             if (triggerEl) {
@@ -279,6 +290,11 @@
                 tab.show();
             }
         }
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(btn) {
+            btn.addEventListener('shown.bs.tab', function(e) {
+                localStorage.setItem(STORAGE_KEY, e.target.getAttribute('data-bs-target'));
+            });
+        });
 
         // Select All Checkbox
         document.getElementById('selectAll').addEventListener('change', function() {
