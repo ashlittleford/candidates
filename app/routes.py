@@ -1073,32 +1073,6 @@ def accept_invitation(token):
 
     return render_template('setup_account.html', user=user)
 
-@main.route('/admin/create_panel_member', methods=['GET', 'POST'])
-@login_required
-def create_panel_member():
-    if not current_user.is_admin:
-        flash('Access denied')
-        return redirect(url_for('main.profile'))
-
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        name = request.form.get('name')
-        formation_panel_id = request.form.get('formation_panel_id')
-
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-        else:
-            new_user = User(username=username, name=name, is_panel_member=True, formation_panel_id=formation_panel_id)
-            new_user.set_password(password)
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Panel Member created successfully')
-            return redirect(url_for('main.admin_dashboard') + '#members')
-
-    panels = FormationPanel.query.all()
-    return render_template('admin_create_panel_member.html', panels=panels)
-
 @main.route('/admin/toggle_archive/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_archive(user_id):
@@ -1154,31 +1128,6 @@ def delete_user(user_id):
 
     # Stay on the same view (show archived or not)
     return redirect(request.referrer or url_for('main.admin_dashboard'))
-
-@main.route('/admin/create', methods=['GET', 'POST'])
-@login_required
-def create_user():
-    if not current_user.is_admin:
-        flash('Access denied')
-        return redirect(url_for('main.profile'))
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        name = request.form.get('name')
-
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-        else:
-            new_user = User(username=username, name=name)
-            new_user.set_password(password)
-            # Create empty profile
-            new_profile = Profile(user=new_user)
-            db.session.add(new_user)
-            db.session.add(new_profile)
-            db.session.commit()
-            flash('User created successfully')
-            return redirect(url_for('main.admin_dashboard'))
-    return render_template('admin_create_user.html')
 
 @main.route('/admin/edit/<int:user_id>', methods=['GET', 'POST'])
 @login_required
@@ -1292,13 +1241,12 @@ def create_panel():
         return redirect(url_for('main.profile'))
 
     if request.method == 'POST':
-        chair_name = request.form.get('chair_name')
-        members = request.form.get('members')
+        name = request.form.get('name')
 
-        new_panel = FormationPanel(chair_name=chair_name, members=members)
+        new_panel = FormationPanel(name=name)
         db.session.add(new_panel)
         db.session.commit()
-        flash('Formation Panel created successfully')
+        flash('Formation Panel created successfully. Invite or assign panel members to it, then set a chair.')
         return redirect(url_for('main.admin_dashboard') + '#panels')
 
     return render_template('admin_create_edit_panel.html', panel=None)
@@ -1313,8 +1261,21 @@ def edit_panel(panel_id):
     panel = FormationPanel.query.get_or_404(panel_id)
 
     if request.method == 'POST':
-        panel.chair_name = request.form.get('chair_name')
-        panel.members = request.form.get('members')
+        panel.name = request.form.get('name')
+
+        chair_user_id = request.form.get('chair_user_id')
+        if chair_user_id:
+            chair_user = User.query.get(int(chair_user_id))
+            valid = chair_user and chair_user in panel.panel_member_users
+            if not valid:
+                flash('Chair must be a panel member already assigned to this panel.')
+                return render_template('admin_create_edit_panel.html', panel=panel)
+            panel.chair_user_id = chair_user.id
+            panel.chair_name = chair_user.name
+        else:
+            panel.chair_user_id = None
+            panel.chair_name = ""
+
         db.session.commit()
         flash('Formation Panel updated successfully')
         return redirect(url_for('main.admin_dashboard') + '#panels')

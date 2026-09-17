@@ -45,8 +45,19 @@ class User(UserMixin, db.Model):
 
 class FormationPanel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    chair_name = db.Column(db.String(150), nullable=False)
+    name = db.Column(db.String(150), nullable=True)
+    chair_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    chair_user = db.relationship('User', foreign_keys=[chair_user_id])
+
+    # Deprecated: replaced by `name` (identifier) and `chair_user` (a real linked
+    # account instead of free text prone to typos). Kept only so old rows created
+    # before this migration still have a legacy display fallback.
+    chair_name = db.Column(db.String(150), nullable=False, default="")
     members = db.Column(db.Text, default="") # Stores comma or newline separated members
+
+    @property
+    def display_name(self):
+        return self.name or self.chair_name or "Unnamed Panel"
 
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)

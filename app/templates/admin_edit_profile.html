@@ -39,7 +39,7 @@
                             <option value="">Select a Formation Panel</option>
                             {% for panel in panels %}
                                 <option value="{{ panel.id }}" {% if user.profile.formation_panel_id == panel.id %}selected{% endif %}>
-                                    Chair: {{ panel.chair_name }}
+                                    {{ panel.display_name }}
                                 </option>
                             {% endfor %}
                         </select>

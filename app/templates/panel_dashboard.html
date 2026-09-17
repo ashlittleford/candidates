@@ -12,19 +12,15 @@
         <h5 class="section-title">Panel Members</h5>
         <div class="card border-0 shadow-sm p-4">
             {% if current_user.formation_panel %}
-                <!-- Chair -->
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                    <span class="fw-bold">{{ current_user.formation_panel.chair_name }}</span>
-                    <span class="badge bg-white text-secondary border">Chair</span>
-                </div>
-                <!-- Members -->
-                {% if current_user.formation_panel.members %}
-                    {% for member in current_user.formation_panel.members.split(',') %}
+                {% if current_user.formation_panel.panel_member_users %}
+                    {% for pm in current_user.formation_panel.panel_member_users %}
                         <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                            <span class="fw-bold">{{ member.strip() }}</span>
-                            <span class="badge bg-white text-secondary border">Member</span>
+                            <span class="fw-bold">{{ pm.name }}</span>
+                            <span class="badge bg-white text-secondary border">{{ 'Chair' if pm.id == current_user.formation_panel.chair_user_id else 'Member' }}</span>
                         </div>
                     {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No panel members assigned yet.</p>
                 {% endif %}
             {% else %}
                 <p class="text-muted mb-0">No panel assigned.</p>

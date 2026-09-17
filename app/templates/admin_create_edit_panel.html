@@ -11,15 +11,46 @@
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label class="form-label">Chair Name</label>
-                        <input type="text" class="form-control" name="chair_name" value="{{ panel.chair_name if panel else '' }}" required>
-                        <div class="form-text">The panel is identified by the chair's name.</div>
+                        <label class="form-label">Panel Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ panel.name if panel else '' }}" required placeholder="e.g. Panel A, Wimala Panel">
+                        <div class="form-text">A short name to identify this panel.</div>
+                    </div>
+
+                    {% if panel %}
+                    <div class="mb-3">
+                        <label class="form-label">Chair</label>
+                        {% if panel.panel_member_users %}
+                        <select class="form-select" name="chair_user_id">
+                            <option value="">No chair set</option>
+                            {% for pm in panel.panel_member_users %}
+                                <option value="{{ pm.id }}" {% if panel.chair_user_id == pm.id %}selected{% endif %}>{{ pm.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <p class="text-muted small mb-0">
+                            No panel members are assigned to this panel yet. Invite a panel member or edit an existing
+                            one to assign them here, then come back to set the chair.
+                        </p>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Panel Members</label>
-                        <textarea class="form-control" name="members" rows="5" placeholder="Enter member names, separated by commas or new lines.">{{ panel.members if panel else '' }}</textarea>
+                        {% if panel.panel_member_users %}
+                        <ul class="list-group">
+                            {% for pm in panel.panel_member_users %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ pm.name }}
+                                {% if pm.id == panel.chair_user_id %}<span class="badge bg-secondary">Chair</span>{% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted small mb-0">No panel members assigned yet.</p>
+                        {% endif %}
+                        <div class="form-text">Manage who's on this panel via Invite Panel Member or a member's Edit Profile.</div>
                     </div>
+                    {% endif %}
 
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('main.admin_dashboard') }}#panels" class="btn btn-secondary">Cancel</a>

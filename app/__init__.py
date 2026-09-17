@@ -98,6 +98,28 @@ def check_and_upgrade_schema(app):
                 except Exception as e:
                     print(f"Failed to add 'current_church' column: {e}")
 
+        if inspector.has_table("formation_panel"):
+            columns = [col['name'] for col in inspector.get_columns("formation_panel")]
+            if "name" not in columns:
+                print("Missing column 'name' detected in 'formation_panel' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE formation_panel ADD COLUMN name VARCHAR(150)"))
+                        conn.commit()
+                    print("Successfully added 'name' column.")
+                except Exception as e:
+                    print(f"Failed to add 'name' column: {e}")
+
+            if "chair_user_id" not in columns:
+                print("Missing column 'chair_user_id' detected in 'formation_panel' table. Attempting to add it...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE formation_panel ADD COLUMN chair_user_id INTEGER"))
+                        conn.commit()
+                    print("Successfully added 'chair_user_id' column.")
+                except Exception as e:
+                    print(f"Failed to add 'chair_user_id' column: {e}")
+
         if inspector.has_table("resource"):
             columns = [col['name'] for col in inspector.get_columns("resource")]
             if "category" not in columns:

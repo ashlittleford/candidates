@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="mb-3">Edit Standard {{ standard.id }}</h1>
+        <h1 class="mb-3">Edit Standard: {{ standard.attribute | truncate(60) }}</h1>
         <a href="{{ url_for('main.admin_standards') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Standards</a>
     </div>
 </div>
