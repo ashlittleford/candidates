@@ -26,19 +26,26 @@
                         </select>
                     </div>
 
+                    <!-- Submission Type Selection -->
+                    <div class="mb-3">
+                        <label for="submission_type" class="form-label fw-bold">Submission Type</label>
+                        <select name="submission_type" id="submission_type" class="form-select" required onchange="updateSubmissionType()">
+                            <option value="">-- Select Type --</option>
+                            <option value="formation_panel_paper">Formation Panel Paper</option>
+                            <option value="panel_report">Panel Report</option>
+                        </select>
+                    </div>
+
                     <!-- Document Category Selection -->
                     <div class="mb-3">
                         <label for="category" class="form-label fw-bold">Document Category</label>
                         <select name="category" id="category" class="form-select" required>
-                            <option value="">-- Select Category --</option>
-                            {% for cat in categories %}
-                                <option value="{{ cat }}">{{ cat }}</option>
-                            {% endfor %}
+                            <option value="">-- Select Submission Type First --</option>
                         </select>
                     </div>
 
-                    <!-- Formation Day Selection -->
-                    <div class="mb-3">
+                    <!-- Formation Day Selection (Formation Panel Paper only) -->
+                    <div class="mb-3" id="dayLabelGroup" style="display: none;">
                         <label for="day_label" class="form-label fw-bold">Formation Day</label>
                         <select name="day_label" id="day_label" class="form-select">
                             <option value="">-- Select Formation Day --</option>
@@ -64,6 +71,43 @@
                         <a href="{{ url_for('main.login') }}" class="btn btn-outline-secondary">Back to Login</a>
                     </div>
                 </form>
+
+                <script>
+                    const FORMATION_PANEL_PAPER_CATEGORIES = {{ candidate_categories | tojson }};
+                    const PANEL_REPORT_CATEGORIES = {{ panel_categories | tojson }};
+
+                    function updateSubmissionType() {
+                        const type = document.getElementById('submission_type').value;
+                        const categorySelect = document.getElementById('category');
+                        const dayLabelGroup = document.getElementById('dayLabelGroup');
+                        const daySelect = document.getElementById('day_label');
+
+                        let categories = [];
+                        if (type === 'formation_panel_paper') {
+                            categories = FORMATION_PANEL_PAPER_CATEGORIES;
+                            dayLabelGroup.style.display = '';
+                        } else if (type === 'panel_report') {
+                            categories = PANEL_REPORT_CATEGORIES;
+                            dayLabelGroup.style.display = 'none';
+                            daySelect.value = '';
+                        } else {
+                            dayLabelGroup.style.display = 'none';
+                            daySelect.value = '';
+                        }
+
+                        categorySelect.innerHTML = '';
+                        const placeholder = document.createElement('option');
+                        placeholder.value = '';
+                        placeholder.textContent = categories.length ? '-- Select Category --' : '-- Select Submission Type First --';
+                        categorySelect.appendChild(placeholder);
+                        categories.forEach(function(cat) {
+                            const opt = document.createElement('option');
+                            opt.value = cat;
+                            opt.textContent = cat;
+                            categorySelect.appendChild(opt);
+                        });
+                    }
+                </script>
             </div>
         </div>
     </div>

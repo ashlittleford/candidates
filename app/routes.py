@@ -341,17 +341,26 @@ def public_submit_document():
 
     if request.method == 'POST':
         user_id = request.form.get('user_id')
+        submission_type = request.form.get('submission_type')
         category = request.form.get('category')
         day_label = request.form.get('day_label') or None
 
-        if category not in CANDIDATE_DOCUMENT_CATEGORIES:
+        if submission_type == 'panel_report':
+            valid_categories = PANEL_DOCUMENT_CATEGORIES
+            day_label = None  # Panel reports aren't tied to a specific formation day
+        else:
+            valid_categories = CANDIDATE_DOCUMENT_CATEGORIES
+
+        if category not in valid_categories:
             category = 'Other'
 
         # Validation
         valid_user_ids = {str(u.id) for u in users}
-        if not user_id or user_id not in valid_user_ids or not request.form.get('category'):
-             flash('Please select a candidate and document category.')
-             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=CANDIDATE_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
+        if (not user_id or user_id not in valid_user_ids
+                or submission_type not in ('formation_panel_paper', 'panel_report')
+                or not request.form.get('category')):
+             flash('Please select a candidate, submission type, and document category.')
+             return render_template('submit_document.html', users=users, global_settings=global_settings, candidate_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
         # Handle files
         files = [f for f in request.files.getlist('file') if f.filename]
@@ -383,7 +392,7 @@ def public_submit_document():
         flash('Document submitted successfully!')
         return redirect(url_for('main.public_submit_document'))
 
-    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=CANDIDATE_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
+    return render_template('submit_document.html', users=users, global_settings=global_settings, candidate_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
