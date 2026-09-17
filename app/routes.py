@@ -941,6 +941,9 @@ def invite_candidate():
             except EmailNotConfiguredError:
                 print(f"INVITATION LINK FOR {email}: {invite_link}") # For dev environment
                 flash(f'Email sending isn\'t configured. Invitation link for {email}: {invite_link}')
+            except Exception as e:
+                print(f"Failed to send invitation email to {email}: {e}")
+                flash(f'Could not send the invitation email ({e}). Invitation link for {email}: {invite_link}')
             return redirect(url_for('main.admin_dashboard'))
 
     panels = FormationPanel.query.all()
@@ -986,6 +989,9 @@ def invite_panel_member():
             except EmailNotConfiguredError:
                 print(f"INVITATION LINK FOR {email}: {invite_link}")
                 flash(f'Email sending isn\'t configured. Invitation link for {email}: {invite_link}')
+            except Exception as e:
+                print(f"Failed to send invitation email to {email}: {e}")
+                flash(f'Could not send the invitation email ({e}). Invitation link for {email}: {invite_link}')
             return redirect(url_for('main.admin_dashboard') + '#members')
 
     panels = FormationPanel.query.all()
