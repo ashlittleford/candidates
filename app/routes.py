@@ -123,14 +123,32 @@ def _parse_formation_panel_date_entries(global_settings):
     parsed.sort(key=lambda item: (item[0], item[1] or datetime.max))
     return parsed
 
+def get_archived_formation_panel_years(global_settings):
+    """The set of year strings an admin has explicitly archived."""
+    if not global_settings or not global_settings.archived_formation_panel_years:
+        return set()
+    return {y.strip() for y in global_settings.archived_formation_panel_years.split(',') if y.strip()}
+
 def get_formation_panel_dates_by_year(global_settings):
     """
     Group formation panel dates by year, as plain date strings (unchanged shape
-    for existing selects/accordions).
+    for existing selects/accordions). Archived years are excluded.
     """
+    archived_years = get_archived_formation_panel_years(global_settings)
     grouped = OrderedDict()
     for year, dt, date_str in _parse_formation_panel_date_entries(global_settings):
+        if year in archived_years:
+            continue
         grouped.setdefault(year, []).append(date_str)
+    return grouped
+
+def get_archived_formation_panel_dates_by_year(global_settings):
+    """Group formation panel dates by year, for years an admin has archived."""
+    archived_years = get_archived_formation_panel_years(global_settings)
+    grouped = OrderedDict()
+    for year, dt, date_str in _parse_formation_panel_date_entries(global_settings):
+        if year in archived_years:
+            grouped.setdefault(year, []).append(date_str)
     return grouped
 
 def get_formation_panel_papers_due_map(global_settings):
@@ -208,9 +226,10 @@ def panel_dashboard():
 
     global_settings = GlobalSettings.query.first()
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
+    archived_formation_panel_dates_by_year = get_archived_formation_panel_dates_by_year(global_settings)
     papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings, formation_panel_dates_by_year=formation_panel_dates_by_year, papers_due_map=papers_due_map)
+    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, papers_due_map=papers_due_map)
 
 @main.route('/candidate/<int:user_id>')
 @login_required
@@ -254,10 +273,11 @@ def view_candidate_profile(user_id):
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
-    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
+    archived_formation_panel_dates_by_year = get_archived_formation_panel_dates_by_year(global_settings)
+    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates] + [d for dates in archived_formation_panel_dates_by_year.values() for d in dates]
     papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -443,10 +463,11 @@ def profile():
 
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
-    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
+    archived_formation_panel_dates_by_year = get_archived_formation_panel_dates_by_year(global_settings)
+    formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates] + [d for dates in archived_formation_panel_dates_by_year.values() for d in dates]
     papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -552,7 +573,11 @@ def admin_settings():
         FormationDay.date >= datetime.now().date()
     ).order_by(FormationDay.date).all()
 
-    return render_template('admin_global_settings.html', settings=settings, formation_days=formation_days)
+    return render_template(
+        'admin_global_settings.html', settings=settings, formation_days=formation_days,
+        formation_panel_dates_by_year=get_formation_panel_dates_by_year(settings),
+        archived_formation_panel_dates_by_year=get_archived_formation_panel_dates_by_year(settings)
+    )
 
 @main.route('/admin/formation_days/add', methods=['POST'])
 @login_required
@@ -619,6 +644,66 @@ def delete_formation_day(day_id):
     db.session.delete(day)
     db.session.commit()
     flash('Formation day removed.')
+    return redirect(url_for('main.admin_settings'))
+
+@main.route('/admin/formation_panel_dates/archive_year', methods=['POST'])
+@login_required
+def archive_formation_panel_year():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    year = request.form.get('year')
+    if not year:
+        flash('No year specified.')
+        return redirect(url_for('main.admin_settings'))
+
+    settings = GlobalSettings.query.first()
+    if not settings:
+        flash('Global settings not found.')
+        return redirect(url_for('main.admin_settings'))
+
+    archived_years = get_archived_formation_panel_years(settings)
+    archived_years.add(year)
+    settings.archived_formation_panel_years = ','.join(sorted(archived_years))
+
+    year_dates = {date_str for y, dt, date_str in _parse_formation_panel_date_entries(settings) if y == year}
+    if year_dates:
+        for doc in PanelDocument.query.filter(PanelDocument.day_label.in_(year_dates)).all():
+            doc.is_archived = True
+
+    db.session.commit()
+    flash(f'{year} formation panel dates and documents archived.')
+    return redirect(url_for('main.admin_settings'))
+
+@main.route('/admin/formation_panel_dates/unarchive_year', methods=['POST'])
+@login_required
+def unarchive_formation_panel_year():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    year = request.form.get('year')
+    if not year:
+        flash('No year specified.')
+        return redirect(url_for('main.admin_settings'))
+
+    settings = GlobalSettings.query.first()
+    if not settings:
+        flash('Global settings not found.')
+        return redirect(url_for('main.admin_settings'))
+
+    archived_years = get_archived_formation_panel_years(settings)
+    archived_years.discard(year)
+    settings.archived_formation_panel_years = ','.join(sorted(archived_years))
+
+    year_dates = {date_str for y, dt, date_str in _parse_formation_panel_date_entries(settings) if y == year}
+    if year_dates:
+        for doc in PanelDocument.query.filter(PanelDocument.day_label.in_(year_dates)).all():
+            doc.is_archived = False
+
+    db.session.commit()
+    flash(f'{year} formation panel dates and documents restored.')
     return redirect(url_for('main.admin_settings'))
 
 @main.route('/formation_days/<int:day_id>/rsvp', methods=['POST'])

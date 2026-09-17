@@ -118,6 +118,7 @@ class GlobalSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     upcoming_formation_dates = db.Column(db.Text, default="")
     formation_panel_dates = db.Column(db.Text, default="")
+    archived_formation_panel_years = db.Column(db.Text, default="")  # comma-separated years, e.g. "2024,2025"
     support_email_generate_presbytery = db.Column(db.String(150), default="admin@generate.org.au")
     support_email_wimala_presbytery = db.Column(db.String(150), default="admin@wimala.org.au")
     support_email_possa = db.Column(db.String(150), default="admin@possa.org.au")

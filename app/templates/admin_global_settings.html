@@ -69,13 +69,57 @@
 
                 <hr class="my-4">
 
+                {% if formation_panel_dates_by_year or archived_formation_panel_dates_by_year %}
+                <h4>Formation Panel Years</h4>
+
+                {% if formation_panel_dates_by_year %}
+                <div class="mb-3">
+                    <label class="form-label">Active Years</label>
+                    {% for year, dates in formation_panel_dates_by_year.items() %}
+                        <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                            <div>
+                                <span class="fw-bold">{{ year }}</span>
+                                <span class="text-muted small ms-2">{{ dates | join(', ') }}</span>
+                            </div>
+                            <form action="{{ url_for('main.archive_formation_panel_year') }}" method="POST" onsubmit="return confirm('Archive all {{ year }} panel dates and documents? Candidates and panel members will only see this under Archived.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="year" value="{{ year }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Archive {{ year }}</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if archived_formation_panel_dates_by_year %}
+                <div class="mb-3">
+                    <label class="form-label">Archived Years</label>
+                    {% for year, dates in archived_formation_panel_dates_by_year.items() %}
+                        <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2 bg-light">
+                            <div>
+                                <span class="fw-bold text-muted">{{ year }}</span>
+                                <span class="text-muted small ms-2">{{ dates | join(', ') }}</span>
+                            </div>
+                            <form action="{{ url_for('main.unarchive_formation_panel_year') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="year" value="{{ year }}">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Restore {{ year }}</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <hr class="my-4">
+                {% endif %}
+
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="mb-3">
                         <label class="form-label">Formation Panels Dates (Yearly)</label>
                         <textarea class="form-control" name="formation_panel_dates" rows="3">{{ settings.formation_panel_dates }}</textarea>
-                        <div class="form-text">Enter the panel dates separated by commas, e.g. "13 February 2026, 19 June 2026, 20 November 2026". No labels &mdash; dates are grouped by year automatically wherever they're shown.</div>
+                        <div class="form-text">Enter the panel dates separated by commas, e.g. "13 February 2026, 19 June 2026, 20 November 2026". No labels &mdash; dates are grouped by year automatically wherever they're shown. Use the "Archive" button above once a year's cycle is done.</div>
                     </div>
 
                     <hr class="my-4">
