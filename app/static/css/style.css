@@ -84,6 +84,12 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--uca-black);
 }
 
+.formation-papers-due {
+    font-size: 0.7rem;
+    color: var(--uca-text-light);
+    margin-top: 4px;
+}
+
 /* Resource Links */
 .resource-link {
     display: block;

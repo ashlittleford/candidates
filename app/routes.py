@@ -91,15 +91,15 @@ def get_most_recent_formation_day_date(upcoming_dates):
 
     return most_recent_date
 
-def get_formation_panel_dates_by_year(global_settings):
+def _parse_formation_panel_date_entries(global_settings):
     """
     Parse GlobalSettings.formation_panel_dates as a plain comma-separated list of
-    dates (no labels) and group them by year, sorted chronologically within each year.
-    Tolerates leftover "Label: Date" entries from before labels were removed.
+    dates (no labels) into (year, dt, date_str) tuples, sorted chronologically
+    within each year. Tolerates leftover "Label: Date" entries from before labels
+    were removed.
     """
-    grouped = OrderedDict()
     if not global_settings or not global_settings.formation_panel_dates:
-        return grouped
+        return []
 
     parsed = []
     for raw in global_settings.formation_panel_dates.split(','):
@@ -121,11 +121,28 @@ def get_formation_panel_dates_by_year(global_settings):
         parsed.append((year, dt, date_str))
 
     parsed.sort(key=lambda item: (item[0], item[1] or datetime.max))
+    return parsed
 
-    for year, dt, date_str in parsed:
+def get_formation_panel_dates_by_year(global_settings):
+    """
+    Group formation panel dates by year, as plain date strings (unchanged shape
+    for existing selects/accordions).
+    """
+    grouped = OrderedDict()
+    for year, dt, date_str in _parse_formation_panel_date_entries(global_settings):
         grouped.setdefault(year, []).append(date_str)
-
     return grouped
+
+def get_formation_panel_papers_due_map(global_settings):
+    """
+    Maps each formation panel date string to its "Papers Due" date string,
+    computed as 7 days before the panel date.
+    """
+    due_map = {}
+    for year, dt, date_str in _parse_formation_panel_date_entries(global_settings):
+        if dt:
+            due_map[date_str] = (dt - timedelta(days=7)).strftime("%d %B %Y")
+    return due_map
 
 def get_candidate_academic_requirements(user):
     """
@@ -191,8 +208,9 @@ def panel_dashboard():
 
     global_settings = GlobalSettings.query.first()
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
+    papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings, formation_panel_dates_by_year=formation_panel_dates_by_year)
+    return render_template('panel_dashboard.html', candidates=candidates, global_settings=global_settings, formation_panel_dates_by_year=formation_panel_dates_by_year, papers_due_map=papers_due_map)
 
 @main.route('/candidate/<int:user_id>')
 @login_required
@@ -237,8 +255,9 @@ def view_candidate_profile(user_id):
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
     formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
+    papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -425,8 +444,9 @@ def profile():
     most_recent_date = get_most_recent_formation_day_date(upcoming_dates)
     formation_panel_dates_by_year = get_formation_panel_dates_by_year(global_settings)
     formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates]
+    papers_due_map = get_formation_panel_papers_due_map(global_settings)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -1451,6 +1471,23 @@ def download_ics():
         )
 
     add_events(global_settings.formation_panel_dates, "Formation Panel")
+
+    for year, dt, date_str in _parse_formation_panel_date_entries(global_settings):
+        if not dt:
+            continue
+        due_dt = dt - timedelta(days=7)
+        summary = "Papers Due"
+        uid_source = f"{summary}-{due_dt.strftime('%Y%m%d')}"
+        uid = hashlib.md5(uid_source.encode('utf-8')).hexdigest() + "@ucasa.formation"
+        dtstamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+        events.append(
+            "BEGIN:VEVENT\n"
+            f"UID:{uid}\n"
+            f"DTSTAMP:{dtstamp}\n"
+            f"SUMMARY:{summary}\n"
+            f"DTSTART;VALUE=DATE:{due_dt.strftime('%Y%m%d')}\n"
+            "END:VEVENT"
+        )
 
     ics_content = (
         "BEGIN:VCALENDAR\n"
