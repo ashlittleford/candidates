@@ -580,6 +580,34 @@ def add_formation_day():
     flash('Formation day added.')
     return redirect(url_for('main.admin_settings'))
 
+@main.route('/admin/formation_days/edit/<int:day_id>', methods=['POST'])
+@login_required
+def edit_formation_day(day_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    day = FormationDay.query.get_or_404(day_id)
+
+    label = request.form.get('label')
+    date_str = request.form.get('date')
+
+    if not date_str:
+        flash('Please provide a date.')
+        return redirect(url_for('main.admin_settings'))
+
+    try:
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash('Invalid date format.')
+        return redirect(url_for('main.admin_settings'))
+
+    day.label = label.strip() if label else None
+    day.date = parsed_date
+    db.session.commit()
+    flash('Formation day updated.')
+    return redirect(url_for('main.admin_settings'))
+
 @main.route('/admin/formation_days/delete/<int:day_id>', methods=['POST'])
 @login_required
 def delete_formation_day(day_id):
