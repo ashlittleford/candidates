@@ -12,7 +12,7 @@
 {% endif %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="mb-1">Welcome, {{ user.name }}
+        <h1 class="mb-1">{% if not current_user.is_panel_member %}Welcome, {% endif %}{{ user.name }}
             {% if user.profile.phase == 3 %}
                 <small class="text-muted fs-5 fw-normal">Ordained{% if user.profile.ordination_date %} {{ user.profile.ordination_date }}{% endif %}</small>
             {% elif user.profile.start_date %}
