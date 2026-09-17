@@ -907,31 +907,34 @@
 
     <!-- Right Column -->
     <div class="col-lg-4">
-        {% if not current_user.is_panel_member %}
-        <!-- Formation Panel Reports -->
+        <!-- Upcoming Formation Panel Papers -->
         <div class="mb-5">
-            <h5 class="section-title">Formation Panel Reports</h5>
+            <h5 class="section-title">Upcoming Formation Panel Papers</h5>
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex flex-column gap-2">
-                        {# Display Recent Reports Submitted by Panel Members (Top 5) #}
-                        {% set active_panel_docs = user.panel_documents | selectattr('source', 'equalto', 'panel_member') | rejectattr('is_archived') | list %}
-                        {% set panel_docs = active_panel_docs | sort(attribute='upload_date', reverse=True) | list %}
-                        {% for doc in panel_docs[:5] %}
-                             <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" class="resource-link" target="_blank">
-                                <i class="fas fa-file-pdf"></i> {{ doc.original_filename }}
-                                <small class="text-muted ms-1" style="font-size: 0.75em;">({{ doc.category or 'Other' }} &middot; {{ doc.upload_date.strftime('%d %b') }})</small>
-                            </a>
-                        {% endfor %}
+                        {% if next_panel_date %}
+                            <p class="text-muted small mb-2">Papers uploaded for {{ next_panel_date }}.</p>
+                            {% set upcoming_panel_docs = user.panel_documents | selectattr('day_label', 'equalto', next_panel_date) | rejectattr('is_archived') | sort(attribute='upload_date') | list %}
+                            {% for doc in upcoming_panel_docs %}
+                                <a href="{{ url_for('main.uploaded_file', filename=doc.filename) }}" class="resource-link" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> {{ doc.original_filename }}
+                                    <small class="text-muted ms-1" style="font-size: 0.75em;">({{ doc.category or 'Other' }} &middot; {{ doc.upload_date.strftime('%d %b') }})</small>
+                                </a>
+                            {% endfor %}
 
-                        {% if (panel_docs|length == 0) %}
-                            <p class="text-muted">No panel reports submitted yet.</p>
+                            {% if (upcoming_panel_docs|length == 0) %}
+                                <p class="text-muted">No papers uploaded yet for this panel.</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">No upcoming formation panel date is scheduled.</p>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
+        {% if not current_user.is_panel_member %}
         <!-- Resources -->
         <div class="mb-5">
             <h5 class="section-title">Resources</h5>
