@@ -72,20 +72,41 @@
                 {% if formation_panel_dates_by_year or archived_formation_panel_dates_by_year %}
                 <h4>Formation Panel Years</h4>
 
+                <form action="{{ url_for('main.add_formation_panel_date') }}" method="POST" class="row g-2 align-items-end mb-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-md-8">
+                        <label class="form-label">Add Formation Panel Date</label>
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn uca-btn-red w-100">Add Date</button>
+                    </div>
+                </form>
+
                 {% if formation_panel_dates_by_year %}
                 <div class="mb-3">
                     <label class="form-label">Active Years</label>
                     {% for year, dates in formation_panel_dates_by_year.items() %}
-                        <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
-                            <div>
+                        <div class="border rounded p-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="fw-bold">{{ year }}</span>
-                                <span class="text-muted small ms-2">{{ dates | join(', ') }}</span>
+                                <form action="{{ url_for('main.archive_formation_panel_year') }}" method="POST" onsubmit="return confirm('Archive all {{ year }} panel dates and documents? Candidates and panel members will only see this under Archived.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="year" value="{{ year }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Archive {{ year }}</button>
+                                </form>
                             </div>
-                            <form action="{{ url_for('main.archive_formation_panel_year') }}" method="POST" onsubmit="return confirm('Archive all {{ year }} panel dates and documents? Candidates and panel members will only see this under Archived.');">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="year" value="{{ year }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Archive {{ year }}</button>
-                            </form>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for date_str in dates %}
+                                <form action="{{ url_for('main.remove_formation_panel_date') }}" method="POST" onsubmit="return confirm('Remove {{ date_str }}?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="date" value="{{ date_str }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
+                                        {{ date_str }} <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </form>
+                                {% endfor %}
+                            </div>
                         </div>
                     {% endfor %}
                 </div>

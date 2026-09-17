@@ -328,14 +328,14 @@ def public_submit_document():
         category = request.form.get('category')
         day_label = request.form.get('day_label') or None
 
-        if category not in PANEL_DOCUMENT_CATEGORIES:
+        if category not in CANDIDATE_DOCUMENT_CATEGORIES:
             category = 'Other'
 
         # Validation
         valid_user_ids = {str(u.id) for u in users}
         if not user_id or user_id not in valid_user_ids or not request.form.get('category'):
              flash('Please select a candidate and document category.')
-             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
+             return render_template('submit_document.html', users=users, global_settings=global_settings, categories=CANDIDATE_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
         # Handle files
         files = [f for f in request.files.getlist('file') if f.filename]
@@ -367,7 +367,7 @@ def public_submit_document():
         flash('Document submitted successfully!')
         return redirect(url_for('main.public_submit_document'))
 
-    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
+    return render_template('submit_document.html', users=users, global_settings=global_settings, categories=CANDIDATE_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -644,6 +644,69 @@ def delete_formation_day(day_id):
     db.session.delete(day)
     db.session.commit()
     flash('Formation day removed.')
+    return redirect(url_for('main.admin_settings'))
+
+@main.route('/admin/formation_panel_dates/add', methods=['POST'])
+@login_required
+def add_formation_panel_date():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    date_str = request.form.get('date')
+    if not date_str:
+        flash('Please provide a date.')
+        return redirect(url_for('main.admin_settings'))
+
+    try:
+        parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash('Invalid date format.')
+        return redirect(url_for('main.admin_settings'))
+
+    settings = GlobalSettings.query.first()
+    if not settings:
+        flash('Global settings not found.')
+        return redirect(url_for('main.admin_settings'))
+
+    formatted = parsed_date.strftime("%d %B %Y")
+    existing_dates = [d for _, _, d in _parse_formation_panel_date_entries(settings)]
+    if formatted not in existing_dates:
+        existing_dates.append(formatted)
+        settings.formation_panel_dates = ', '.join(existing_dates)
+        db.session.commit()
+        flash(f'{formatted} added to formation panel dates.')
+    else:
+        flash(f'{formatted} is already in the list.')
+
+    return redirect(url_for('main.admin_settings'))
+
+@main.route('/admin/formation_panel_dates/remove', methods=['POST'])
+@login_required
+def remove_formation_panel_date():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    date_str = request.form.get('date')
+    if not date_str:
+        flash('No date specified.')
+        return redirect(url_for('main.admin_settings'))
+
+    settings = GlobalSettings.query.first()
+    if not settings:
+        flash('Global settings not found.')
+        return redirect(url_for('main.admin_settings'))
+
+    existing_dates = [d for _, _, d in _parse_formation_panel_date_entries(settings)]
+    if date_str in existing_dates:
+        existing_dates.remove(date_str)
+        settings.formation_panel_dates = ', '.join(existing_dates)
+        db.session.commit()
+        flash(f'{date_str} removed from formation panel dates.')
+    else:
+        flash('Date not found.')
+
     return redirect(url_for('main.admin_settings'))
 
 @main.route('/admin/formation_panel_dates/archive_year', methods=['POST'])
