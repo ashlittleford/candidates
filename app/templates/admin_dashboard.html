@@ -100,6 +100,12 @@
                                                     {{ 'Unarchive' if user.is_archived else 'Archive' }}
                                                 </button>
                                             </form>
+                                            {% if user.is_archived %}
+                                            <form action="{{ url_for('main.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Permanently delete {{ user.name }}? This cannot be undone and removes their profile, documents, and RSVPs.');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
@@ -201,6 +207,12 @@
                                             {{ 'Unarchive' if member.is_archived else 'Archive' }}
                                         </button>
                                     </form>
+                                    {% if member.is_archived %}
+                                    <form action="{{ url_for('main.delete_user', user_id=member.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ member.name }}? This cannot be undone.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% else %}

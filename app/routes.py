@@ -1087,6 +1087,41 @@ def toggle_archive(user_id):
 
     status = 'archived' if user.is_archived else 'unarchived'
     flash(f'User {user.username} has been {status}.')
+    return redirect(request.referrer or url_for('main.admin_dashboard'))
+
+@main.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user = User.query.get_or_404(user_id)
+
+    if user.id == current_user.id:
+        flash('You cannot delete yourself.')
+        return redirect(url_for('main.admin_dashboard'))
+    if user.is_admin:
+        flash('Cannot delete an admin account.')
+        return redirect(url_for('main.admin_dashboard'))
+    if not user.is_archived:
+        flash('Only archived profiles can be deleted. Archive this profile first.')
+        return redirect(url_for('main.admin_dashboard'))
+
+    for doc in user.panel_documents:
+        try:
+            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], doc.filename))
+        except:
+            pass # File might be missing
+
+    FormationDayRSVP.query.filter_by(user_id=user.id).delete()
+    CandidateAcademicRequirement.query.filter_by(user_id=user.id).delete()
+
+    username = user.username
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f'User {username} has been permanently deleted.')
 
     # Stay on the same view (show archived or not)
     return redirect(request.referrer or url_for('main.admin_dashboard'))
