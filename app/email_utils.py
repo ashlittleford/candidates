@@ -7,12 +7,7 @@ class EmailNotConfiguredError(Exception):
     pass
 
 
-def send_invitation_email(to_email, name, role, setup_link):
-    """
-    Sends the account-setup invitation email via Resend.
-    Raises EmailNotConfiguredError if RESEND_API_KEY isn't set, so callers
-    can fall back to showing the admin the link directly (e.g. in local dev).
-    """
+def _send(to_email, subject, html):
     api_key = os.environ.get('RESEND_API_KEY')
     if not api_key:
         raise EmailNotConfiguredError('RESEND_API_KEY is not set.')
@@ -20,11 +15,31 @@ def send_invitation_email(to_email, name, role, setup_link):
     resend.api_key = api_key
     from_address = os.environ.get('MAIL_FROM', 'Candidate Portal <onboarding@resend.dev>')
 
-    html = render_template('emails/invite.html', name=name, role=role, setup_link=setup_link)
-
     resend.Emails.send({
         "from": from_address,
         "to": [to_email],
-        "subject": "You're invited to the Uniting Church Candidate Portal",
+        "subject": subject,
         "html": html,
     })
+
+
+def send_invitation_email(to_email, name, role, setup_link):
+    """
+    Sends the account-setup invitation email via Resend.
+    Raises EmailNotConfiguredError if RESEND_API_KEY isn't set, so callers
+    can fall back to showing the admin the link directly (e.g. in local dev).
+    """
+    html = render_template('emails/invite.html', name=name, role=role, setup_link=setup_link)
+    _send(to_email, "You're invited to the Uniting Church Candidate Portal", html)
+
+
+def send_password_reset_email(to_email, name, reset_link, triggered_by_admin=False):
+    """
+    Sends a password reset email via Resend.
+    Raises EmailNotConfiguredError if RESEND_API_KEY isn't set, so callers
+    can fall back to showing the admin the link directly (e.g. in local dev).
+    """
+    html = render_template(
+        'emails/reset_password.html', name=name, reset_link=reset_link, triggered_by_admin=triggered_by_admin
+    )
+    _send(to_email, "Reset your Candidate Portal password", html)

@@ -8,7 +8,7 @@ from app.models import (
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
-from app.email_utils import send_invitation_email, EmailNotConfiguredError
+from app.email_utils import send_invitation_email, send_password_reset_email, EmailNotConfiguredError
 import os
 import re
 from collections import OrderedDict
@@ -418,8 +418,11 @@ def reset_request():
         if user:
             token = user.get_reset_token()
             reset_link = url_for('main.reset_token', token=token, _external=True)
-            # TODO: Integrate with an email service (e.g., Flask-Mail) here.
-            print(f"PASSWORD RESET LINK FOR {email}: {reset_link}") # For dev environment
+            try:
+                send_password_reset_email(user.email, user.name, reset_link)
+            except Exception as e:
+                # Don't leak delivery errors to an anonymous requester; just log server-side.
+                print(f"PASSWORD RESET LINK FOR {email}: {reset_link} (email send failed: {e})")
 
         # Always display the same message to prevent email enumeration
         flash('If an account with that email exists, a password reset email has been sent.', 'info')
@@ -446,6 +449,32 @@ def reset_token(token):
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('main.login'))
     return render_template('reset_token.html')
+
+@main.route('/admin/send_password_reset/<int:user_id>', methods=['POST'])
+@login_required
+def send_password_reset(user_id):
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    user = User.query.get_or_404(user_id)
+    if not user.email:
+        flash(f'{user.name} has no email address on file, so a reset link cannot be sent.')
+        return redirect(request.referrer or url_for('main.admin_dashboard'))
+
+    token = user.get_reset_token()
+    reset_link = url_for('main.reset_token', token=token, _external=True)
+    try:
+        send_password_reset_email(user.email, user.name, reset_link, triggered_by_admin=True)
+        flash(f'Password reset email sent to {user.email}.')
+    except EmailNotConfiguredError:
+        print(f"PASSWORD RESET LINK FOR {user.email}: {reset_link}")
+        flash(f'Email sending isn\'t configured. Password reset link for {user.email}: {reset_link}')
+    except Exception as e:
+        print(f"Failed to send password reset email to {user.email}: {e}")
+        flash(f'Could not send the reset email ({e}). Password reset link for {user.email}: {reset_link}')
+
+    return redirect(request.referrer or url_for('main.admin_dashboard'))
 
 @main.route('/profile')
 @login_required
