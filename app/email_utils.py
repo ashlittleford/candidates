@@ -48,3 +48,25 @@ def send_password_reset_email(to_email, name, reset_link, triggered_by_admin=Fal
         triggered_by_admin=triggered_by_admin, intro=intro
     )
     _send(to_email, "Reset your Candidate Portal password", html)
+
+
+def send_custom_email(recipients, subject, body_html):
+    """
+    Sends the same admin-composed message to each recipient individually
+    (never a shared 'to' list, so recipients can't see each other's emails).
+    `recipients` is a list of (name, email) tuples.
+    Returns a list of (name, email, error) tuples for any that failed to send.
+    Raises EmailNotConfiguredError immediately if RESEND_API_KEY isn't set,
+    since that would fail identically for every recipient.
+    """
+    if not os.environ.get('RESEND_API_KEY'):
+        raise EmailNotConfiguredError('RESEND_API_KEY is not set.')
+
+    failures = []
+    for name, email in recipients:
+        html = render_template('emails/custom_message.html', name=name, subject=subject, body=body_html)
+        try:
+            _send(email, subject, html)
+        except Exception as e:
+            failures.append((name, email, str(e)))
+    return failures

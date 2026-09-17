@@ -8,7 +8,7 @@ from app.models import (
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
-from app.email_utils import send_invitation_email, send_password_reset_email, EmailNotConfiguredError
+from app.email_utils import send_invitation_email, send_password_reset_email, send_custom_email, EmailNotConfiguredError
 from app.editable_content import EDITABLE_CONTENT_DEFAULTS, get_raw_content, render_content
 import os
 import re
@@ -922,6 +922,67 @@ def admin_dashboard():
         global_settings=global_settings, show_archived=show_archived,
         formation_days=formation_days, rsvp_counts=rsvp_counts, total_candidates=total_candidates
     )
+
+@main.route('/admin/send_email', methods=['GET', 'POST'])
+@login_required
+def send_bulk_email():
+    if not current_user.is_admin:
+        flash('Access denied')
+        return redirect(url_for('main.profile'))
+
+    panels = FormationPanel.query.all()
+
+    if request.method == 'POST':
+        subject = request.form.get('subject')
+        body = request.form.get('body')
+        group_keys = request.form.getlist('groups')
+
+        if not subject or not body:
+            flash('Please provide a subject and message.')
+            return redirect(url_for('main.send_bulk_email'))
+        if not group_keys:
+            flash('Please select at least one recipient group.')
+            return redirect(url_for('main.send_bulk_email'))
+
+        recipients = {}  # email -> name, deduplicated across selected groups
+        for key in group_keys:
+            if key == 'all_candidates':
+                for u in User.query.filter_by(is_admin=False, is_panel_member=False, is_archived=False).all():
+                    if u.email:
+                        recipients[u.email] = u.name
+            elif key == 'all_panel_members':
+                for u in User.query.filter_by(is_panel_member=True, is_archived=False).all():
+                    if u.email:
+                        recipients[u.email] = u.name
+            elif key.startswith('panel_'):
+                panel = FormationPanel.query.get(int(key.split('_', 1)[1]))
+                if panel:
+                    for u in panel.panel_member_users:
+                        if u.email and not u.is_archived:
+                            recipients[u.email] = u.name
+                    for profile in panel.profiles:
+                        if profile.user and profile.user.email and not profile.user.is_archived:
+                            recipients[profile.user.email] = profile.user.name
+
+        if not recipients:
+            flash('No recipients with an email address found for the selected group(s).')
+            return redirect(url_for('main.send_bulk_email'))
+
+        recipient_list = [(name, email) for email, name in recipients.items()]
+        try:
+            failures = send_custom_email(recipient_list, subject, body)
+            if failures:
+                failed_desc = ', '.join(f'{name} ({error})' for name, email, error in failures)
+                flash(f'Sent to {len(recipient_list) - len(failures)} of {len(recipient_list)} recipients. Failed: {failed_desc}')
+            else:
+                flash(f'Email sent to {len(recipient_list)} recipient(s).')
+        except EmailNotConfiguredError:
+            recipient_desc = ', '.join(f'{name} <{email}>' for name, email in recipient_list)
+            flash(f'Email sending isn\'t configured. Would have sent to {len(recipient_list)} recipient(s): {recipient_desc}')
+
+        return redirect(url_for('main.send_bulk_email'))
+
+    return render_template('admin_send_email.html', panels=panels)
 
 @main.route('/admin/invite/candidate', methods=['GET', 'POST'])
 @login_required
