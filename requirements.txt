@@ -6,3 +6,4 @@ Flask-WTF
 itsdangerous
 gunicorn
 psycopg2-binary
+resend

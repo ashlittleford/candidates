@@ -9,6 +9,19 @@
             </div>
             <div class="card-body">
                 <p>Welcome, {{ user.name }}! Please set up your username and password to complete your registration.</p>
+
+                {% if not user.is_panel_member %}
+                <div class="alert alert-light border mb-4">
+                    <h6 class="fw-bold">Using the Candidate Portal</h6>
+                    <ul class="mb-0 small">
+                        <li>Your <strong>Formation Progress</strong> tab tracks your standards, academic requirements, and formation days.</li>
+                        <li>RSVP to upcoming formation days and formation panel dates as they're announced.</li>
+                        <li>Upload documents and reports for your formation panel under <strong>My Documents</strong>.</li>
+                        <li>Your panel and presbytery have already been assigned by an admin &mdash; you'll see them on your profile once you're set up.</li>
+                    </ul>
+                </div>
+                {% endif %}
+
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
@@ -27,6 +40,26 @@
                         <label for="confirm_password" class="form-label">Confirm Password</label>
                         <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                     </div>
+
+                    {% if not user.is_panel_member %}
+                    <hr class="my-4">
+                    <h6 class="fw-bold mb-3">A Few More Details</h6>
+
+                    <div class="mb-3">
+                        <label for="current_church" class="form-label">Current Church</label>
+                        <input type="text" class="form-control" id="current_church" name="current_church">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="supervisor" class="form-label">Supervisor Name</label>
+                        <input type="text" class="form-control" id="supervisor" name="supervisor">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date (Month Year)</label>
+                        <input type="text" class="form-control" id="start_date" name="start_date" placeholder="e.g. March 2026">
+                    </div>
+                    {% endif %}
 
                     <div class="d-grid">
                         <button type="submit" class="btn uca-btn-red">Create Account</button>

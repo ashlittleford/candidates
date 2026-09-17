@@ -8,6 +8,7 @@ from app.models import (
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from app.email_utils import send_invitation_email, EmailNotConfiguredError
 import os
 import re
 from collections import OrderedDict
@@ -162,6 +163,19 @@ def get_formation_panel_papers_due_map(global_settings):
             due_map[date_str] = (dt - timedelta(days=7)).strftime("%d %B %Y")
     return due_map
 
+def get_next_formation_panel_date(global_settings):
+    """The soonest upcoming (non-archived) formation panel date, as its stored string, or None."""
+    archived_years = get_archived_formation_panel_years(global_settings)
+    today = datetime.now().date()
+    upcoming = [
+        (dt, date_str) for year, dt, date_str in _parse_formation_panel_date_entries(global_settings)
+        if year not in archived_years and dt and dt.date() >= today
+    ]
+    if not upcoming:
+        return None
+    upcoming.sort(key=lambda item: item[0])
+    return upcoming[0][1]
+
 def get_candidate_academic_requirements(user):
     """
     Get-or-create a CandidateAcademicRequirement row for every AcademicRequirement,
@@ -276,8 +290,9 @@ def view_candidate_profile(user_id):
     archived_formation_panel_dates_by_year = get_archived_formation_panel_dates_by_year(global_settings)
     formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates] + [d for dates in archived_formation_panel_dates_by_year.values() for d in dates]
     papers_due_map = get_formation_panel_papers_due_map(global_settings)
+    next_panel_date = get_next_formation_panel_date(global_settings)
 
-    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
+    return render_template('profile.html', user=target_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map, next_panel_date=next_panel_date)
 
 @main.route('/candidate/<int:user_id>/transition_phase3', methods=['POST'])
 @login_required
@@ -466,8 +481,9 @@ def profile():
     archived_formation_panel_dates_by_year = get_archived_formation_panel_dates_by_year(global_settings)
     formation_panel_dates_flat = [d for dates in formation_panel_dates_by_year.values() for d in dates] + [d for dates in archived_formation_panel_dates_by_year.values() for d in dates]
     papers_due_map = get_formation_panel_papers_due_map(global_settings)
+    next_panel_date = get_next_formation_panel_date(global_settings)
 
-    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map)
+    return render_template('profile.html', user=current_user, global_settings=global_settings, upcoming_dates=upcoming_dates, resources=resources, standards=standards, academic_requirements=academic_requirements, support_email=support_email, most_recent_date=most_recent_date, document_categories=CANDIDATE_DOCUMENT_CATEGORIES, panel_report_categories=PANEL_DOCUMENT_CATEGORIES, formation_panel_dates_by_year=formation_panel_dates_by_year, archived_formation_panel_dates_by_year=archived_formation_panel_dates_by_year, formation_panel_dates_flat=formation_panel_dates_flat, papers_due_map=papers_due_map, next_panel_date=next_panel_date)
 
 @main.route('/profile/update_supervisor', methods=['POST'])
 @login_required
@@ -918,11 +934,13 @@ def invite_candidate():
             db.session.add(new_profile)
             db.session.commit()
 
-            # Simulate sending email
             invite_link = url_for('main.accept_invitation', token=token, _external=True)
-            print(f"INVITATION LINK FOR {email}: {invite_link}") # For dev environment
-
-            flash(f'Invitation sent to {email}. Link: {invite_link}')
+            try:
+                send_invitation_email(email, name, 'Candidate', invite_link)
+                flash(f'Invitation sent to {email}.')
+            except EmailNotConfiguredError:
+                print(f"INVITATION LINK FOR {email}: {invite_link}") # For dev environment
+                flash(f'Email sending isn\'t configured. Invitation link for {email}: {invite_link}')
             return redirect(url_for('main.admin_dashboard'))
 
     panels = FormationPanel.query.all()
@@ -962,9 +980,12 @@ def invite_panel_member():
             db.session.commit()
 
             invite_link = url_for('main.accept_invitation', token=token, _external=True)
-            print(f"INVITATION LINK FOR {email}: {invite_link}")
-
-            flash(f'Invitation sent to {email}. Link: {invite_link}')
+            try:
+                send_invitation_email(email, name, 'Panel Member', invite_link)
+                flash(f'Invitation sent to {email}.')
+            except EmailNotConfiguredError:
+                print(f"INVITATION LINK FOR {email}: {invite_link}")
+                flash(f'Email sending isn\'t configured. Invitation link for {email}: {invite_link}')
             return redirect(url_for('main.admin_dashboard') + '#members')
 
     panels = FormationPanel.query.all()
@@ -1001,6 +1022,14 @@ def accept_invitation(token):
         user.set_password(password)
         user.invitation_token = None # Clear token
         user.invitation_expiry = None
+
+        if not user.is_panel_member and not user.is_admin:
+            if not user.profile:
+                user.profile = Profile(user=user)
+            user.profile.current_church = request.form.get('current_church') or None
+            user.profile.supervisor = request.form.get('supervisor') or None
+            user.profile.start_date = request.form.get('start_date') or None
+
         db.session.commit()
 
         login_user(user)
