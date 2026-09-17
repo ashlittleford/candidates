@@ -887,6 +887,8 @@ def invite_candidate():
     if request.method == 'POST':
         email = request.form.get('email')
         name = request.form.get('name')
+        formation_panel_id = request.form.get('formation_panel_id')
+        presbytery = request.form.get('presbytery')
 
         if User.query.filter_by(username=email).first() or User.query.filter_by(email=email).first():
             flash('User with this email already exists')
@@ -906,8 +908,12 @@ def invite_candidate():
             )
             new_user.set_password(str(uuid.uuid4())) # Random password
 
-            # Create empty profile
-            new_profile = Profile(user=new_user)
+            # Create profile with assigned panel/presbytery
+            new_profile = Profile(
+                user=new_user,
+                formation_panel_id=int(formation_panel_id) if formation_panel_id else None,
+                presbytery=presbytery or None
+            )
             db.session.add(new_user)
             db.session.add(new_profile)
             db.session.commit()
@@ -919,7 +925,8 @@ def invite_candidate():
             flash(f'Invitation sent to {email}. Link: {invite_link}')
             return redirect(url_for('main.admin_dashboard'))
 
-    return render_template('admin_invite_user.html', role='Candidate')
+    panels = FormationPanel.query.all()
+    return render_template('admin_invite_user.html', role='Candidate', panels=panels)
 
 @main.route('/admin/invite/panel_member', methods=['GET', 'POST'])
 @login_required

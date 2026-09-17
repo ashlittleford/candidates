@@ -21,7 +21,7 @@
                         <input type="text" class="form-control" id="name" name="name" required>
                     </div>
 
-                    {% if role == 'Panel Member' %}
+                    {% if role in ('Panel Member', 'Candidate') %}
                     <div class="mb-3">
                         <label for="formation_panel_id" class="form-label">Assign to Formation Panel</label>
                         <select class="form-select" id="formation_panel_id" name="formation_panel_id">
@@ -29,6 +29,18 @@
                             {% for panel in panels %}
                                 <option value="{{ panel.id }}">Panel {{ panel.id }}: {{ panel.chair_name }}</option>
                             {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    {% if role == 'Candidate' %}
+                    <div class="mb-3">
+                        <label for="presbytery" class="form-label">Presbytery</label>
+                        <select class="form-select" id="presbytery" name="presbytery">
+                            <option value="">Select a Presbytery</option>
+                            <option value="Generate Presbytery">Generate Presbytery</option>
+                            <option value="Wimala Presbytery">Wimala Presbytery</option>
+                            <option value="POSSA">POSSA</option>
                         </select>
                     </div>
                     {% endif %}
